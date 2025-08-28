@@ -3,33 +3,21 @@ require "sketchup.rb"
 
 module ProjetaPlus
   module Commands
-    # URL base da sua aplicação Next.js na Vercel
-    VERCEL_APP_BASE_URL = "https://projeta-plus-html.vercel.app".freeze
+    VERCEL_APP_BASE_URL = "https://projeta-plus-html.vercel.app".freeze # Seu domínio na Vercel
 
-    # Hash para armazenar referências a cada HtmlDialog de conteúdo aberto, um por botão.
-    # A chave será o ID do botão (ex: 'button1'), o valor será a instância do HtmlDialog.
     @@button_html_dialogs = {}
 
-    # Método auxiliar para criar/reutilizar um HtmlDialog para um botão específico.
-    # @param button_id [String] Um ID único para o diálogo (ex: 'button1', 'button2').
-    # @param initial_path [String] O caminho inicial dentro da sua aplicação Vercel (ex: '/', '/button1').
-    # @param dialog_title [String] O título da janela do diálogo.
     def self.open_button_html_dialog(button_id, initial_path = '/', dialog_title = "Projeta Plus")
-      # Se o diálogo para este botão já existe e está visível, apenas traga-o para a frente.
+      # ... (Código existente para verificar se o diálogo já está aberto e reutilizá-lo)
       if @@button_html_dialogs[button_id] && @@button_html_dialogs[button_id].visible?
-        puts "[ProjetaPlus Dialog] Diálogo para '#{button_id}' já aberto. Trazendo para a frente."
         @@button_html_dialogs[button_id].show
-        # Opcional: Se quiser que o diálogo sempre re-navegue para o initial_path ao reabrir,
-        # descomente a linha abaixo. Útil se o usuário navegou para outra parte do seu app.
-        # @@button_html_dialogs[button_id].set_url("#{VERCEL_APP_BASE_URL}#{initial_path}")
         return
       end
 
-      # Cria um novo HtmlDialog para este botão.
       puts "[ProjetaPlus Dialog] Criando novo diálogo para '#{button_id}' com URL: #{VERCEL_APP_BASE_URL}"
       dialog = ::UI::HtmlDialog.new({
         :dialog_title => dialog_title,
-        :preferences_key => "com.projeta_plus.dialog_#{button_id}", # Chave única para persistir tamanho/posição
+        :preferences_key => "com.projeta_plus.dialog_#{button_id}",
         :resizable => true,
         :width => 800,
         :height => 600,
@@ -47,13 +35,25 @@ module ProjetaPlus
         dialog.javascript_access = true
       end
 
-      # Define a URL remota da sua aplicação Next.js na Vercel
       dialog.set_url("#{VERCEL_APP_BASE_URL}")
 
-      # Adiciona um callback para o JavaScript chamar o Ruby (exemplo)
-      # No seu Next.js, você faria: window.sketchup.send_action('logMessage', 'Mensagem do JS');
-      dialog.add_action_callback("logMessage") do |action_context, message|
-        puts "[ProjetaPlus JS Message] #{message}"
+      # --- NOVOS CALLBACKS AQUI ---
+      # 1. Callback para receber uma mensagem do JS e exibir no MessageBox do SketchUp
+      dialog.add_action_callback("showMessageBox") do |action_context, message_from_js|
+        puts "[ProjetaPlus Ruby] Recebido do JS: #{message_from_js}"
+        ::UI.messagebox(message_from_js, MB_OK, "Mensagem do App Vercel")
+        nil # Retorna nil para o SketchUp
+      end
+
+      # 2. Callback para o JS solicitar o nome do modelo ativo do SketchUp
+      dialog.add_action_callback("requestModelName") do |action_context|
+        model_name = Sketchup.active_model.path # Pega o caminho completo do arquivo
+        model_name = File.basename(model_name) if model_name && !model_name.empty? # Pega só o nome do arquivo
+        model_name = "[Nenhum Modelo Salvo]" if model_name.empty? || model_name.nil?
+
+        puts "[ProjetaPlus Ruby] Solicitado nome do modelo. Enviando: '#{model_name}' para o JS."
+        
+        dialog.execute_script("window.receiveModelNameFromRuby('#{model_name.gsub("'", "\'")}');")
         nil
       end
 
