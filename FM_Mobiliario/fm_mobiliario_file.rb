@@ -5,462 +5,448 @@ require 'json'
 
 module FM_Extensions
   module Exportar
+    PREFIX = "pro_mob_".freeze
 
-    CATEGORIAS = {
-      "Mobiliário" => ['-INTERIORES-MOBILIARIO', '-INTERIORES-QUADRO', '-INTERIORES-TAPETE', '-INTERIORES-CORTINA'],
-      "Eletro"     => ['-INTERIORES-ELETRO (AEREO)', '-INTERIORES-ELETRO (MARCENARIA)', '-INTERIORES-ELETRO (MARMORARIA)', '-INTERIORES-ELETRO (PISO)'],
-      "Metais"     => ['-BANHEIRO-BACIA', '-BANHEIRO-BOX', '-BANHEIRO-ACESSORIOS', '-BANHEIRO-CHUVEIRO',
-                       '-MARMORARIA-CUBA E METAIS','-BANHEIRO-RALO',"-TECNICO-REGISTRO ACABAMENTO","-INTERIORES-CUBA E METAIS"]
-    }.freeze
+    
 
-    PREF_ROOT   = "FM_Exportar_Categorias".freeze
-    ATTR_DICT   = "FM_Exportar".freeze
+    def self.isolate_item(target)
+  SKETCHUP_CONSOLE.clear
+  nome_cena = "geral"
+  model = Sketchup.active_model
+  cena = model.pages.find { |c| c.name.downcase == nome_cena.downcase }
 
-    # ---------- Persistência ----------
-    def self.read_selected_tags(model, categoria)
-      # 1) do modelo
-      arr = model.get_attribute(ATTR_DICT, "#{categoria}_tags")
-      if arr.is_a?(Array) && !arr.empty?
-        return arr
+  if cena
+    model.pages.selected_page = cena
+  else
+    puts "Cena '#{nome_cena}' não encontrada."
+    return
+  end
+
+  model.start_operation("Isolar Item", true)
+
+  # 1. Sobe até estar dentro do model.entities
+current = target
+highest_parent = current
+
+while current.respond_to?(:parent) && !current.parent.is_a?(Sketchup::Model)
+  # só aceita Group ou ComponentInstance como pai mais alto
+  break unless current.is_a?(Sketchup::Group) || current.is_a?(Sketchup::ComponentInstance)
+  highest_parent = current
+  current = current.parent
+end
+
+  # 2. Seleciona apenas o pai mais alto
+  model.selection.clear
+  model.selection.add(highest_parent)
+
+  # 3. Oculta todo o resto do modelo, exceto o pai mais alto e seus filhos
+  model.entities.each do |e|
+    # Mostra se é o pai ou está dentro dele
+    e.visible = highest_parent == e || (e.is_a?(Sketchup::ComponentInstance) || e.is_a?(Sketchup::Group)) && highest_parent.definition.entities.include?(e)
+  end
+
+  model.commit_operation
+  
+  # 4. Ajusta a câmera
+  view = model.active_view
+  eye    = Geom::Point3d.new(-1000, -1000, 1000)
+  target_pt = Geom::Point3d.new(0, 0, 0)
+  up     = Geom::Vector3d.new(0, 0, 1)
+
+  view.camera.set(eye, target_pt, up)
+  view.camera.perspective = true
+  view.zoom_extents
+end
+
+
+
+
+
+
+
+    # ---------- Funções auxiliares ----------
+
+    # Coleta todos os componentes/grupos com atributo pro_mob_ até 10 níveis
+    def self.collect_all_pro_mob_instances(entities, arr, level=0)
+      return if level > 10
+      entities.each do |e|
+        comp = case e
+               when Sketchup::Group then e.to_component
+               when Sketchup::ComponentInstance then e
+               else next
+               end
+
+        tipo = comp.get_attribute("dynamic_attributes", "#{PREFIX}tipo", "").to_s.strip
+        arr << comp unless tipo.empty?
+
+        collect_all_pro_mob_instances(comp.definition.entities, arr, level+1)
       end
-      # 2) global
-      s = Sketchup.read_default(PREF_ROOT, "#{categoria}_tags", "")
-      return s.split(",").map(&:strip).reject(&:empty?) unless s.nil? || s.empty?
-      # 3) fallback
-      CATEGORIAS[categoria] || []
     end
 
-    def self.write_selected_tags(model, categoria, tags)
-      tags = Array(tags).map(&:to_s).uniq
-      model.set_attribute(ATTR_DICT, "#{categoria}_tags", tags)
-      Sketchup.write_default(PREF_ROOT, "#{categoria}_tags", tags.join(","))
-    end
-
-    def self.all_model_tags(model)
-      # Retorna todos os nomes de etiquetas do arquivo
-      model.layers.map(&:name).compact
-    end
-
-    # ---------- Diálogo de escolher etiquetas ----------
-    def self.abrir_dialogo_etiquetas(categoria)
-      model = Sketchup.active_model
-      etiquetas_todas = all_model_tags(model).sort
-      selecionadas = read_selected_tags(model, categoria) & etiquetas_todas
-      selecionadas = CATEGORIAS[categoria] if selecionadas.empty? && CATEGORIAS[categoria]
-
-      dlg = UI::HtmlDialog.new(
-        dialog_title: "Escolher Etiquetas - #{categoria}",
-        preferences_key: "fm_exportar_escolher_#{categoria}",
-        scrollable: true,
-        resizable: false,
-        width: 360,
-        height: 540,
-        style: UI::HtmlDialog::STYLE_DIALOG
-      )
-
-      html = gerar_html_etiquetas(categoria, etiquetas_todas, selecionadas)
-      dlg.set_html(html)
-
-      dlg.add_action_callback("salvarEtiquetas") do |_, json_data|
-        data = JSON.parse(json_data)
-        escolhidas = Array(data["etiquetas"]).map(&:to_s)
-        write_selected_tags(model, categoria, escolhidas)
-        UI.messagebox("Preferências de '#{categoria}' salvas.")
-        dlg.close
+    # Procura componente ou grupo por ID recursivamente
+    def self.find_component_by_id(entities, target_id, level=0)
+      return nil if level > 10
+      entities.each do |e|
+        next unless e.is_a?(Sketchup::ComponentInstance) || e.is_a?(Sketchup::Group)
+        comp = e.is_a?(Sketchup::Group) ? e.to_component : e
+        return comp if comp.entityID == target_id
+        found = find_component_by_id(comp.definition.entities, target_id, level+1)
+        return found if found
       end
-
-      dlg.show
+      nil
     end
 
-    def self.gerar_html_etiquetas(categoria, etiquetas, selecionadas)
-      etiquetas_json    = etiquetas.to_json
-      selecionadas_json = selecionadas.to_json
-      <<-HTML
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <title>Escolher Etiquetas</title>
-        <style>
-          body{font-family:Century Gothic, sans-serif;margin:10px;text-align:center;background:#f6f6f6;}
-          h1{font-size:16px;margin:10px 0;border:2px solid #becc8a;padding:5px;border-radius:8px;display:inline-block;}
-          .actions{margin:6px 0;}
-          table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;background:#fff;}
-          th,td{border:1px solid #ddd;padding:6px;text-align:left;vertical-align:middle;}
-          th{background:#fff;}
-          button{margin:3px 5px;padding:6px 10px;font-size:12px;cursor:pointer;background:#dee9b6;border-radius:10px;
-                 box-shadow:2px 2px 10px rgba(0,0,0,0.2);transition:background-color .3s ease;border:0;}
-          button:hover{background:#becc8a;}
-        </style>
-      </head>
-      <body>
-        <h1>Etiquetas - #{categoria}</h1>
-        <div class="actions">
-          <button onclick="selecionarTudo()">Selecionar tudo</button>
-          <button onclick="limparTudo()">Limpar</button>
-        </div>
-        <table>
-          <thead><tr><th>✓</th><th>Etiqueta</th></tr></thead>
-          <tbody id="etiquetas-body"></tbody>
-        </table>
-        <button onclick="salvar()">Salvar</button>
-
-        <script>
-          const etiquetas = #{etiquetas_json};
-          const selecionadas = #{selecionadas_json};
-
-          function preencher() {
-            const tbody = document.getElementById('etiquetas-body');
-            tbody.innerHTML = etiquetas.map(e => {
-              const checked = selecionadas.includes(e) ? "checked" : "";
-              return `<tr>
-                <td style="width:40px;text-align:center;"><input type="checkbox" value="${e}" ${checked}></td>
-                <td>${e}</td>
-              </tr>`;
-            }).join('');
-          }
-          function selecionarTudo(){
-            document.querySelectorAll('input[type=checkbox]').forEach(i=>i.checked=true);
-          }
-          function limparTudo(){
-            document.querySelectorAll('input[type=checkbox]').forEach(i=>i.checked=false);
-          }
-          function salvar(){
-            const escolhidas = Array.from(document.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.value);
-            sketchup.salvarEtiquetas(JSON.stringify({categoria:"#{categoria}", etiquetas:escolhidas}));
-          }
-          preencher();
-        </script>
-      </body>
-      </html>
-      HTML
-    end
-
-    # ---------- Busca e contagem ----------
-    def self.buscar_componentes(entities, allowed_layers, instances)
-      entities.each do |entity|
-        if entity.is_a?(Sketchup::ComponentInstance) || entity.is_a?(Sketchup::Group)
-          # conta somente se a própria etiqueta do item estiver selecionada
-          if entity.respond_to?(:layer) && allowed_layers.include?(entity.layer.name)
-            instances << entity
-          end
-          child_entities =
-            entity.is_a?(Sketchup::ComponentInstance) ? entity.definition.entities :
-            entity.is_a?(Sketchup::Group) ? entity.entities : nil
-          buscar_componentes(child_entities, allowed_layers, instances) if child_entities
+    # Torna visível recursivamente todos os elementos de um componente
+    def self.set_visible_recursive(comp, value)
+      comp.visible = value
+      comp.definition.entities.each do |e|
+        if e.is_a?(Sketchup::ComponentInstance) || e.is_a?(Sketchup::Group)
+          set_visible_recursive(e.is_a?(Sketchup::Group) ? e.to_component : e, value)
+        else
+          e.visible = value
         end
       end
-    end
-
-    # ---------- Conjunto de etiquetas visíveis incluindo ancestrais ----------
-    def self.coletar_etiquetas_ancestrais_para(selected_names)
-      model = Sketchup.active_model
-      visible = selected_names.to_set
-      stack = []
-      rec = lambda do |entities, chain|
-        entities.each do |e|
-          next unless e.is_a?(Sketchup::ComponentInstance) || e.is_a?(Sketchup::Group)
-          this_tag = e.respond_to?(:layer) && e.layer ? e.layer.name : nil
-          # Se o item está numa etiqueta selecionada, adicione também as etiquetas do caminho
-          if this_tag && selected_names.include?(this_tag)
-            chain.each do |anc|
-              if anc.respond_to?(:layer) && anc.layer
-                visible << anc.layer.name
-              end
-            end
-            visible << this_tag
-          end
-          children = e.is_a?(Sketchup::ComponentInstance) ? e.definition.entities : e.entities
-          rec.call(children, chain + [e]) if children
-        end
-      end
-      rec.call(model.entities, [])
-      visible.to_a
     end
 
     # ---------- Atualização da tabela ----------
     def self.update_category_data(model, categoria)
-      selected_layers = read_selected_tags(model, categoria)
-      selected_layers = all_model_tags(model) if selected_layers.nil? || selected_layers.empty?
       instances = []
-      buscar_componentes(model.entities, selected_layers, instances)
+      collect_all_pro_mob_instances(model.entities, instances)
 
-      data = Hash.new(0)
+      dados = Hash.new { |h, k| h[k] = { qtd: 0, ids: [] } }
+
       instances.each do |inst|
-        desc = inst.definition.name
-        data[desc] += 1
+        tipo = inst.get_attribute("dynamic_attributes", "#{PREFIX}tipo", "").to_s.strip
+        next if tipo.empty? || tipo != categoria
+
+        key = [
+          inst.get_attribute("dynamic_attributes", "#{PREFIX}nome", ""),
+          inst.get_attribute("dynamic_attributes", "#{PREFIX}cor", ""),
+          inst.get_attribute("dynamic_attributes", "#{PREFIX}marca", ""),
+          tipo,
+          inst.get_attribute("dynamic_attributes", "#{PREFIX}dimensao", ""),
+          inst.get_attribute("dynamic_attributes", "#{PREFIX}ambiente", ""),
+          inst.get_attribute("dynamic_attributes", "#{PREFIX}observacoes", ""),
+          inst.get_attribute("dynamic_attributes", "#{PREFIX}link", "")
+        ]
+
+        dados[key][:qtd] += 1
+        dados[key][:ids] << inst.entityID
       end
 
-      if data.empty?
-        "<tr><td colspan='4' style='color:red;'>Nenhum dado encontrado.</td></tr>"
+      if dados.empty?
+        "<tr><td colspan='11' style='color:red;'>Nenhum dado encontrado.</td></tr>"
       else
-        idx = 0
-        data.keys.sort_by(&:downcase).map { |descricao|
-          idx += 1
-          qt = data[descricao]
-          "<tr><td>#{idx}</td><td>#{descricao}</td><td>#{qt}</td><td><button onclick=\"removeRow(this)\">Remover</button></td></tr>"
-        }.join
+        index = 1
+        dados.map do |key, info|
+          nome, cor, marca, tipo, dimensao, ambiente, obs, link = key
+          id = info[:ids].first # usa o primeiro ID só como referência
+          html = "<tr id='linha-#{id}'>
+            <td class='seq'>#{index}</td>
+            <td>#{nome}</td>
+            <td>#{cor}</td>
+            <td>#{marca}</td>
+            <td>#{tipo}</td>
+            <td>#{dimensao}</td>
+            <td>#{ambiente}</td>
+            <td>#{link}</td>
+            <td>#{obs}</td>
+            <td>#{info[:qtd]}</td>
+            <td><button onclick='isolateItem(#{id})'>Isolar</button></td>
+            <td><button onclick='deleteItem(#{id})'>Excluir</button></td>
+          </tr>"
+          index += 1
+          html
+        end.join
       end
     end
 
-    # ---------- Ferramentas ----------
-    def self.medida_item
-      model = Sketchup.active_model
-      selection = model.selection
-      if selection.empty?
-        UI.messagebox('Nenhum objeto selecionado.')
-        return
-      end
-      first_entity = selection[0]
-      if first_entity.is_a?(Sketchup::Group) || first_entity.is_a?(Sketchup::ComponentInstance)
-        component = first_entity.is_a?(Sketchup::Group) ? first_entity.to_component : first_entity
-        polegadas_para_cm = 2.54
-        tamanho_x = (component.bounds.width * polegadas_para_cm).round(2).to_i
-        tamanho_y = (component.bounds.height * polegadas_para_cm).round(2).to_i
-        tamanho_z = (component.bounds.depth * polegadas_para_cm).round(2).to_i
-        novo_nome = "DEFINIR - L #{tamanho_x} x P #{tamanho_y} x A #{tamanho_z} cm"
-        component.definition.name = novo_nome
+    def self.format_number(num)
+      arred = num.round(2)
+      if arred.to_i == arred
+        arred.to_i.to_s
       else
-        UI.messagebox('O objeto selecionado não é um grupo ou um componente.')
+        sprintf('%.2f', arred).gsub('.', ',').sub(/,?0+$/, '')
       end
     end
 
-    def self.open_export_dialog
-      model = Sketchup.active_model
-      model_path = model.path
-      if model_path.empty?
-        UI.messagebox("Por favor, salve o modelo antes de exportar o CSV.")
-        return false
-      end
-      show_dialog
-    end
 
-    # ---------- UI principal ----------
-    def self.show_dialog
-      dialog = UI::HtmlDialog.new(
-        dialog_title: "Mobiliário, Eletro, Louças e Metais",
-        preferences_key: "com.example.exportar_dados",
-        scrollable: true,
-        resizable: true,
-        width: 800,
-        height: 600,
+    # ---------- Edição de atributos ----------
+    def self.edit_component_attributes(comp)
+      bounds = comp.bounds
+      largura = format_number(bounds.width.to_f * 2.54)
+      altura  = format_number(bounds.height.to_f * 2.54)
+      profund = format_number(bounds.depth.to_f * 2.54)
+
+      
+
+      dimensao = "#{largura} x #{altura} x #{profund} cm"
+
+
+
+      nome     = comp.get_attribute("dynamic_attributes", "#{PREFIX}nome", "")
+      cor      = comp.get_attribute("dynamic_attributes", "#{PREFIX}cor", "")
+      marca    = comp.get_attribute("dynamic_attributes", "#{PREFIX}marca", "")
+      tipo     = comp.get_attribute("dynamic_attributes", "#{PREFIX}tipo", "")
+      obs      = comp.get_attribute("dynamic_attributes", "#{PREFIX}observacoes", "")
+      ambiente = comp.get_attribute("dynamic_attributes", "#{PREFIX}ambiente", "")
+      link = comp.get_attribute("dynamic_attributes", "#{PREFIX}link", "")
+
+
+
+      html = <<-HTML
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial; padding: 10px; }
+            label { display:block; margin-top:8px; }
+            input, select, textarea { width:95%; padding:4px; }
+            textarea { height:60px; }
+            button { margin-top:15px; padding:6px 12px; }
+          </style>
+        </head>
+        <body>
+          <h3>Definir atributos do componente</h3>
+          <label>Nome: <input id="nome" type="text" value="#{nome}"></label>
+          <label>Cor: <input id="cor" type="text" value="#{cor}"></label>
+          <label>Marca: <input id="marca" type="text" value="#{marca}"></label>
+          <label>Tipo:
+            <select id="tipo">
+              <option value="Mobiliário" #{'selected' if tipo=="Mobiliário"}>Mobiliário</option>
+              <option value="Eletrodomésticos" #{'selected' if tipo=="Eletrodomésticos"}>Eletrodomésticos</option>
+              <option value="Louças" #{'selected' if tipo=="Louças"}>Louças</option>
+              <option value="Metais" #{'selected' if tipo=="Metais"}>Metais</option>
+              <option value="Acessórios" #{'selected' if tipo=="Acessórios"}>Acessórios</option>
+              <option value="Decoração" #{'selected' if tipo=="Decoração"}>Decoração</option>
+            </select>
+          </label>
+          <label>Dimensão (LxAxP):</label>
+          <input id="dimensao" type="text" value="#{dimensao}" readonly>
+          <label>Ambiente: <input id="ambiente" type="text" value="#{ambiente}"></label>
+          <label>Link: <input id="link" type="text" value="#{link}"></label>
+          <label>Observações:</label>
+          <textarea id="observacoes">#{obs}</textarea>
+          <button onclick="enviar()">Salvar</button>
+
+          <script>
+            function enviar(){
+              var dados = {
+                nome: document.getElementById("nome").value,
+                cor: document.getElementById("cor").value,
+                marca: document.getElementById("marca").value,
+                tipo: document.getElementById("tipo").value,
+                ambiente: document.getElementById("ambiente").value,
+                observacoes: document.getElementById("observacoes").value,
+                link: document.getElementById("link").value
+              };
+              sketchup.salvarAtributos(JSON.stringify(dados));
+            }
+          </script>
+        </body>
+        </html>
+      HTML
+
+      dlg = UI::HtmlDialog.new(
+        dialog_title: "Atributos do Componente",
+        width: 320,
+        height: 480,
         style: UI::HtmlDialog::STYLE_DIALOG
       )
+
+      dlg.set_html(html)
+      dlg.add_action_callback("salvarAtributos") do |_ctx, json|
+        dados = JSON.parse(json)
+        dados.each { |k,v| comp.set_attribute("dynamic_attributes", "#{PREFIX}#{k}", v) }
+        comp.set_attribute("dynamic_attributes", "#{PREFIX}dimensao", dimensao)
+        new_name = "#{dados['nome']} - #{dados['marca']} - #{dimensao}"
+        comp.definition.name = new_name
+        UI.messagebox("Atributos atualizados e definição renomeada para:\n#{new_name}")
+      end
+      dlg.show
+    end
+
+    # ---------- Janela de Exportação ----------
+    def self.open_export_dialog
+      model = Sketchup.active_model
+      if model.path.empty?
+        UI.messagebox("Salve o modelo antes de exportar o CSV.")
+        return
+      end
+
+      tipos = []
+      instances = []
+      collect_all_pro_mob_instances(model.entities, instances)
+      instances.each do |inst|
+        tipo = inst.get_attribute("dynamic_attributes", "#{PREFIX}tipo", "").to_s.strip
+        tipos << tipo unless tipo.empty?
+      end
+      tipos.uniq!
+      return UI.messagebox("Nenhum componente com atributo '#{PREFIX}tipo' encontrado.") if tipos.empty?
+
+      dialog = UI::HtmlDialog.new(
+        dialog_title: "Relatórios por Tipo",
+        preferences_key: "fm_exportar_tipos",
+        scrollable: true,
+        resizable: true,
+        width: 950,
+        height: 700,
+        style: UI::HtmlDialog::STYLE_DIALOG
+      )
+
+      html_sections = tipos.map do |tipo|
+        <<-HTML
+        <div class="categoria">
+          <h2>#{tipo}</h2>
+          <table id="table-#{tipo.gsub(' ', '-')}">
+            <thead>
+              <tr>
+              <th>#</th>
+              <th>Nome</th><th>Cor</th><th>Marca</th><th>Tipo</th>
+              <th>Dimensão</th><th>Ambiente</th><th>Link</th><th>Observações</th>
+              <th>Qtd</th><th>Isolar</th><th>Excluir</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <button onclick="updateCategory('#{tipo}')">Atualizar Tabela</button>
+          <button onclick="exportCategory('#{tipo}')">Exportar CSV</button>
+          <hr>
+        </div>
+        HTML
+      end.join("\n")
 
       html_content = <<-HTML
       <!DOCTYPE html>
       <html lang="pt">
         <head>
-          <meta http-equiv='content-type' content='text/html; charset=utf-8'>
-          <title>Mobiliário, Eletro, Louças e Metais</title>
+          <meta charset='UTF-8'>
+          <title>Relatórios por Tipo</title>
           <style>
             body{font-family:'Century Gothic',sans-serif;margin:10px;text-align:center;background-color:#f6f6f6;}
-            p{font-size:10px;margin:5px;margin-bottom:10px;}
-            h1{font-size:18px;margin:10px 0;display:inline-block;border:3px solid #becc8a;padding:5px;border-radius:10px;box-shadow:2px 2px 10px rgba(0,0,0,0.2);}
-            h2{font-size:16px;margin:10px 0;}
-            table{font-size:12px;width:100%;border-collapse:collapse;margin:10px 0;margin-bottom:10px;}
-            th,td{border:1px solid #ddd;padding:10px;text-align:left;}
-            th{background-color:#fff;}
-            .footer{margin-top:20px;font-size:10px;color:#a7af8b;text-align:center;border-top:1px solid #ccc;padding-top:10px;}
-            hr{border:none;border-top:1px solid #ccc;margin:20px 0;}
-            button{margin:3px 4px;padding:5px 8px;font-size:12px;cursor:pointer;background-color:#dee9b6;border-radius:10px;
-                   box-shadow:2px 2px 10px rgba(0,0,0,0.2);transition:background-color 0.3s ease;border:0;}
-            button:hover{background-color:#becc8a;}
-            th:last-child,td:last-child{width:auto;min-width:fit-content;text-align:center;}
-            td:nth-child(3),th:nth-child(3),td:nth-child(1),th:nth-child(1){text-align:center;}
+            table{font-size:12px;width:100%;border-collapse:collapse;margin:10px 0;background:#fff;}
+            th,td{border:1px solid #ddd;padding:8px;text-align:left;}
+            th{background-color:#eee;}
+            button{margin:2px;padding:4px 8px;font-size:12px;cursor:pointer;border-radius:8px;background:#dee9b6;border:0;}
+            button:hover{background:#becc8a;}
           </style>
         </head>
         <body>
-          <h1>Relatórios</h1>
-          <p>Abaixo temos os relatórios de cada categoria, clique nos botões para executar as ações em cada um deles:</p>
-
-          <div class="categoria">
-            <h2>Mobiliário</h2>
-            <table id="table-Mobiliário">
-              <thead><tr><th>Legenda</th><th>Descrição</th><th>Quantidade</th><th>Ações</th></tr></thead>
-              <tbody></tbody>
-            </table>
-            <button onclick="updateCategory('Mobiliário')">Atualizar Tabela</button>
-            <button onclick="chooseTags('Mobiliário')">Escolher Etiquetas</button>
-            <button onclick="isolateCategory('Mobiliário')">Isolar Itens</button>
-            <button onclick="exportCategory('Mobiliário')">Exportar Relatório</button>
-            <hr>
-          </div>
-
-          <div class="categoria">
-            <h2>Eletrodomésticos</h2>
-            <table id="table-Eletro">
-              <thead><tr><th>Legenda</th><th>Descrição</th><th>Quantidade</th><th>Ações</th></tr></thead>
-              <tbody></tbody>
-            </table>
-            <button onclick="updateCategory('Eletro')">Atualizar Tabela</button>
-            <button onclick="chooseTags('Eletro')">Escolher Etiquetas</button>
-            <button onclick="isolateCategory('Eletro')">Isolar Itens</button>
-            <button onclick="exportCategory('Eletro')">Exportar Relatório</button>
-            <hr>
-          </div>
-
-          <div class="categoria">
-            <h2>Louças e Metais</h2>
-            <table id="table-Metais">
-              <thead><tr><th>Legenda</th><th>Descrição</th><th>Quantidade</th><th>Ações</th></tr></thead>
-              <tbody></tbody>
-            </table>
-            <button onclick="updateCategory('Metais')">Atualizar Tabela</button>
-            <button onclick="chooseTags('Metais')">Escolher Etiquetas</button>
-            <button onclick="isolateCategory('Metais')">Isolar Itens</button>
-            <button onclick="exportCategory('Metais')">Exportar Relatório</button>
-            <hr>
-          </div>
-
+          <h1>Relatórios de Componentes por Tipo</h1>
+          #{html_sections}
           <script>
             function updateCategory(categoria){ sketchup.update_category(categoria); }
-            function chooseTags(categoria){ sketchup.choose_tags(categoria); }
-            function isolateCategory(categoria){ sketchup.isolate_category(categoria); }
-            function removeRow(btn){
-              var row = btn.parentNode.parentNode;
-              var tbody = row.parentNode;
-              tbody.removeChild(row);
-              var rows = tbody.getElementsByTagName("tr");
-              for (var i=0;i<rows.length;i++){
-                rows[i].getElementsByTagName("td")[0].innerText = i+1;
-              }
-            }
-            function exportCategory(categoria){
-              var table = document.getElementById("table-"+categoria);
-              var data = [];
-              var rows = table.getElementsByTagName("tbody")[0].rows;
-              for (var i=0;i<rows.length;i++){
-                var cells = rows[i].cells;
-                data.push([cells[0].innerText, cells[1].innerText, cells[2].innerText]);
-              }
-              sketchup.export_category(JSON.stringify([categoria, data]));
-            }
-          </script>
+            function exportCategory(categoria){ sketchup.export_category(categoria); }
 
-          <footer>
-            <p>Desenvolvido por
-              <a href="https://francielimadeira.com" target="_blank" style="text-decoration:none;color:#666;font-weight:bold;">
-                Francieli Madeira
-              </a>
-              (C) 2025. Todos os direitos reservados. VERSÃO 1.0 (26/02/25)
-            </p>
-          </footer>
+            function isolateItem(id){ sketchup.isolate_item(id); }
+
+            function deleteItem(id){
+              const row = document.getElementById('linha-'+id);
+              if(row) row.remove();
+              reajustarNumeracao();
+            }
+
+            function reajustarNumeracao(){
+              const linhas = document.querySelectorAll("tbody tr");
+              linhas.forEach((linha, i) => {
+                const celulaSeq = linha.querySelector(".seq");
+                if(celulaSeq) celulaSeq.textContent = i+1;
+              });
+            }
+
+          </script>
         </body>
       </html>
       HTML
 
       dialog.set_html(html_content)
 
-      # Atualizar tabela pela seleção salva
       dialog.add_action_callback("update_category") do |_ctx, categoria|
-        begin
-          updated_html = update_category_data(Sketchup.active_model, categoria)
-          script = "document.querySelector('#table-" + categoria.gsub(' ', '-') + " tbody').innerHTML = `#{updated_html}`;"
-          dialog.execute_script(script)
-        rescue => e
-          UI.messagebox("Erro ao atualizar a tabela de #{categoria}: #{e.message}")
-        end
+        updated_html = update_category_data(model, categoria)
+        script = "document.querySelector('#table-"+categoria.gsub(' ','-')+" tbody').innerHTML = `#{updated_html}`;"
+        dialog.execute_script(script)
       end
 
-      # Abrir seletor de etiquetas
-      dialog.add_action_callback("choose_tags") do |_ctx, categoria|
-        abrir_dialogo_etiquetas(categoria)
-      end
+      dialog.add_action_callback("export_category") do |_ctx, categoria|
+          dados = Hash.new { |h, k| h[k] = { qtd: 0 } }
 
-      # Isolar itens respeitando ancestrais
-      dialog.add_action_callback("isolate_category") do |_ctx, categoria|
-        begin
-          model = Sketchup.active_model
-          etiqueta_page = model.pages.find { |p| p.name.downcase == 'etiquetar' }
-          selected = read_selected_tags(model, categoria)
-          if selected.nil? || selected.empty?
-            UI.messagebox("Nenhuma etiqueta configurada para #{categoria}.")
+          instances = []
+          collect_all_pro_mob_instances(model.entities, instances)
+          instances.each do |inst|
+            tipo = inst.get_attribute("dynamic_attributes", "#{PREFIX}tipo", "").to_s.strip
+            next if tipo.empty? || tipo != categoria
+
+            key = [
+              inst.get_attribute("dynamic_attributes", "#{PREFIX}nome", ""),
+              inst.get_attribute("dynamic_attributes", "#{PREFIX}cor", ""),
+              inst.get_attribute("dynamic_attributes", "#{PREFIX}marca", ""),
+              tipo,
+              inst.get_attribute("dynamic_attributes", "#{PREFIX}dimensao", ""),
+              inst.get_attribute("dynamic_attributes", "#{PREFIX}ambiente", ""),
+              inst.get_attribute("dynamic_attributes", "#{PREFIX}observacoes", ""),
+              inst.get_attribute("dynamic_attributes", "#{PREFIX}link", "")
+            ]
+
+            dados[key][:qtd] += 1
+          end
+
+          if dados.empty?
+            UI.messagebox("Nenhum dado para exportar em #{categoria}.")
             next
           end
 
-          if etiqueta_page
-            model.pages.selected_page = etiqueta_page
-            model.pages.selected_page.update
-          end
-
-          # Etiquetas visíveis = selecionadas + ancestrais necessários
-          require 'set'
-          visible_names = coletar_etiquetas_ancestrais_para(selected)
-
-          model.start_operation("Isolando #{categoria}", true)
-          model.layers.each do |camada|
-            name = camada.name
-            camada.visible = visible_names.include?(name)
-          end
-          model.commit_operation
-        rescue => e
-          UI.messagebox("Erro ao isolar itens: #{e.message}")
-        end
-      end
-
-      # Exportar CSV
-      dialog.add_action_callback("export_category") do |_context, args|
-        begin
-          args = JSON.parse(args)
-          categoria = args[0]
-          data = args[1]
-          model = Sketchup.active_model
-          model_path = model.path
-          if model_path.empty?
-            UI.messagebox("Por favor, salve o modelo antes de exportar o CSV.")
-            next
-          end
-          directory = File.dirname(model_path)
-          file_path = File.join(directory, "#{categoria}.csv")
+          file_path = File.join(File.dirname(model.path), "#{categoria}.csv")
           CSV.open(file_path, "w") do |csv|
-            csv << ["LEGENDA", "DESCRIÇÃO", "QUANTIDADE"]
-            data.each_with_index do |row, idx|
-              csv << [idx + 1, row[1], row[2]]
-            end
+          csv << ["Código","Nome","Cor","Marca","Tipo","Dimensão","Ambiente","Observações","Link","Qtd"]
+          dados.each_with_index do |(key, info), i|
+            nome, cor, marca, tipo, dimensao, ambiente, obs, link = key
+            codigo = i + 1   # número sequencial simples
+            csv << [codigo, nome, cor, marca, tipo, dimensao, ambiente, obs, link, info[:qtd]]
           end
-          UI.messagebox("Exportação de #{categoria} concluída com sucesso em:\n#{file_path}")
-        rescue => e
-          UI.messagebox("Erro ao exportar CSV: #{e.message}")
         end
       end
 
-      dialog.set_size(800, 600)
+
+
+      dialog.add_action_callback("isolate_item") do |_ctx, id|
+        model = Sketchup.active_model
+        target = find_component_by_id(model.entities, id.to_i)
+        next unless target
+
+        FM_Extensions::Exportar.isolate_item(target)
+      end
+
+
+
       dialog.show
     end
 
-  end # Exportar
+  end # module Exportar
 
   # ---------- Toolbar ----------
   toolbar = UI::Toolbar.new('FM - Mobiliário')
 
-  cmd_item_mobiliario = UI::Command.new('Novo Item') {
-    FM_Extensions::Exportar.medida_item
+  cmd_atributos = UI::Command.new('Editar Atributos') {
+    selection = Sketchup.active_model.selection
+    if selection.empty?
+      UI.messagebox("Selecione um componente ou grupo.")
+    else
+      ent = selection.first
+      comp = ent.is_a?(Sketchup::Group) ? ent.to_component : ent
+      FM_Extensions::Exportar.edit_component_attributes(comp)
+    end
   }
-  icon_item_mobiliario = File.join(__dir__, 'icones', 'itemmob.png')
-  if File.exist?(icon_item_mobiliario)
-    cmd_item_mobiliario.small_icon = icon_item_mobiliario
-    cmd_item_mobiliario.large_icon = icon_item_mobiliario
-  else
-    UI.messagebox("Ícone não encontrado: #{icon_item_mobiliario}")
-  end
-  cmd_item_mobiliario.tooltip = 'Novo Item'
-  cmd_item_mobiliario.status_bar_text = 'Atualiza a descrição do componente e acrescenta dimensões em cm.'
-  toolbar.add_item(cmd_item_mobiliario)
+  icon_attr = File.join(__dir__, 'icones', 'itemmob.png')
+  cmd_atributos.small_icon = cmd_atributos.large_icon = File.exist?(icon_attr) ? icon_attr : nil
+  cmd_atributos.tooltip = "Editar Atributos e Renomear"
+  toolbar.add_item(cmd_atributos)
 
-  cmd_exportar_dados = UI::Command.new('Exportar Dados') {
-    FM_Extensions::Exportar.open_export_dialog
-  }
-  icon_exportar_dados = File.join(__dir__, 'icones', 'exporte.png')
-  if File.exist?(icon_exportar_dados)
-    cmd_exportar_dados.small_icon = icon_exportar_dados
-    cmd_exportar_dados.large_icon = icon_exportar_dados
-  else
-    UI.messagebox("Ícone não encontrado: #{icon_exportar_dados}")
-  end
-  cmd_exportar_dados.tooltip = 'Exportar Dados'
-  cmd_exportar_dados.status_bar_text = 'Exporta dados de Mobiliário, Eletro ou Louças e Metais.'
-  toolbar.add_item(cmd_exportar_dados)
+  cmd_exportar = UI::Command.new('Exportar Dados') { FM_Extensions::Exportar.open_export_dialog }
+  icon_exp = File.join(__dir__, 'icones', 'exporte.png')
+  cmd_exportar.small_icon = cmd_exportar.large_icon = File.exist?(icon_exp) ? icon_exp : nil
+  cmd_exportar.tooltip = "Exportar Relatórios"
+  toolbar.add_item(cmd_exportar)
 
   toolbar.show
-end # FM_Extensions
+
+end # module FM_Extensions

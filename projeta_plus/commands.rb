@@ -1,14 +1,14 @@
 # projeta_plus/commands.rb
 require "sketchup.rb"
+require "json"
 
 module ProjetaPlus
   module Commands
-    VERCEL_APP_BASE_URL = "https://projeta-plus-html.vercel.app".freeze # Seu domínio na Vercel
+    VERCEL_APP_BASE_URL = "https://projeta-plus-html.vercel.app".freeze
 
     @@button_html_dialogs = {}
 
     def self.open_button_html_dialog(button_id, initial_path = '/', dialog_title = "Projeta Plus")
-      # ... (Código existente para verificar se o diálogo já está aberto e reutilizá-lo)
       if @@button_html_dialogs[button_id] && @@button_html_dialogs[button_id].visible?
         @@button_html_dialogs[button_id].show
         return
@@ -40,7 +40,12 @@ module ProjetaPlus
       # --- NOVOS CALLBACKS AQUI ---
       # 1. Callback para receber uma mensagem do JS e exibir no MessageBox do SketchUp
       dialog.add_action_callback("showMessageBox") do |action_context, message_from_js|
-        puts "[ProjetaPlus Ruby] Recebido do JS: #{message_from_js}"
+        model_name = Sketchup.active_model.path
+        model_name = File.basename(model_name) if model_name && !model_name.empty? # Pega só o nome do arquivo
+        model_name = "[Nenhum Modelo Salvo]" if model_name.empty? || model_name.nil?
+
+        puts "[ProjetaPlus Ruby] Recebido do JS: #{message_from_js} '#{model_name}'"
+
         ::UI.messagebox(message_from_js, MB_OK, "Mensagem do App Vercel")
         nil # Retorna nil para o SketchUp
       end
