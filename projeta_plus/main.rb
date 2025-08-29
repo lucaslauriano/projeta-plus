@@ -10,6 +10,12 @@ end
 
 # Carrega 'commands.rb' ANTES de 'core.rb', pois 'core.rb' depende de 'commands.rb'.
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'commands.rb')
+
+# Modules
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_room_annotation.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_section_annotation.rb')
+
+# UI
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'core.rb')
 
 
