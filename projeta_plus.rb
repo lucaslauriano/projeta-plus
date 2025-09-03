@@ -14,7 +14,7 @@ module ProjetaPlus
   # O segundo argumento deve apontar para o script principal que o SketchUp carregará
   # quando a extensão for habilitada. Este será um novo arquivo: 'main.rb'.
   extension = SketchupExtension.new("PROJETA PLUS", File.join(PATH, 'projeta_plus', 'main.rb'))
-  extension.description = "A sample SketchUp plugin with a toolbar and five buttons."
+  extension.description = "Projeta+ - A plugin  library "
   extension.version = VERSION
   extension.copyright = "My Awesome Company © 2025"
   extension.creator = "Lucas" # Seu nome como criador

@@ -7,8 +7,8 @@ module ProjetaPlus
     def self.create_toolbar
       toolbar = ::UI::Toolbar.new(TOOLBAR_NAME)
 
-      toolbar.add_item(ProjetaPlus::Commands.button_one_command)
-      toolbar.add_item(ProjetaPlus::Commands.button_two_command)
+      toolbar.add_item(ProjetaPlus::Commands.open_main_dashboard_command)
+      toolbar.add_item(ProjetaPlus::Commands.logout_command)
 
       toolbar.add_separator
 
