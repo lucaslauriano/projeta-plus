@@ -18,8 +18,16 @@ module SectionAnnotation
   
     face = triangle_group.entities.add_face(pt1, pt2, pt3)
   
-    face.material = 'black'
-    face.back_material = 'black'
+    # Define black color for triangle
+    model = Sketchup.active_model
+    black_material = model.materials['Black']
+    unless black_material
+      black_material = model.materials.add('Black')
+      black_material.color = Sketchup::Color.new(0, 0, 0)
+    end
+    
+    face.material = black_material
+    face.back_material = black_material
   
     transformation = Geom::Transformation.new(position) *
                       Geom::Transformation.rotation(Geom::Point3d.new(0, 0, 0),
@@ -33,13 +41,23 @@ module SectionAnnotation
   def self.create_text(entities, position, text, font_size, scale_factor)
     text_group = entities.add_group
   
-    text_entity = text_group.entities.add_3d_text(text.upcase, TextAlignLeft, "Century Gothic",
+    # Add 3D text to group - use macOS compatible font
+    font_name = Sketchup.platform == :platform_osx ? "Arial" : "Century Gothic"
+    text_entity = text_group.entities.add_3d_text(text.upcase, TextAlignLeft, font_name,
                                                   false, false, font_size * scale_factor, 0, 0, true, 0)
   
+    # Apply black material to text
+    model = Sketchup.active_model
+    black_material = model.materials['Black']
+    unless black_material
+      black_material = model.materials.add('Black')
+      black_material.color = Sketchup::Color.new(0, 0, 0)
+    end
+    
     text_group.entities.each do |entity|
       if entity.is_a?(Sketchup::Face)
-        entity.material = 'black'
-        entity.back_material = 'black'
+        entity.material = black_material
+        entity.back_material = black_material
       end
     end
     
@@ -93,6 +111,8 @@ module SectionAnnotation
   # --- MODIFIED: create_lines_from_section_planes to accept parameters from JS ---
   def self.create_lines_from_section_planes(args)
     model = Sketchup.active_model
+    return { success: false, message: "No active model found." } unless model
+    
     entities = model.entities
   
     section_planes = entities.grep(Sketchup::SectionPlane)
@@ -107,6 +127,10 @@ module SectionAnnotation
     if line_height_cm <= 0 || scale_factor <= 0
       return { success: false, message: "Annotation Height and Scale must be positive values." }
     end
+
+    # Persist values to SketchUp defaults
+    Sketchup.write_default("SectionAnnotation", "line_height_cm", args['line_height_cm'].to_s)
+    Sketchup.write_default("SectionAnnotation", "scale_factor", args['scale_factor'].to_s)
   
     line_height   = line_height_cm / 2.54  # Convert cm to inches (1 inch = 2.54 cm)
   
@@ -114,7 +138,10 @@ module SectionAnnotation
     all_lines_group.name = "All Section Lines"
   
     layer_name = '-2D-SECTION ANNOTATION LEGEND'
-    layer      = model.layers[layer_name] || model.layers.add(layer_name)
+    layer = model.layers[layer_name]
+    unless layer
+      layer = model.layers.add(layer_name)
+    end
     all_lines_group.layer = layer
   
     dash_length = 20 / 2.54
@@ -123,8 +150,9 @@ module SectionAnnotation
   
     model_bb = model.bounds # Get model bounds only once
     section_planes.each do |entity|
-      plane = entity.get_plane
-      orientation = Geom::Vector3d.new(plane[0], plane[1], plane[2])
+      begin
+        plane = entity.get_plane
+        orientation = Geom::Vector3d.new(plane[0], plane[1], plane[2])
   
       if orientation.z.abs > 0.9 # Check for horizontal planes
         next
@@ -168,6 +196,9 @@ module SectionAnnotation
       transformation = Geom::Transformation.new([0, 0, line_height])
       line_group.transform!(transformation)
       line_group.layer = layer
+      rescue => e
+        puts "Error processing section plane #{entity.inspect}: #{e.message}"
+      end
     end
   
     { success: true, message: "Section Annotations created successfully!" }

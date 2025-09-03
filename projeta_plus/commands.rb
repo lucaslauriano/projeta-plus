@@ -4,7 +4,7 @@ require "json"
 
 module ProjetaPlus
   module Commands
-    VERCEL_APP_BASE_URL = "https://projeta-plus-html.vercel.app".freeze # Your Vercel domain
+    VERCEL_APP_BASE_URL = "https://projeta-plus-html.vercel.app".freeze 
 
     # Just a main dialog for the dashboard
     @@main_dashboard_dialog = nil
@@ -25,9 +25,11 @@ module ProjetaPlus
         :dialog_title => "Projeta Plus Dashboard",
         :preferences_key => "com.projeta_plus.main_dashboard_dialog", # Unique key
         :resizable => true,
-        :width => 1024, # Adjust initial size for a dashboard
+        :width => 430, # Adjust initial size for a dashboard
         :height => 768,
-        :min_width => 800,
+        :max_width => 430, # Adjust initial size for a dashboard
+        :max_height => 768,
+        :min_width => 430,
         :min_height => 600
       })
 
@@ -64,6 +66,37 @@ module ProjetaPlus
         puts "[ProjetaPlus Ruby] Solicitado nome do modelo. Enviando: '#{model_name}' para o JS."
         
         @@main_dashboard_dialog.execute_script("window.receiveModelNameFromRuby('#{model_name.gsub("'", "\'")}');")
+        nil
+      end
+
+      # Callback to load room annotation defaults from SketchUp
+      @@main_dashboard_dialog.add_action_callback("loadRoomAnnotationDefaults") do |action_context|
+        defaults = {
+          scale: Sketchup.read_default("RoomAnnotation", "scale", "25"),
+          font: Sketchup.read_default("RoomAnnotation", "font", "Century Gothic"),
+          floor_height: Sketchup.read_default("RoomAnnotation", "floor_height", "0,00"),
+          show_pd: Sketchup.read_default("RoomAnnotation", "show_pd", "Sim"),
+          pd: Sketchup.read_default("RoomAnnotation", "pd", "0,00"),
+          show_level: Sketchup.read_default("RoomAnnotation", "show_level", "Sim"),
+          level: Sketchup.read_default("RoomAnnotation", "level", "0,00")
+        }
+        
+        puts "[ProjetaPlus Ruby] Loading room annotation defaults: #{defaults.inspect}"
+        
+        @@main_dashboard_dialog.execute_script("window.handleRoomDefaults(#{JSON.generate(defaults)});")
+        nil
+      end
+
+      # Callback to load section annotation defaults from SketchUp
+      @@main_dashboard_dialog.add_action_callback("loadSectionAnnotationDefaults") do |action_context|
+        defaults = {
+          line_height_cm: Sketchup.read_default("SectionAnnotation", "line_height_cm", "145"),
+          scale_factor: Sketchup.read_default("SectionAnnotation", "scale_factor", "25")
+        }
+        
+        puts "[ProjetaPlus Ruby] Loading section annotation defaults: #{defaults.inspect}"
+        
+        @@main_dashboard_dialog.execute_script("window.handleSectionDefaults(#{JSON.generate(defaults)});")
         nil
       end
 

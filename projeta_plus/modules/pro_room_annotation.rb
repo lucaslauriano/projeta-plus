@@ -6,7 +6,12 @@ module RoomAnnotation
 
     # TODO: Settings - Move it to user settings, fonts, area and stuff 
     def self.available_fonts
-      ["Arial", "Arial Narrow","Century Gothic", "Helvetica", "Times New Roman", "Verdana"]
+      # macOS compatible fonts
+      if Sketchup.platform == :platform_osx
+        ["Arial", "Helvetica", "Times New Roman", "Verdana", "Geneva", "Monaco"]
+      else
+        ["Arial", "Arial Narrow", "Century Gothic", "Helvetica", "Times New Roman", "Verdana"]
+      end
     end
 
     def self.calculate_area_of_group(group)
@@ -33,8 +38,12 @@ module RoomAnnotation
 
       tb = text_group.bounds
 
-      black_material = model.materials['Black'] || model.materials.add('Black')
-      black_material.color = 'black'
+      # Create or get black material
+      black_material = model.materials['Black']
+      unless black_material
+        black_material = model.materials.add('Black')
+        black_material.color = Sketchup::Color.new(0, 0, 0)
+      end
 
       text_entities.grep(Sketchup::Face).each do |face|
         face.material = black_material
@@ -55,9 +64,16 @@ module RoomAnnotation
       level_text_group = test_text(level_text, center, scale, font, TextAlignLeft)
       level_text_width = level_text_group.bounds.width
 
+      # Apply black material to text faces
+      black_material = model.materials['Black']
+      unless black_material
+        black_material = model.materials.add('Black')
+        black_material.color = Sketchup::Color.new(0, 0, 0)
+      end
+      
       level_text_group.entities.grep(Sketchup::Face).each do |face|
-        face.material = 'black'
-        face.back_material = 'black'
+        face.material = black_material
+        face.back_material = black_material
       end
 
       cross_radius = level_text_width / 5.0
@@ -108,9 +124,21 @@ module RoomAnnotation
           ang < 0 ? ang + 2 * Math::PI : ang
         end
         quad_faces.each_with_index do |face, index|
-          material_name = (index.even? ? "black" : "white")
-          mat = model.materials[material_name] || model.materials.add(material_name)
-          mat.color = material_name
+          if index.even?
+            # Black material
+            mat = model.materials['Black']
+            unless mat
+              mat = model.materials.add('Black')
+              mat.color = Sketchup::Color.new(0, 0, 0)
+            end
+          else
+            # White material
+            mat = model.materials['White']
+            unless mat
+              mat = model.materials.add('White')
+              mat.color = Sketchup::Color.new(255, 255, 255)
+            end
+          end
           face.material = mat
         end
       end
@@ -143,6 +171,8 @@ module RoomAnnotation
     # --- MODIFIED: add_text_to_selected_instance to accept parameters from JS ---
     def self.add_text_to_selected_instance(args)
       model = Sketchup.active_model
+      return { success: false, message: "No active model found." } unless model
+      
       selection = model.selection
       groups = selection.grep(Sketchup::Group)
 
@@ -172,12 +202,19 @@ module RoomAnnotation
       Sketchup.write_default("RoomAnnotation", "level", level_str)
 
       scale = scale_str.to_f
+      if scale <= 0
+        return { success: false, message: "Scale must be a positive number." }
+      end
+      
       cut_height = 1.45 # Fixed value
       floor_height = floor_height_str.gsub(',', '.').to_f # Handle comma as decimal separator
       z_height = (floor_height + cut_height).m
 
       layer_name = '-2D-ROOM ANNOTATION LEGEND'
-      layer = model.layers[layer_name] || model.layers.add(layer_name)
+      layer = model.layers[layer_name]
+      unless layer
+        layer = model.layers.add(layer_name)
+      end
 
       groups.each do |group|
         instance_name = group.name.empty? ? "No Name" : group.name
@@ -190,12 +227,18 @@ module RoomAnnotation
         center = bounds.center
         center.z = 0
 
-        text_group = test_text(text_content, center, scale, font)
-        text_group.layer = layer
+        begin
+          text_group = test_text(text_content, center, scale, font)
+          text_group.layer = layer if text_group && text_group.valid?
+        rescue => e
+          puts "Error creating text for group #{group.name}: #{e.message}"
+          next
+        end
 
         if show_level.strip.downcase == "yes"
-          symbol_groups = create_level_symbol(center, "#{level_str} m", scale, font)
-          level_composite = model.entities.add_group(symbol_groups)
+          begin
+            symbol_groups = create_level_symbol(center, "#{level_str} m", scale, font)
+            level_composite = model.entities.add_group(symbol_groups) if symbol_groups
 
           text_bb = text_group.bounds
           comp_bb = level_composite.bounds
@@ -231,7 +274,10 @@ module RoomAnnotation
 
           model.selection.clear
           model.selection.add(final_group)
-          else
+          rescue => e
+            puts "Error creating level symbol for group #{group.name}: #{e.message}"
+          end
+        else
           text_group_center = text_group.bounds.center
           translation_to_z_height = Geom::Transformation.translation(Geom::Vector3d.new(0, 0, z_height - text_group_center.z))
           text_group.transform!(translation_to_z_height)

@@ -7,7 +7,12 @@ module FM_Extensions
   module Nomeambiente
 
       def self.fontes_disponiveis
-        ["Arial", "Arial Narrow","Century Gothic", "Helvetica", "Times New Roman", "Verdana"]
+        # macOS compatible fonts
+        if Sketchup.platform == :platform_osx
+          ["Arial", "Helvetica", "Times New Roman", "Verdana", "Geneva", "Monaco"]
+        else
+          ["Arial", "Arial Narrow", "Century Gothic", "Helvetica", "Times New Roman", "Verdana"]
+        end
       end
 
       def self.calculate_area_of_group(group)
@@ -33,8 +38,12 @@ module FM_Extensions
 
         tb = text_group.bounds
 
-        black_material = model.materials['Black'] || model.materials.add('Black')
-        black_material.color = 'black'
+        # Create or get black material
+        black_material = model.materials['Black']
+        unless black_material
+          black_material = model.materials.add('Black')
+          black_material.color = Sketchup::Color.new(0, 0, 0)
+        end
 
         text_entities.grep(Sketchup::Face).each do |face|
           face.material = black_material
@@ -55,9 +64,16 @@ module FM_Extensions
         nivel_text_group = test_text(nivel_text, center, scale, font, TextAlignLeft)
         level_text_width = nivel_text_group.bounds.width
 
+        # Apply black material to text faces
+        black_material = model.materials['Black']
+        unless black_material
+          black_material = model.materials.add('Black')
+          black_material.color = Sketchup::Color.new(0, 0, 0)
+        end
+        
         nivel_text_group.entities.grep(Sketchup::Face).each do |face|
-          face.material = 'black'
-          face.back_material = 'black'
+          face.material = black_material
+          face.back_material = black_material
         end
 
         cross_radius = level_text_width / 5.0
@@ -105,9 +121,21 @@ module FM_Extensions
             ang < 0 ? ang + 2 * Math::PI : ang
           end
           quad_faces.each_with_index do |face, index|
-            material_name = (index.even? ? "black" : "white")
-            mat = model.materials[material_name] || model.materials.add(material_name)
-            mat.color = material_name
+            if index.even?
+              # Black material
+              mat = model.materials['Black']
+              unless mat
+                mat = model.materials.add('Black')
+                mat.color = Sketchup::Color.new(0, 0, 0)
+              end
+            else
+              # White material
+              mat = model.materials['White']
+              unless mat
+                mat = model.materials.add('White')
+                mat.color = Sketchup::Color.new(255, 255, 255)
+              end
+            end
             face.material = mat
           end
         end
@@ -139,6 +167,8 @@ module FM_Extensions
 
       def self.add_text_to_selected_instance
         model = Sketchup.active_model
+        return unless model
+        
         selection = model.selection
         grupos = selection.grep(Sketchup::Group)
 
@@ -157,8 +187,8 @@ module FM_Extensions
         last_mostrar_pd    = Sketchup.read_default("Nomeambiente", "mostrar_pd", "Sim")
         last_mostrar_nivel = Sketchup.read_default("Nomeambiente", "mostrar_nivel", "Sim")
 
-        prompts  = ["Escala do Texto:", "Fonte:", "Altura Piso (Z) (m):", "Mostrar PD?","PD (m):", "Mostrar Nível?:", "Nível Piso:"]
-        defaults = [last_scale, last_font, last_altura_piso, last_mostrar_pd, last_pd, last_mostrar_nivel, last_nivel]
+        prompts  = ["Escala do Texto:", "Fonte:", "Altura Piso (Z) (m):", "Mostrar PD?", "PD (m):", "Mostrar Nível?", "Nível Piso:"]
+        defaults = [last_scale.to_s, last_font.to_s, last_altura_piso.to_s, last_mostrar_pd.to_s, last_pd.to_s, last_mostrar_nivel.to_s, last_nivel.to_s]
 
         lists = ["", fontes_disponiveis.join("|"), "", "Sim|Não", "", "Sim|Não", ""]
 
@@ -176,12 +206,20 @@ module FM_Extensions
         Sketchup.write_default("Nomeambiente", "altura_piso", altura_piso_str)
 
         scale = scale_str.to_f
+        if scale <= 0
+          UI.messagebox("Escala deve ser um número positivo.")
+          return
+        end
+        
         altura_corte = 1.45
         altura_piso = altura_piso_str.gsub(',', '.').to_f
         z_height = (altura_piso + altura_corte).m
 
         layer_name = '-2D-LEGENDA AMBIENTE'
-        layer = model.layers[layer_name] || model.layers.add(layer_name)
+        layer = model.layers[layer_name]
+        unless layer
+          layer = model.layers.add(layer_name)
+        end
 
         grupos.each do |grupo|
           instance_name = grupo.name.empty? ? "Sem Nome" : grupo.name
@@ -194,12 +232,18 @@ module FM_Extensions
           center = bounds.center
           center.z = 0
 
-          text_group = test_text(texto, center, scale, font)
-          text_group.layer = layer
+          begin
+            text_group = test_text(texto, center, scale, font)
+            text_group.layer = layer if text_group && text_group.valid?
+          rescue => e
+            puts "Error creating text for group #{grupo.name}: #{e.message}"
+            next
+          end
 
           if mostrar_nivel.strip.downcase == "sim"
-            simbolo_groups = create_nivel_symbol(center, "#{nivel_str} m", scale, font)
-            nivel_composite = model.entities.add_group(simbolo_groups)
+            begin
+              simbolo_groups = create_nivel_symbol(center, "#{nivel_str} m", scale, font)
+              nivel_composite = model.entities.add_group(simbolo_groups) if simbolo_groups
 
             text_bb = text_group.bounds
             comp_bb = nivel_composite.bounds
@@ -241,7 +285,10 @@ module FM_Extensions
 
             model.selection.clear
             model.selection.add(final_group)
-            else
+            rescue => e
+              puts "Error creating level symbol for group #{grupo.name}: #{e.message}"
+            end
+          else
             text_group_center = text_group.bounds.center
             translation_to_z_height = Geom::Transformation.translation(Geom::Vector3d.new(0, 0, z_height - text_group_center.z))
             text_group.transform!(translation_to_z_height)
@@ -261,8 +308,9 @@ module FM_Extensions
     # Solicita duas entradas do usuário e retorna os valores informados
     def self.get_user_input(prompt1, default_value1, prompt2, default_value2)
       prompts = [prompt1, prompt2]
-      defaults = [default_value1, default_value2]
-      UI.inputbox(prompts, defaults)
+      defaults = [default_value1.to_s, default_value2.to_s]
+      lists = ["", ""]
+      UI.inputbox(prompts, defaults, lists, "Configurações de Anotação de Corte")
     end
 
     # Cria um triângulo preto para indicar as pontas das linhas de corte
@@ -282,8 +330,15 @@ module FM_Extensions
       face = triangle_group.entities.add_face(pt1, pt2, pt3)
     
       # Definir a cor preta para o triângulo
-      face.material = 'black'
-      face.back_material = 'black'
+      model = Sketchup.active_model
+      black_material = model.materials['Black']
+      unless black_material
+        black_material = model.materials.add('Black')
+        black_material.color = Sketchup::Color.new(0, 0, 0)
+      end
+      
+      face.material = black_material
+      face.back_material = black_material
     
       # Criar a transformação para orientar e posicionar o triângulo
       transformation = Geom::Transformation.new(position) *
@@ -300,15 +355,23 @@ module FM_Extensions
       # Cria um grupo para o texto como filho do grupo recebido
       text_group = entities.add_group
     
-      # Adicionar o texto 3D ao grupo
-      text_entity = text_group.entities.add_3d_text(text.upcase, TextAlignLeft, "Century Gothic",
+      # Adicionar o texto 3D ao grupo - usar fonte compatível com macOS
+      font_name = Sketchup.platform == :platform_osx ? "Arial" : "Century Gothic"
+      text_entity = text_group.entities.add_3d_text(text.upcase, TextAlignLeft, font_name,
                                                     false, false, font_size * scale_factor, 0, 0, true, 0)
     
       # Aplicar material preto ao texto
+      model = Sketchup.active_model
+      black_material = model.materials['Black']
+      unless black_material
+        black_material = model.materials.add('Black')
+        black_material.color = Sketchup::Color.new(0, 0, 0)
+      end
+      
       text_group.entities.each do |entity|
         if entity.is_a?(Sketchup::Face)
-          entity.material = 'black'
-          entity.back_material = 'black'
+          entity.material = black_material
+          entity.back_material = black_material
         end
       end
       
@@ -371,6 +434,8 @@ module FM_Extensions
     # Cria as linhas de anotações a partir dos planos de corte presentes no modelo
     def self.create_lines_from_section_planes
       model = Sketchup.active_model
+      return unless model
+      
       entities = model.entities
     
       # Obter todos os planos de corte do modelo
@@ -397,7 +462,10 @@ module FM_Extensions
     
       # Adicionar o grupo à camada de anotações de cortes
       layer_name = '-2D-LEGENDA CORTES'
-      layer      = model.layers[layer_name] || model.layers.add(layer_name)
+      layer = model.layers[layer_name]
+      unless layer
+        layer = model.layers.add(layer_name)
+      end
       all_lines_group.layer = layer
     
       # Parâmetros para o estilo da linha (traço, ponto e espaço)
@@ -406,9 +474,10 @@ module FM_Extensions
       gap_length = 10 / 2.54   # 10 cm convertido para polegadas
     
       section_planes.each do |entity|
-        # Obter a orientação do plano de corte
-        plane = entity.get_plane
-        orientation = Geom::Vector3d.new(plane[0], plane[1], plane[2])
+        begin
+          # Obter a orientação do plano de corte
+          plane = entity.get_plane
+          orientation = Geom::Vector3d.new(plane[0], plane[1], plane[2])
     
         # Ignorar planos horizontais (vertical é quando z.abs > 0.9)
         if orientation.z.abs > 0.9
@@ -463,6 +532,9 @@ module FM_Extensions
         transformation = Geom::Transformation.new([0, 0, line_height])
         line_group.transform!(transformation)
         line_group.layer = layer
+        rescue => e
+          puts "Error processing section plane #{entity.inspect}: #{e.message}"
+        end
       end
     
       UI.messagebox("Anotações de Corte criadas com sucesso!")
@@ -480,7 +552,7 @@ module FM_Extensions
   cmd_nomeambiente = UI::Command.new('Nome do Ambiente') {
     Nomeambiente.add_text_to_selected_instance
   }
-  icon_nomeambiente = File.join(__dir__, 'icones', 'nomeambiente.png')
+  icon_nomeambiente = File.join(File.dirname(__FILE__), 'icones', 'nomeambiente.png')
   cmd_nomeambiente.small_icon = icon_nomeambiente
   cmd_nomeambiente.large_icon = icon_nomeambiente
   cmd_nomeambiente.tooltip = 'Nome do Ambiente'
@@ -491,7 +563,7 @@ module FM_Extensions
   cmd_anotacao_cortes = UI::Command.new('Anotação de Cortes') {
     Anotacaocorte.create_lines_from_section_planes
   }
-  icon_anotacao_cortes = File.join(__dir__, 'icones', 'anotacaocorte.png')
+  icon_anotacao_cortes = File.join(File.dirname(__FILE__), 'icones', 'anotacaocorte.png')
   if File.exist?(icon_anotacao_cortes)
     cmd_anotacao_cortes.small_icon = icon_anotacao_cortes
     cmd_anotacao_cortes.large_icon = icon_anotacao_cortes
