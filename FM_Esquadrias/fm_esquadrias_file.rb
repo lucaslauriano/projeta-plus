@@ -6,7 +6,7 @@ require 'sketchup'
 require 'csv'
 
 module FM_Esquadrias
-
+  #TODO: Levar para modulo Anotação
   module Anotacao_esquadria
 
       def self.criarcodigo
@@ -155,7 +155,7 @@ module FM_Esquadrias
 
 
   end
-
+  #TODO: Levar para modulo Relatórios
   module Export_esquadrias
 
     @@dados_cache = nil
@@ -429,7 +429,7 @@ module FM_Esquadrias
     end
 
   end # module
-
+  #TODO: Importar - mesma base light e techpoints
   module FM_BlocosEsquadrias
 
     # 1) Abrir a janela HTML

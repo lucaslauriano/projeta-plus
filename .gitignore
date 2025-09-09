@@ -16,9 +16,11 @@
 /habitat_site_context
 /su_dynamiccomponents
 /su_sandbox
+/5d_auto_tag
 /__MACOSX
 
 *su_dynamiccomponents.rb
 *su_sandbox.rb
 *mad_floor_design.rb
+*5d_auto_tag.rb
 /projeta_plus/html

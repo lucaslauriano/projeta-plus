@@ -3,11 +3,12 @@ require 'sketchup.rb'
 require 'csv'
 require 'json'
 
+#TODO: Corrigr funcioonalidade de inverter largura e profundidade.
+
+
 module FM_Extensions
   module Exportar
     PREFIX = "pro_mob_".freeze
-
-    
 
     def self.isolate_item(target)
   SKETCHUP_CONSOLE.clear
