@@ -101,9 +101,26 @@ module ProjetaPlus
       
       # NOVO: Callback para alterar o idioma globalmente no SketchUp
       @@main_dashboard_dialog.add_action_callback("changeLanguage") do |action_context, lang_code|
-        ProjetaPlus::Localization.set_language(lang_code)
-        # Opcional: Notificar o frontend que o idioma foi alterado (pode ser útil para UI do SketchUp também)
-        @@main_dashboard_dialog.execute_script("window.languageChanged('#{lang_code}');")
+        begin
+          # Validate language code using Settings module
+          available_languages = ProjetaPlus::Settings.get_available_language_codes
+          if available_languages.include?(lang_code)
+            # Update language settings and translations
+            ProjetaPlus::Settings.write("Language", lang_code)
+            ProjetaPlus::Localization.set_language(lang_code)
+            
+            # Update only the language button text, don't recreate toolbar
+            ProjetaPlus::Commands.update_language_button_text
+            
+            # Notify frontend that language was changed
+            @@main_dashboard_dialog.execute_script("window.languageChanged('#{lang_code}');")
+            puts "[ProjetaPlus Ruby] Language changed to: #{lang_code}, toolbar updated"
+          else
+            puts "[ProjetaPlus Ruby] Invalid language code: #{lang_code}"
+          end
+        rescue => e
+          puts "[ProjetaPlus Ruby] Error changing language: #{e.message}"
+        end
         nil
       end
 
@@ -184,6 +201,92 @@ module ProjetaPlus
       command.tooltip = ProjetaPlus::Localization.t("toolbar.logout_tooltip") # Adicione tooltip no YAML
       command.status_bar_text = ProjetaPlus::Localization.t("toolbar.logout_tooltip") # Adicione tooltip no YAML
       command
+    end
+
+    # Store the language command for updates
+    @@language_command = nil
+    
+    # Language indicator command - shows current language and allows switching
+    def self.language_indicator_command
+      current_language = get_current_language_display
+      
+      @@language_command = ::UI::Command.new(current_language) do
+        # Show language selection dialog or cycle through languages
+        cycle_language
+      end
+      
+      # No icon for language indicator - just text
+      @@language_command.tooltip = "Current Language: #{current_language} (click to change)"
+      @@language_command.status_bar_text = "Language: #{current_language}"
+      @@language_command
+    end
+
+    # Get current language display text (EN, pt-BR, ES)
+    def self.get_current_language_display
+      if defined?(ProjetaPlus::Settings) && defined?(ProjetaPlus::Localization)
+        current_lang = ProjetaPlus::Settings.read("Language", ProjetaPlus::Settings::DEFAULT_LANGUAGE)
+        case current_lang
+        when "en"
+          "EN"
+        when "pt-BR"
+          "pt-BR"
+        when "es"
+          "ES"
+        else
+          current_lang.upcase
+        end
+      else
+        "EN"
+      end
+    end
+
+    # Update language button text without recreating toolbar
+    def self.update_language_button_text
+      if @@language_command
+        current_language = get_current_language_display
+        # Update the command text and tooltip
+        @@language_command.menu_text = current_language
+        @@language_command.tooltip = "Current Language: #{current_language} (click to change)"
+        @@language_command.status_bar_text = "Language: #{current_language}"
+      end
+    end
+
+    # Cycle through available languages
+    def self.cycle_language
+      if defined?(ProjetaPlus::Settings) && defined?(ProjetaPlus::Localization)
+        current_lang = ProjetaPlus::Settings.read("Language", ProjetaPlus::Settings::DEFAULT_LANGUAGE)
+        available_languages = ProjetaPlus::Settings.get_available_language_codes
+        
+        current_index = available_languages.index(current_lang) || 0
+        next_index = (current_index + 1) % available_languages.length
+        new_language = available_languages[next_index]
+        
+        # Update the language setting
+        ProjetaPlus::Settings.write("Language", new_language)
+        ProjetaPlus::Localization.load_translations(new_language)
+        
+        # Update only the language button text, don't recreate toolbar
+        update_language_button_text
+        
+        # Show confirmation message
+        language_name = ProjetaPlus::Settings.get_language_name_by_code(new_language)
+        ::UI.messagebox("Language changed to: #{language_name}", MB_OK, "Projeta Plus")
+        
+        puts "[ProjetaPlus] Language changed to: #{new_language}"
+      end
+    end
+
+
+    # Recreate toolbar to reflect language changes
+    def self.recreate_toolbar
+      # Remove existing toolbar if it exists
+      if defined?(ProjetaPlus::UI::TOOLBAR_NAME)
+        existing_toolbar = ::UI.toolbar(ProjetaPlus::UI::TOOLBAR_NAME)
+        existing_toolbar.hide if existing_toolbar
+      end
+      
+      # Recreate the toolbar with updated language
+      ProjetaPlus::UI.create_toolbar
     end
 
   end # module Commands

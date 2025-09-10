@@ -43,6 +43,17 @@ module ProjetaPlus
         { code: "es", name: "Español" }
       ]
     end
+
+    # Helper method to get just the language codes
+    def self.get_available_language_codes
+      get_available_languages.map { |lang| lang[:code] }
+    end
+
+    # Helper method to get language name by code
+    def self.get_language_name_by_code(code)
+      language = get_available_languages.find { |lang| lang[:code] == code }
+      language ? language[:name] : code
+    end
     # --- FIM NOVO ---
 
     def self.get_sketchup_model_display_units
@@ -144,6 +155,11 @@ module ProjetaPlus
       end
 
       write(key, value)
+      
+      # Special handling for language changes - update the active localization
+      if key == 'language'
+        ProjetaPlus::Localization.set_language(value)
+      end
       { success: true, message: "Setting '#{key}' updated successfully to '#{value}'.", updated_value: value }
     rescue StandardError => e
       { success: false, message: "Error updating setting '#{key}': #{e.message}" }
