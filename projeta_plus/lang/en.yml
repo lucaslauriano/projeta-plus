@@ -2,13 +2,22 @@
 plugin_name: 'Projeta Plus'
 toolbar:
   main_dashboard: 'Projeta Plus Dashboard'
+  main_dashboard_tooltip: 'Open Projeta Plus Dashboard'
   logout: 'Projeta Plus Logout (Remote App)'
+  logout_tooltip: 'Logout from Projeta Plus (managed by remote app)'
 messages:
   logout_info: 'User logout is now managed by the remote application on Vercel (via Clerk). Please manage your session directly there, or close and reopen the application for a new login.'
   room_annotation_success: 'Room name and annotations added successfully!'
   room_annotation_error_no_group: "Please select at least one group (even if it's inside another group)."
   section_annotation_success: 'Section annotations created successfully!'
   section_annotation_error_no_plane: 'No section planes in the model. Please create one before using this function.'
+  no_model_saved: 'No model saved'
+  app_message_title: 'Projeta Plus Message'
+  function_not_found: 'Function %{function} not found in module %{module}'
+  json_parse_error: 'JSON parsing error'
+  reference_error: 'Reference error'
+  security_error: 'Security error'
+  unexpected_error: 'Unexpected error'
 settings:
   global_settings_title: 'Global Settings'
   font: 'Font'
