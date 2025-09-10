@@ -1,0 +1,26 @@
+# projeta_plus/lang/en.yml
+plugin_name: 'Projeta Plus'
+toolbar:
+  main_dashboard: 'Projeta Plus Dashboard'
+  logout: 'Projeta Plus Logout (Remote App)'
+messages:
+  logout_info: 'User logout is now managed by the remote application on Vercel (via Clerk). Please manage your session directly there, or close and reopen the application for a new login.'
+  room_annotation_success: 'Room name and annotations added successfully!'
+  room_annotation_error_no_group: "Please select at least one group (even if it's inside another group)."
+  section_annotation_success: 'Section annotations created successfully!'
+  section_annotation_error_no_plane: 'No section planes in the model. Please create one before using this function.'
+settings:
+  global_settings_title: 'Global Settings'
+  font: 'Font'
+  measurement_unit: 'Measurement Unit'
+  area_unit: 'Area Unit'
+  scale: 'Scale'
+  floor_level: 'Floor Level (m)'
+  cut_height: 'Cut Height (m)'
+  headroom_height: 'Headroom Height (m)'
+  styles_folder: 'Styles Folder'
+  sheets_folder: 'Drawing Sheets Folder'
+  select_button: 'Select'
+  language: 'Language'
+  success_prefix: 'Success'
+  error_prefix: 'Error'

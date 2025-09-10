@@ -1,0 +1,26 @@
+# projeta_plus/lang/pt-BR.yml
+plugin_name: 'Projeta Plus'
+toolbar:
+  main_dashboard: 'Painel Principal Projeta Plus'
+  logout: 'Logout Projeta Plus (App Remoto)'
+messages:
+  logout_info: 'O logout de usuário agora é gerenciado pelo aplicativo remoto na Vercel (via Clerk). Por favor, gerencie sua sessão diretamente lá, ou feche e reabra o aplicativo para um novo login.'
+  room_annotation_success: 'Nome do ambiente e anotações adicionados com sucesso!'
+  room_annotation_error_no_group: 'Por favor, selecione pelo menos um grupo (mesmo que esteja dentro de outro grupo).'
+  section_annotation_success: 'Anotações de Corte criadas com sucesso!'
+  section_annotation_error_no_plane: 'Não há planos de corte no modelo. Por favor, crie um antes de usar esta função.'
+settings:
+  global_settings_title: 'Configurações Globais'
+  font: 'Fonte'
+  measurement_unit: 'Unidade de Medida'
+  area_unit: 'Unidade de Área'
+  scale: 'Escala'
+  floor_level: 'Nível Piso (m)'
+  cut_height: 'Altura de Corte (m)'
+  headroom_height: 'Altura Pé Direito (m)'
+  styles_folder: 'Pasta Estilos'
+  sheets_folder: 'Pasta Pranchas'
+  select_button: 'Selecionar'
+  language: 'Idioma'
+  success_prefix: 'Sucesso'
+  error_prefix: 'Erro'
