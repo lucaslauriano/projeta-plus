@@ -1,10 +1,11 @@
 # projeta_plus/lang/en.yml
+
 plugin_name: 'Projeta Plus'
 toolbar:
   main_dashboard: 'Projeta Plus Dashboard'
   main_dashboard_tooltip: 'Open Projeta Plus Dashboard'
   logout: 'Projeta Plus Logout (Remote App)'
-  logout_tooltip: 'Logout from Projeta Plus (managed by remote app)'
+  logout_tooltip: 'Remote App Logout Instructions'
 messages:
   logout_info: 'User logout is now managed by the remote application on Vercel (via Clerk). Please manage your session directly there, or close and reopen the application for a new login.'
   room_annotation_success: 'Room name and annotations added successfully!'
@@ -18,6 +19,29 @@ messages:
   reference_error: 'Reference error'
   security_error: 'Security error'
   unexpected_error: 'Unexpected error'
+  no_model_open: 'Please open a SketchUp model before using this feature.'
+  room_tool_activated: 'Room annotation tool activated. Click on a face to annotate.'
+  error_activating_tool: 'Error activating annotation tool'
+  error_nivel_symbol_not_found: "Nivel Planta.skp not found. Please ensure it's in the 'blocos' folder within your plugin or model directory."
+  area_label: 'AREA'
+  error_adding_room_name: 'Error adding room name'
+  room_annotation_prompt: 'Click on a face to ANNOTATE. ESC to exit.'
+  ceilling_height_label: 'CEILLING HEIGHT'
+  no_object_selected_for_section: 'No object was selected for section annotation. Please select one.'
+  invalid_section_annotation_values: 'Annotation height and Scale must be positive values.'
+  section_label_default_name: 'Section %{number}'
+  error_creating_section_annotations: 'Error creating section annotations'
+  ceiling_annotation_success: 'Ceiling annotation added successfully!'
+  error_adding_ceiling_annotation: 'Error adding ceiling annotation'
+  ceiling_annotation_prompt: 'Click on a CEILING face to annotate area and headroom. ESC to exit.'
+  ceiling_tool_activated: 'Ceiling annotation tool activated. Click on a face to annotate.'
+commands:
+  room_annotation_operation_name: 'Room Annotation'
+  ceiling_annotation_operation_name: 'Ceiling Annotation'
+  ceiling_mirror_z_operation_name: 'Mirror Z for Text'
+  section_annotation_operation_name: 'Section Annotation'
+  all_section_lines_group_name: 'All Section Lines'
+  section_line_group_name: 'Section Line'
 settings:
   global_settings_title: 'Global Settings'
   font: 'Font'
