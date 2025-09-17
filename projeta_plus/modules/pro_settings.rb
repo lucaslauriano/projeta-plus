@@ -156,11 +156,15 @@ module ProjetaPlus
 
       write(key, value)
       
-      # Special handling for language changes - update the active localization
+      # Special handling for language changes - update the active localization and toolbar
       if key == 'language'
         ProjetaPlus::Localization.set_language(value)
+        # Update the language button in the toolbar
+        if defined?(ProjetaPlus::Commands) && ProjetaPlus::Commands.respond_to?(:update_language_button_text)
+          ProjetaPlus::Commands.update_language_button_text
+        end
       end
-      { success: true, message: "Setting '#{key}' updated successfully to '#{value}'.", updated_value: value }
+      { success: true, message: "Setting '#{key}' updated successfully to '#{value}'.", updated_value: value, setting_key: key }
     rescue StandardError => e
       { success: false, message: "Error updating setting '#{key}': #{e.message}" }
     end

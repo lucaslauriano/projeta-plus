@@ -12,8 +12,7 @@ module ProjetaPlus
       toolbar.add_item(ProjetaPlus::Commands.open_main_dashboard_command)
       toolbar.add_item(ProjetaPlus::Commands.logout_command)
 
-      toolbar.add_separator
-      toolbar.add_item(ProjetaPlus::Commands.language_indicator_command) # ADD an conditional item based on the language
+    
       toolbar.show
     end
   end
