@@ -1,13 +1,15 @@
 # projeta_plus/commands.rb
 require "sketchup.rb"
 require "json"
-require File.join(ProjetaPlus::PATH, 'projeta_plus', 'localization.rb') # Certifique-se que Localization está carregado
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'localization.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_settings.rb') # Nova referência para o módulo de settings renomeado
 
 module ProjetaPlus
   module Commands
     VERCEL_APP_BASE_URL = "https://projeta-plus-html.vercel.app".freeze 
 
     @@main_dashboard_dialog = nil
+    @@language_command_name = nil 
 
     def self.open_main_dashboard_html_dialog
       if @@main_dashboard_dialog && @@main_dashboard_dialog.visible?
@@ -18,7 +20,7 @@ module ProjetaPlus
 
       puts "[ProjetaPlus Dialog] Creating new main dialog for the Dashboard with URL: #{VERCEL_APP_BASE_URL}/dashboard"
       @@main_dashboard_dialog = ::UI::HtmlDialog.new({
-        :dialog_title => ProjetaPlus::Localization.t("plugin_name") + " Dashboard", # Traduzindo o título
+        :dialog_title => ProjetaPlus::Localization.t("plugin_name") + " Dashboard",
         :preferences_key => "com.projeta_plus.main_dashboard_dialog",
         :resizable => true,
         :width => 430,
@@ -42,16 +44,16 @@ module ProjetaPlus
       @@main_dashboard_dialog.add_action_callback("showMessageBox") do |action_context, message_from_js|
         model_name = Sketchup.active_model.path
         model_name = File.basename(model_name) if model_name && !model_name.empty?
-        model_name = "[#{ProjetaPlus::Localization.t("messages.no_model_saved")}]" if model_name.empty? || model_name.nil? # Traduzido
+        model_name = "[#{ProjetaPlus::Localization.t("messages.no_model_saved")}]" if model_name.empty? || model_name.nil?
         puts "[ProjetaPlus Ruby] Received from JS: #{message_from_js} '#{model_name}'"
-        ::UI.messagebox(message_from_js, MB_OK, ProjetaPlus::Localization.t("messages.app_message_title")) # Traduzido
+        ::UI.messagebox(message_from_js, MB_OK, ProjetaPlus::Localization.t("messages.app_message_title"))
         nil
       end
 
       @@main_dashboard_dialog.add_action_callback("requestModelName") do |action_context|
         model_name = Sketchup.active_model.path
         model_name = File.basename(model_name) if model_name && !model_name.empty?
-        model_name = "[#{ProjetaPlus::Localization.t("messages.no_model_saved")}]" if model_name.empty? || model_name.nil? # Traduzido
+        model_name = "[#{ProjetaPlus::Localization.t("messages.no_model_saved")}]" if model_name.empty? || model_name.nil?
         puts "[ProjetaPlus Ruby] Requested model name. Sending: '#{model_name}' to JS."
         @@main_dashboard_dialog.execute_script("window.receiveModelNameFromRuby('#{model_name.gsub("'", "\'")}');")
         nil
@@ -60,8 +62,8 @@ module ProjetaPlus
       # Callback to get all current settings from SketchUp
       @@main_dashboard_dialog.add_action_callback("requestAllSettings") do |action_context|
         begin
-          if defined?(ProjetaPlus::Settings)
-            all_settings = ProjetaPlus::Settings.get_all_settings
+          if defined?(ProjetaPlus::Modules::ProSettings)
+            all_settings = ProjetaPlus::Modules::ProSettings.get_all_settings
             puts "[ProjetaPlus Ruby] Requested all settings. Sending settings data to JS."
             @@main_dashboard_dialog.execute_script("window.receiveAllSettingsFromRuby(#{JSON.generate(all_settings)});")
           else
@@ -90,31 +92,27 @@ module ProjetaPlus
         @@main_dashboard_dialog.execute_script("window.handleSectionDefaults(#{JSON.generate(defaults)});")
         nil
       end
-
-      # Callback para carregar TODAS as configurações globais
+      
+      # load all global settings
       @@main_dashboard_dialog.add_action_callback("loadGlobalSettings") do |action_context|
-        settings = ProjetaPlus::Settings.get_all_settings
+        settings = ProjetaPlus::Modules::ProSettings.get_all_settings
         puts "[ProjetaPlus Ruby] Loading global settings: #{settings.inspect}"
         @@main_dashboard_dialog.execute_script("window.handleGlobalSettings(#{JSON.generate(settings)});")
         nil
       end
       
-      # NOVO: Callback para alterar o idioma globalmente no SketchUp
+      # change language
       @@main_dashboard_dialog.add_action_callback("changeLanguage") do |action_context, lang_code|
         begin
-          # Validate language code using Settings module
-          available_languages = ProjetaPlus::Settings.get_available_language_codes
+          available_languages = ProjetaPlus::Modules::ProSettings.get_available_language_codes
           if available_languages.include?(lang_code)
-            # Update language settings and translations
-            ProjetaPlus::Settings.write("Language", lang_code)
+            ProjetaPlus::Modules::ProSettings.write("Language", lang_code)
             ProjetaPlus::Localization.set_language(lang_code)
             
-            # Update only the language button text, don't recreate toolbar
-            ProjetaPlus::Commands.update_language_button_text
+            self.recreate_toolbar 
             
-            # Notify frontend that language was changed
             @@main_dashboard_dialog.execute_script("window.languageChanged('#{lang_code}');")
-            puts "[ProjetaPlus Ruby] Language changed to: #{lang_code}, toolbar updated"
+            puts "[ProjetaPlus Ruby] Language changed to: #{lang_code}, toolbar recreated"
           else
             puts "[ProjetaPlus Ruby] Invalid language code: #{lang_code}"
           end
@@ -124,7 +122,7 @@ module ProjetaPlus
         nil
       end
 
-      # PADRÃO: Generic Action Callback para executar funções de extensão Ruby
+   
       @@main_dashboard_dialog.add_action_callback("executeExtensionFunction") do |action_context, json_payload|
         result = {}
         begin
@@ -133,7 +131,7 @@ module ProjetaPlus
           function_name = payload['function_name']
           args = payload['args']
 
-          if module_name_str !~ /^ProjetaPlus::/ 
+          if module_name_str !~ /^ProjetaPlus::Modules::/ && module_name_str !~ /^ProjetaPlus::/
             raise SecurityError, "Access denied to module '#{module_name_str}'"
           end
 
@@ -142,25 +140,26 @@ module ProjetaPlus
           if target_module.respond_to?(function_name)
             puts "[ProjetaPlus Ruby] Executing #{module_name_str}.#{function_name} with arguments: #{args.inspect}"
             result = target_module.send(function_name, args)
-            # Adapta a mensagem de sucesso para o idioma atual se for uma mensagem genérica
-            result[:message] = ProjetaPlus::Localization.t("messages.success_prefix") + ": #{result[:message]}" if result[:success]
-            result[:message] = ProjetaPlus::Localization.t("messages.error_prefix") + ": #{result[:message]}" unless result[:success]
-
+            if result[:success]
+              result[:message] = ProjetaPlus::Localization.t("messages.success_prefix") + ": #{result[:message]}" unless result[:message].start_with?("Success:")
+            else
+              result[:message] = ProjetaPlus::Localization.t("messages.error_prefix") + ": #{result[:message]}" unless result[:message].start_with?("Error:")
+            end
           else
-            result = { success: false, message: ProjetaPlus::Localization.t("messages.function_not_found").gsub("%{function}", function_name).gsub("%{module}", module_name_str) } # Traduzido
+            result = { success: false, message: ProjetaPlus::Localization.t("messages.function_not_found").gsub("%{function}", function_name).gsub("%{module}", module_name_str) }
             puts "[ProjetaPlus Ruby] Error: #{result[:message]}"
           end
         rescue JSON::ParserError => e
-          result = { success: false, message: ProjetaPlus::Localization.t("messages.json_parse_error") + ": #{e.message}" } # Traduzido
+          result = { success: false, message: ProjetaPlus::Localization.t("messages.json_parse_error") + ": #{e.message}" }
           puts "[ProjetaPlus Ruby] #{result[:message]}"
         rescue NameError => e
-          result = { success: false, message: ProjetaPlus::Localization.t("messages.reference_error") + ": #{e.message}" } # Traduzido
+          result = { success: false, message: ProjetaPlus::Localization.t("messages.reference_error") + ": #{e.message}" }
           puts "[ProjetaPlus Ruby] #{result[:message]}"
         rescue SecurityError => e
-          result = { success: false, message: ProjetaPlus::Localization.t("messages.security_error") + ": #{e.message}" } # Traduzido
+          result = { success: false, message: ProjetaPlus::Localization.t("messages.security_error") + ": #{e.message}" }
           puts "[ProjetaPlus Ruby] #{result[:message]}"
         rescue StandardError => e
-          result = { success: false, message: ProjetaPlus::Localization.t("messages.unexpected_error") + ": #{e.message} \n#{e.backtrace.join("\n")}" } # Traduzido
+          result = { success: false, message: ProjetaPlus::Localization.t("messages.unexpected_error") + ": #{e.message} \n#{e.backtrace.join("\n")}" }
           puts "[ProjetaPlus Ruby] #{result[:message]}"
         end
         @@main_dashboard_dialog.execute_script("window.handleRubyResponse(#{JSON.generate(result)});")
@@ -183,8 +182,8 @@ module ProjetaPlus
 
     def self.open_main_dashboard_command
       create_command(
-        name: ProjetaPlus::Localization.t("toolbar.main_dashboard"), # Traduzido
-        tooltip: ProjetaPlus::Localization.t("toolbar.main_dashboard_tooltip"), # Adicione tooltip no YAML
+        name: ProjetaPlus::Localization.t("toolbar.main_dashboard"),
+        tooltip: ProjetaPlus::Localization.t("toolbar.main_dashboard_tooltip"),
         icon: "button1.png"
       ) do
         self.open_main_dashboard_html_dialog
@@ -192,50 +191,19 @@ module ProjetaPlus
     end
 
     def self.logout_command
-      command = ::UI::Command.new(ProjetaPlus::Localization.t("toolbar.logout")) do # Traduzido
-        ::UI.messagebox(ProjetaPlus::Localization.t("messages.logout_info"), MB_OK, ProjetaPlus::Localization.t("plugin_name")) # Traduzido
-      end
-      icon_path = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', "button2.png")
-      command.small_icon = icon_path
-      command.large_icon = icon_path
-      command.tooltip = ProjetaPlus::Localization.t("toolbar.logout_tooltip") # Adicione tooltip no YAML
-      command.status_bar_text = ProjetaPlus::Localization.t("toolbar.logout_tooltip") # Adicione tooltip no YAML
-      command
-    end
-
-    # Store the language command for updates
-    @@language_command = nil
-
-
-    # Get current language display text (EN, pt-BR, ES)
-    def self.get_current_language_display
-      if defined?(ProjetaPlus::Settings) && defined?(ProjetaPlus::Localization)
-        current_lang = ProjetaPlus::Settings.read("Language", ProjetaPlus::Settings::DEFAULT_LANGUAGE)
-        case current_lang
-        when "en"
-          "EN"
-        when "pt-BR"
-          "pt-BR"
-        when "es"
-          "ES"
-        else
-          current_lang.upcase
-        end
-      else
-        "EN"
+      create_command(
+        name: ProjetaPlus::Localization.t("toolbar.logout"),
+        tooltip: ProjetaPlus::Localization.t("toolbar.logout_tooltip"),
+        icon: "button2.png"
+      ) do
+        ::UI.messagebox(ProjetaPlus::Localization.t("messages.logout_info"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
       end
     end
 
-
-    # Recreate toolbar to reflect language changes
     def self.recreate_toolbar
-      # Remove existing toolbar if it exists
-      if defined?(ProjetaPlus::UI::TOOLBAR_NAME)
-        existing_toolbar = ::UI.toolbar(ProjetaPlus::UI::TOOLBAR_NAME)
-        existing_toolbar.hide if existing_toolbar
-      end
-      
-      # Recreate the toolbar with updated language
+      existing_toolbar = ::UI.toolbar(ProjetaPlus::UI::TOOLBAR_NAME)
+      existing_toolbar.close if existing_toolbar
+
       ProjetaPlus::UI.create_toolbar
     end
 
