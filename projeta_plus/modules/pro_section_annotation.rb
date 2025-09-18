@@ -1,212 +1,232 @@
 # encoding: UTF-8
 require 'sketchup.rb'
-require 'csv'
+require_relative 'pro_settings.rb' # Certifique-se que pro_settings.rb está carregado
+require_relative 'pro_settings_utils.rb'
+require_relative '../localization.rb'
 
-module SectionAnnotation
+module ProjetaPlus
+  module Modules
+    module ProSectionAnnotation
 
-  # get_user_input - This method will be removed as input will come from JS
-  # create_black_triangle, create_text, draw_dashed_dotted_line remain unchanged as helper methods
-  def self.create_black_triangle(entities, position, orientation, scale_factor)
-    size = (1 / 2.54) * scale_factor  # Triangle size in inches adjusted by scale factor
-    half_size = size / 2.0
-  
-    pt1 = [0, -half_size, 0]
-    pt2 = [0, half_size, 0]
-    pt3 = [size / 4, 0, 0]
-  
-    triangle_group = entities.add_group
-  
-    face = triangle_group.entities.add_face(pt1, pt2, pt3)
-  
-    # Define black color for triangle
-    model = Sketchup.active_model
-    black_material = model.materials['Black']
-    unless black_material
-      black_material = model.materials.add('Black')
-      black_material.color = Sketchup::Color.new(0, 0, 0)
-    end
-    
-    face.material = black_material
-    face.back_material = black_material
-  
-    transformation = Geom::Transformation.new(position) *
-                      Geom::Transformation.rotation(Geom::Point3d.new(0, 0, 0),
-                                                      Geom::Vector3d.new(0, 0, 1),
-                                                      Math.atan2(orientation.y, orientation.x))
-    triangle_group.transform!(transformation)
-  
-    triangle_group
-  end
-  
-  def self.create_text(entities, position, text, font_size, scale_factor)
-    text_group = entities.add_group
-  
-    # Add 3D text to group - use macOS compatible font
-    font_name = Sketchup.platform == :platform_osx ? "Arial" : "Century Gothic"
-    text_entity = text_group.entities.add_3d_text(text.upcase, TextAlignLeft, font_name,
-                                                  false, false, font_size * scale_factor, 0, 0, true, 0)
-  
-    # Apply black material to text
-    model = Sketchup.active_model
-    black_material = model.materials['Black']
-    unless black_material
-      black_material = model.materials.add('Black')
-      black_material.color = Sketchup::Color.new(0, 0, 0)
-    end
-    
-    text_group.entities.each do |entity|
-      if entity.is_a?(Sketchup::Face)
-        entity.material = black_material
-        entity.back_material = black_material
+
+      DEFAULT_SECTION_LINE_HEIGHT_CM = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+      DEFAULT_SECTION_SCALE_FACTOR = ProjetaPlus::Modules::ProSettingsUtils.get_scale.to_s
+
+
+      def self.get_defaults
+        {
+          line_height_cm: Sketchup.read_default("SectionAnnotation", "line_height_cm", DEFAULT_SECTION_LINE_HEIGHT_CM),
+          scale_factor: Sketchup.read_default("SectionAnnotation", "scale_factor", DEFAULT_SECTION_SCALE_FACTOR)
+        }
       end
-    end
-    
-    text_bounds = text_group.bounds
-    text_width  = text_bounds.width
-    text_height = text_bounds.height
-  
-    translation = Geom::Transformation.new([-text_width / 2.0, -text_height / 2.0, 0])
-    text_group.transform!(translation)
-  
-    text_translation = Geom::Transformation.new(position)
-    text_group.transform!(text_translation)
-  
-    text_group
-  end
-  
-  def self.draw_dashed_dotted_line(entities, start_point, end_point, dash_length, dot_diameter, gap_length)
-    vector = Geom::Vector3d.new(end_point[0] - start_point[0],
-                                end_point[1] - start_point[1],
-                                end_point[2] - start_point[2])
-    length = vector.length
-    unit_vector = vector.normalize
-  
-    perpendicular_vector = Geom::Vector3d.new(0, 0, 1)
-  
-    current_position = start_point
-    while length > 0
-      dash_end = [current_position[0] + unit_vector.x * dash_length,
-                  current_position[1] + unit_vector.y * dash_length,
-                  current_position[2] + unit_vector.z * dash_length]
-      entities.add_line(current_position, dash_end)
+
+      def self.create_black_triangle(entities, position, orientation, scale_factor)
+        size = (1 / 2.54) * scale_factor 
+        half_size = size / 2.0
       
-      length -= dash_length
-      current_position = dash_end
-  
-      dot_center = [current_position[0] + unit_vector.x * (gap_length / 2.0),
-                    current_position[1] + unit_vector.y * (gap_length / 2.0),
-                    current_position[2] + unit_vector.z * (gap_length / 2.0)]
+        pt1 = [0, -half_size, 0]
+        pt2 = [0, half_size, 0]
+        pt3 = [size / 4, 0, 0]
       
-      dot_circle = entities.add_circle(dot_center, perpendicular_vector, dot_diameter / 2.0)
-      entities.add_face(dot_circle)
+        triangle_group = entities.add_group
+        
+        face = triangle_group.entities.add_face(pt1, pt2, pt3)
+        face.material = 'black'
+        face.back_material = 'black'
       
-      length -= dot_diameter
-      current_position = [dot_center[0] + unit_vector.x * (gap_length / 2.0),
-                          dot_center[1] + unit_vector.y * (gap_length / 2.0),
-                          current_position[2] + unit_vector.z * (gap_length / 2.0)] # Adjusted for `unit_capital` typo
-      length -= gap_length
-    end
-  end
-  
-  # --- MODIFIED: create_lines_from_section_planes to accept parameters from JS ---
-  def self.create_lines_from_section_planes(args)
-    model = Sketchup.active_model
-    return { success: false, message: "No active model found." } unless model
-    
-    entities = model.entities
-  
-    section_planes = entities.grep(Sketchup::SectionPlane)
-    if section_planes.empty?
-      return { success: false, message: "No section planes in the model. Please create one before using this function." }
-    end
-  
-    # Extract parameters from args hash, sent from JS
-    line_height_cm = args['line_height_cm'].to_f
-    scale_factor  = args['scale_factor'].to_f
+        # Cria a transformação para posicionar e rotacionar o triângulo
+        # A rotação é em torno do eixo Z, alinhando com a orientação do plano de corte
+        transformation = Geom::Transformation.new(position) *
+                         Geom::Transformation.rotation(ORIGIN, Z_AXIS, Math.atan2(orientation.y, orientation.x))
+        triangle_group.transform!(transformation)
+      
+        triangle_group
+      end
+      
+      # Adaptação de FM_Extensions::Anotacaocorte.create_text
+      def self.create_text(entities, position, text, font_size, scale_factor)
+        model = Sketchup.active_model
+        text_group = entities.add_group
+        
+        # Pega a fonte padrão das configurações globais ou usa um fallback
+        font = ProjetaPlus::Modules::ProSettings.read("font", ProjetaPlus::Modules::ProSettings::DEFAULT_FONT)
+        
+        # O 3D Text no SketchUp usa TRUE para bold, FALSE para italic, e um valor para height
+        text_group.entities.add_3d_text(text.upcase, TextAlignLeft, font,
+                                                      false, false, font_size * scale_factor, 0, 0, true, 0)
+        
+        # Coloca material preto no texto 3D
+        black_material = model.materials['Black'] || model.materials.add('Black')
+        black_material.color = 'black'
+        text_group.entities.grep(Sketchup::Face).each do |entity|
+          entity.material = black_material
+          entity.back_material = black_material
+        end
+        
+        text_bounds = text_group.bounds
+        # Centraliza o texto no ponto de inserção
+        translation = Geom::Transformation.new([-text_bounds.width / 2.0, -text_bounds.height / 2.0, 0])
+        text_group.transform!(translation)
+        
+        text_translation = Geom::Transformation.new(position)
+        text_group.transform!(text_translation)
+      
+        text_group
+      end
+      
+      # Adaptação de FM_Extensions::Anotacaocorte.draw_dashed_dotted_line
+      def self.draw_dashed_dotted_line(entities, start_point, end_point, dash_length, dot_diameter, gap_length)
+        vector = Geom::Vector3d.new(end_point[0] - start_point[0],
+                                    end_point[1] - start_point[1],
+                                    end_point[2] - start_point[2])
+        length = vector.length
+        unit_vector = vector.normalize
+      
+        perpendicular_vector = Geom::Vector3d.new(0, 0, 1) # Usado para desenhar o círculo do ponto
+      
+        current_position = start_point
+        while length > 0
+          # Desenha o traço
+          dash_end = [current_position[0] + unit_vector.x * dash_length,
+                      current_position[1] + unit_vector.y * dash_length,
+                      current_position[2] + unit_vector.z * dash_length]
+          entities.add_line(current_position, dash_end)
+          
+          length -= dash_length
+          current_position = dash_end
+      
+          # Desenha o ponto (círculo) no meio do gap
+          dot_center = [current_position[0] + unit_vector.x * (gap_length / 2.0),
+                        current_position[1] + unit_vector.y * (gap_length / 2.0),
+                        current_position[2] + unit_vector.z * (gap_length / 2.0)]
+          
+          dot_circle_edges = entities.add_circle(dot_center, perpendicular_vector, dot_diameter / 2.0)
+          entities.add_face(dot_circle_edges) # Adiciona uma face para o ponto
+          
+          length -= dot_diameter
+          current_position = [dot_center[0] + unit_vector.x * (gap_length / 2.0),
+                              dot_center[1] + unit_vector.y * (gap_length / 2.0),
+                              dot_center[2] + unit_vector.z * (gap_length / 2.0)]
+          length -= gap_length
+        end
+      end
+      
+      # Este método será chamado pelo `executeExtensionFunction` do Next.js
+      # Adaptação de FM_Extensions::Anotacaocorte.processar_anotacoes (e create_lines_from_section_planes)
+      def self.create_lines_from_section_planes(args)
+        model = Sketchup.active_model
+        entities = model.entities
+      
+        # Mensagens traduzidas
+        no_planes_msg = ProjetaPlus::Localization.t("messages.section_annotation_error_no_plane")
+        no_selection_msg = ProjetaPlus::Localization.t("messages.no_object_selected_for_section")
+        invalid_values_msg = ProjetaPlus::Localization.t("messages.invalid_section_annotation_values")
+        section_success_msg = ProjetaPlus::Localization.t("messages.section_annotation_success")
+        
+        section_planes = entities.grep(Sketchup::SectionPlane)
+        if section_planes.empty?
+          return { success: false, message: no_planes_msg }
+        end
 
-    if line_height_cm <= 0 || scale_factor <= 0
-      return { success: false, message: "Annotation Height and Scale must be positive values." }
-    end
+        selection = model.selection
+        if selection.empty?
+          return { success: false, message: no_selection_msg }
+        end
+      
+        # Extrai parâmetros dos args do frontend
+        # Assegura que os valores são numéricos e positivos
+        line_height_cm_str = args['line_height_cm'].to_s.tr(',', '.')
+        scale_factor_str  = args['scale_factor'].to_s.tr(',', '.')
+        
+        line_height_cm = line_height_cm_str.to_f
+        scale_factor = scale_factor_str.to_f
 
-    # Persist values to SketchUp defaults
-    Sketchup.write_default("SectionAnnotation", "line_height_cm", args['line_height_cm'].to_s)
-    Sketchup.write_default("SectionAnnotation", "scale_factor", args['scale_factor'].to_s)
-  
-    line_height   = line_height_cm / 2.54  # Convert cm to inches (1 inch = 2.54 cm)
-  
-    all_lines_group = entities.add_group
-    all_lines_group.name = "All Section Lines"
-  
-    layer_name = '-2D-SECTION ANNOTATION LEGEND'
-    layer = model.layers[layer_name]
-    unless layer
-      layer = model.layers.add(layer_name)
-    end
-    all_lines_group.layer = layer
-  
-    dash_length = 20 / 2.54
-    dot_diameter = 1 / 2.54
-    gap_length = 10 / 2.54
-  
-    model_bb = model.bounds # Get model bounds only once
-    section_planes.each do |entity|
-      begin
-        plane = entity.get_plane
-        orientation = Geom::Vector3d.new(plane[0], plane[1], plane[2])
-  
-      if orientation.z.abs > 0.9 # Check for horizontal planes
-        next
-      end
-  
-      position = entity.bounds.center
-  
-      line_group = all_lines_group.entities.add_group
-      line_group.name = "Section Line - #{entity.name || position.inspect}"
-  
-      if orientation.y.abs > orientation.x.abs
-        line_start = [model_bb.min.x - (scale_factor / 2.54), position.y, 0]
-        line_end   = [model_bb.max.x + (scale_factor / 2.54), position.y, 0]
-        text_offset_direction = :x
-      else
-        line_start = [position.x, model_bb.min.y - (scale_factor / 2.54), 0]
-        line_end   = [position.x, model_bb.max.y + (scale_factor / 2.54), 0]
-        text_offset_direction = :y
-      end
-  
-      draw_dashed_dotted_line(line_group.entities, line_start, line_end, dash_length, dot_diameter, gap_length)
-  
-      create_black_triangle(line_group.entities, line_start, orientation, scale_factor)
-      create_black_triangle(line_group.entities, line_end, orientation, scale_factor)
-  
-      text_height = (0.3 / 2.54)
-      offset_text = text_height * scale_factor
-  
-      if text_offset_direction == :x
-        create_text(line_group.entities, [line_start[0], line_start[1] - offset_text * orientation.y, 0],
-                    entity.name || "No name", text_height, scale_factor)
-        create_text(line_group.entities, [line_end[0], line_end[1] - offset_text * orientation.y, 0],
-                    entity.name || "No name", text_height, scale_factor)
-      else
-        create_text(line_group.entities, [line_start[0] - offset_text * orientation.x, line_start[1], 0],
-                    entity.name || "No name", text_height, scale_factor)
-        create_text(line_group.entities, [line_end[0] - offset_text * orientation.x, line_end[1], 0],
-                    entity.name || "No name", text_height, scale_factor)
-      end
-  
-      transformation = Geom::Transformation.new([0, 0, line_height])
-      line_group.transform!(transformation)
-      line_group.layer = layer
-      rescue => e
-        puts "Error processing section plane #{entity.inspect}: #{e.message}"
-      end
-    end
-  
-    { success: true, message: "Section Annotations created successfully!" }
-  rescue StandardError => e
-    { success: false, message: "Error creating section annotations: #{e.message}" }
-  end
-  
-end  # module SectionAnnotation
+        # Persist module-specific values
+        Sketchup.write_default("SectionAnnotation", "line_height_cm", line_height_cm_str)
+        Sketchup.write_default("SectionAnnotation", "scale_factor", scale_factor_str)
 
-# --- REMOVED THE TOOLBAR CREATION BLOCK FROM HERE ---
-# (The toolbar will be created by ProjetaPlus::UI in projeta_plus/core.rb)
+        if line_height_cm <= 0 || scale_factor <= 0
+          return { success: false, message: invalid_values_msg }
+        end
+      
+        line_height = line_height_cm / 2.54 # Converter cm para polegadas (unidade interna do SketchUp)
+      
+        model.start_operation(ProjetaPlus::Localization.t("commands.section_annotation_operation_name"), true)
+        
+        bb = Geom::BoundingBox.new
+        selection.each { |e| bb.add(e.bounds) } # Bounding box da seleção para determinar a extensão das linhas
+        
+        layer_name = '-2D-LEGENDA CORTES'
+        layer      = model.layers.add(layer_name)
+
+        all_lines_group = entities.add_group
+        all_lines_group.name = ProjetaPlus::Localization.t("commands.all_section_lines_group_name")
+        all_lines_group.layer = layer
+      
+        # Constantes para o estilo de linha (valores em polegadas)
+        dash_length = 10.mm # Convertendo mm para polegadas
+        dot_diameter = 0.5.mm # Convertendo mm para polegadas
+        gap_length = 2.mm # Convertendo mm para polegadas
+
+        font_size = (0.3 / 2.54) # Base para o tamanho do texto (em polegadas)
+
+        section_planes.each_with_index do |entity, i|
+          plane = entity.get_plane
+          orientation = Geom::Vector3d.new(plane[0], plane[1], plane[2])
+      
+          if orientation.z.abs > 0.9 # Ignora planos de corte horizontais (que estariam no plano XY)
+            next
+          end
+      
+          position = entity.bounds.center # Centro do plano de corte
+      
+          line_group = all_lines_group.entities.add_group
+          line_group.name = "#{ProjetaPlus::Localization.t("commands.section_line_group_name")} - #{entity.name || position.inspect}"
+      
+          # Determina as extremidades da linha de corte com base na orientação do plano e bounding box da seleção
+          if orientation.y.abs > orientation.x.abs
+            # Plano de corte mais alinhado com o eixo Y (corte "horizontal" no modelo)
+            line_start = [bb.min.x - (scale_factor / 2.54), position.y, 0] # Adiciona um offset para que a linha saia um pouco da seleção
+            line_end   = [bb.max.x + (scale_factor / 2.54), position.y, 0]
+            text_offset_direction = :x
+          else
+            # Plano de corte mais alinhado com o eixo X (corte "vertical" no modelo)
+            line_start = [position.x, bb.min.y - (scale_factor / 2.54), 0]
+            line_end   = [position.x, bb.max.y + (scale_factor / 2.54), 0]
+            text_offset_direction = :y
+          end
+      
+          draw_dashed_dotted_line(line_group.entities, line_start, line_end, dash_length, dot_diameter, gap_length)
+          create_black_triangle(line_group.entities, line_start, orientation, scale_factor)
+          create_black_triangle(line_group.entities, line_end, orientation, scale_factor)
+          
+          letra = entity.name.empty? ? ProjetaPlus::Localization.t("messages.section_label_default_name").gsub("%{number}", (i+1).to_s) : entity.name
+          afas_text = font_size * scale_factor # Offset do texto
+      
+          # Posiciona o texto nas extremidades
+          if text_offset_direction == :x
+            create_text(line_group.entities, [line_start[0], line_start[1] - afas_text * orientation.y, 0],
+                        letra, font_size, scale_factor)
+            create_text(line_group.entities, [line_end[0], line_end[1] - afas_text * orientation.y, 0],
+                        letra, font_size, scale_factor)
+          else
+            create_text(line_group.entities, [line_start[0] - afas_text * orientation.x, line_start[1], 0],
+                        letra, font_size, scale_factor)
+            create_text(line_group.entities, [line_end[0] - afas_text * orientation.x, line_end[1], 0],
+                        letra, font_size, scale_factor)
+          end
+          
+          # Move o grupo de linha e texto para a altura final (line_height)
+          line_group.transform!(Geom::Transformation.new([0, 0, line_height]))
+          line_group.layer = layer
+        end
+        
+        model.commit_operation
+        { success: true, message: section_success_msg }
+      rescue StandardError => e
+        model.abort_operation
+        { success: false, message: ProjetaPlus::Localization.t("messages.error_creating_section_annotations") + ": #{e.message}" }
+      end
+    end # module ProSectionAnnotation
+  end # module Modules
+end # module ProjetaPlus
