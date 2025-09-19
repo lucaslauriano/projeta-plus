@@ -166,6 +166,20 @@ module ProjetaPlus
         nil
       end
 
+      @@main_dashboard_dialog.add_action_callback("startRoomAnnotation") do |action_context, json_payload|
+        begin
+          args = JSON.parse(json_payload)
+          result = ProjetaPlus::Modules::ProRoomAnnotation.start_interactive_annotation(args)
+          puts "[ProjetaPlus Ruby] Room annotation started with args: #{args.inspect}"
+          @@main_dashboard_dialog.execute_script("window.handleRoomAnnotationResult(#{JSON.generate(result)});")
+        rescue => e
+          error_result = { success: false, message: "Error: #{e.message}" }
+          puts "[ProjetaPlus Ruby] Error in room annotation: #{e.message}"
+          @@main_dashboard_dialog.execute_script("window.handleRoomAnnotationResult(#{JSON.generate(error_result)});")
+        end
+        nil
+      end
+
       @@main_dashboard_dialog.set_on_closed { @@main_dashboard_dialog = nil; puts "[ProjetaPlus Dialog] Main dialog closed." }
       @@main_dashboard_dialog.show
     end
@@ -202,7 +216,7 @@ module ProjetaPlus
 
     def self.recreate_toolbar
       existing_toolbar = ::UI.toolbar(ProjetaPlus::UI::TOOLBAR_NAME)
-      existing_toolbar.close if existing_toolbar
+      existing_toolbar.visible = false if existing_toolbar
 
       ProjetaPlus::UI.create_toolbar
     end

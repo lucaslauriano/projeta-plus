@@ -38,6 +38,16 @@ module ProjetaPlus
         total_area * 0.00064516 # convert to m²
       end
 
+      def self.calculate_face_area_formatted(face)
+        if face
+          area_inch = face.area
+          area_m2 = area_inch * 0.00064516 # Convert square inches to square meters
+          format('%.2f', area_m2).gsub('.', ',')
+        else
+          "0,00"
+        end
+      end
+
       def self.test_text(text, position, scale, font, alignment = TextAlignCenter)
         model = Sketchup.active_model
         g = model.entities.add_group
@@ -54,13 +64,13 @@ module ProjetaPlus
         g
       end
 
-      def self.import_nivel_symbol(center, scale)
+      def self.import_level_symbol(center, scale)
         model = Sketchup.active_model
         defs  = model.definitions
         
         candidates = []
-        candidates << File.join(File.dirname(model.path), 'components', 'plan_level.skp') if model.path && !model.path.empty?
-        candidates << File.join(ProjetaPlus::PATH, 'projeta_plus', 'components', 'plan_level.skp')
+        candidates << File.join(File.dirname(model.path), 'components', 'Nível Corte.skp') if model.path && !model.path.empty?
+        candidates << File.join(ProjetaPlus::PATH, 'projeta_plus', 'components', 'Nível Corte.skp')
         
         # Finds the first existing path (first existing path)
         path = candidates.find { |p| File.exist?(p) }
@@ -82,40 +92,32 @@ module ProjetaPlus
       end
       
       # Removed parse_num (use to_f directly, or methods of Localization)
-      # Removed global_transformation e global_piso_z (simplest Bounds logic used in processar_grupo)
+      # Removed global_transformation e global_piso_z (simplest Bounds logic used in process_room_annotation)
       # Removed coletar_config (settings come from Next.js)
 
       # Now accepts 'args' from the Next.js frontend.
-      def self.processar_grupo(grupo, args, hover_face = nil, hover_extents = nil)
+      def self.process_room_annotation(grupo, args, hover_face = nil, hover_extents = nil)
         model = Sketchup.active_model
         # Uses a layer '-2D-LEGENDA AMBIENTE' (Environment Legend)
         layer = model.layers.add('-2D-LEGENDA AMBIENTE')
 
         # Extracts parameters from the frontend args
         enviroment_name   = args['enviroment_name'].to_s
-        scale           = args['scale'].to_f
-        font            = args['font'].to_s
+        scale           = DEFAULT_ROOM_ANNOTATION_SCALE
+        font            = DEFAULT_ROOM_ANNOTATION_FONT
         show_ceilling_height      = args['show_ceilling_height'].to_s.strip.downcase == "sim"
         ceilling_height_str          = args['ceilling_height'].to_s
-        mostrar_nivel   = args['show_level'].to_s.strip.downcase == "sim"
+        show_level   = args['show_level'].to_s.strip.downcase == "sim"
         manual_level    = args['level'].to_s # What was 'manual_level' is now 'level' in the UI
         
         # Persist module-specific values (Sketchup.read_default/write_default)
-        # Note: scale and font are passed from the frontend, which may be using global values
-        Sketchup.write_default("RoomAnnotation", "floor_height", args['floor_height'].to_s)
-        Sketchup.write_default("RoomAnnotation", "show_ceilling_height", args['show_ceilling_height'].to_s)
-        Sketchup.write_default("RoomAnnotation", "ceilling_height", args['ceilling_height'].to_s)
-        Sketchup.write_default("RoomAnnotation", "show_level", args['show_level'].to_s)
-        Sketchup.write_default("RoomAnnotation", "level", args['level'].to_s)
+        # Note: scale and font use global settings values
+        %w[floor_height show_ceilling_height ceilling_height show_level level].each do |key|
+          Sketchup.write_default("RoomAnnotation", key, args[key].to_s)
+        end
 
         # --------------------- Area logic ---------------------
-        if hover_face
-          area_inch = hover_face.area
-          area_m2 = area_inch * 0.00064516
-          area_str = format('%.2f', area_m2).gsub('.', ',')
-        else
-          area_str = "0,00"
-        end
+        area_str = calculate_face_area_formatted(hover_face)
         
         main_text = "#{enviroment_name}\n#{ProjetaPlus::Localization.t("messages.area_label")}: #{area_str} m²"
         main_text += "\n#{ProjetaPlus::Localization.t("messages.ceilling_height_label")}: #{ceilling_height_str}m" if show_ceilling_height
@@ -145,8 +147,8 @@ module ProjetaPlus
         text_group = test_text(main_text, center, scale, font)
         text_group.layer = layer
 
-        if mostrar_nivel
-          nivel_instance = import_nivel_symbol(center, scale)
+        if show_level
+          nivel_instance = import_level_symbol(center, scale)
           unless nivel_instance
             model.selection.clear; model.selection.add(text_group)
             return { success: false, message: ProjetaPlus::Localization.t("messages.error_nivel_symbol_not_found") }
@@ -229,25 +231,23 @@ module ProjetaPlus
              holder = model
           end
 
-          result = ProjetaPlus::Modules::ProRoomAnnotation.processar_grupo(holder, @args, @hover_face, hover_extents)
+          result = ProjetaPlus::Modules::ProRoomAnnotation.process_room_annotation(holder, @args, @hover_face, hover_extents)
           if result[:success]
             model.commit_operation
-            UI.messagebox(ProjetaPlus::Localization.t("messages.room_annotation_success"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            ::UI.messagebox(ProjetaPlus::Localization.t("messages.room_annotation_success"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
           else
             model.abort_operation
-            UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            ::UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
           end
           Sketchup.active_model.select_tool(nil) # Desativa a ferramenta após o clique
         rescue StandardError => e
           model.abort_operation
-          UI.messagebox("#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}", MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+          ::UI.messagebox("#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}", MB_OK, ProjetaPlus::Localization.t("plugin_name"))
           Sketchup.active_model.select_tool(nil)
         end
 
         def onKeyDown(key, repeat, flags, view)
-          if key == VK_ESCAPE # Tecla ESC para sair
-            Sketchup.active_model.select_tool(nil)
-          end
+          Sketchup.active_model.select_tool(nil) if key == 27
         end
       end
 
