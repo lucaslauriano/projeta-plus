@@ -8,10 +8,9 @@ module ProjetaPlus
   module Modules
     module ProSectionAnnotation
 
-
       DEFAULT_SECTION_LINE_HEIGHT_CM = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
       DEFAULT_SECTION_SCALE_FACTOR = ProjetaPlus::Modules::ProSettingsUtils.get_scale.to_s
-
+      DEFAULT_SECTION_SCALE = 2.54
 
       def self.get_defaults
         {
@@ -21,7 +20,7 @@ module ProjetaPlus
       end
 
       def self.create_black_triangle(entities, position, orientation, scale_factor)
-        size = (1 / 2.54) * scale_factor 
+        size = (1 / DEFAULT_SECTION_SCALE) * scale_factor 
         half_size = size / 2.0
       
         pt1 = [0, -half_size, 0]
@@ -149,7 +148,7 @@ module ProjetaPlus
           return { success: false, message: invalid_values_msg }
         end
       
-        line_height = line_height_cm / 2.54 # Converter cm para polegadas (unidade interna do SketchUp)
+        line_height = line_height_cm / DEFAULT_SECTION_SCALE # Converter cm para polegadas (unidade interna do SketchUp)
       
         model.start_operation(ProjetaPlus::Localization.t("commands.section_annotation_operation_name"), true)
         
@@ -168,7 +167,7 @@ module ProjetaPlus
         dot_diameter = 0.5.mm # Convertendo mm para polegadas
         gap_length = 2.mm # Convertendo mm para polegadas
 
-        font_size = (0.3 / 2.54) # Base para o tamanho do texto (em polegadas)
+        font_size = (0.3 / DEFAULT_SECTION_SCALE) # Base para o tamanho do texto (em polegadas)
 
         section_planes.each_with_index do |entity, i|
           plane = entity.get_plane
@@ -186,13 +185,13 @@ module ProjetaPlus
           # Determina as extremidades da linha de corte com base na orientação do plano e bounding box da seleção
           if orientation.y.abs > orientation.x.abs
             # Plano de corte mais alinhado com o eixo Y (corte "horizontal" no modelo)
-            line_start = [bb.min.x - (scale_factor / 2.54), position.y, 0] # Adiciona um offset para que a linha saia um pouco da seleção
-            line_end   = [bb.max.x + (scale_factor / 2.54), position.y, 0]
+            line_start = [bb.min.x - (scale_factor / DEFAULT_SECTION_SCALE), position.y, 0] # Adiciona um offset para que a linha saia um pouco da seleção
+            line_end   = [bb.max.x + (scale_factor / DEFAULT_SECTION_SCALE), position.y, 0]
             text_offset_direction = :x
           else
             # Plano de corte mais alinhado com o eixo X (corte "vertical" no modelo)
-            line_start = [position.x, bb.min.y - (scale_factor / 2.54), 0]
-            line_end   = [position.x, bb.max.y + (scale_factor / 2.54), 0]
+            line_start = [position.x, bb.min.y - (scale_factor / DEFAULT_SECTION_SCALE), 0]
+            line_end   = [position.x, bb.max.y + (scale_factor / DEFAULT_SECTION_SCALE), 0]
             text_offset_direction = :y
           end
       

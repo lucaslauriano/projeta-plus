@@ -2,7 +2,7 @@ require "sketchup.rb"
 require "extensions.rb"
 
 module ProjetaPlus
-  VERSION = "1.0.0".freeze
+  VERSION = "2.0.0".freeze
 
   PATH = File.dirname(__FILE__).freeze
 

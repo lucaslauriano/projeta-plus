@@ -52,6 +52,7 @@ module ProjetaPlus
         model = Sketchup.active_model
         g = model.entities.add_group
         ents = g.entities
+        puts "SCALE: #{scale}"
         height = 0.3.cm * scale # 0.3 cm as base for height
         
         ents.add_3d_text(text, alignment, font, true, false, height, 0)

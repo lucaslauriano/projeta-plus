@@ -10,7 +10,7 @@ module ProjetaPlus
       def self.get_scale
         if defined?(ProjetaPlus::Modules::ProSettings)
           numerator = ProjetaPlus::Modules::ProSettings.read("ScaleNumerator", 1).to_f
-          denominator = ProjetaPlus::Modules::ProSettings.read("ScaleDenominator", 50).to_f
+          denominator = ProjetaPlus::Modules::ProSettings.read("ScaleDenominator", 25).to_f
           denominator > 0 ? denominator / numerator : 25.0
         else
           25.0

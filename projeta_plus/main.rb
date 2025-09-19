@@ -9,6 +9,7 @@ end
 
 # Modules (load settings first as other modules depend on it)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_settings.rb')
+puts "[ProjetaPlus Debug] ProSettings loaded: #{defined?(ProjetaPlus::Modules::ProSettings)}"
 
 # load localization module
 begin
@@ -17,8 +18,17 @@ rescue => e
   puts "[ProjetaPlus] Warning: Could not load localization module: #{e.message}"
 end
 
+# Dialog Handlers (load before commands as commands depend on them)
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'base_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'settings_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'model_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'annotation_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'extension_handler.rb')
+
+# Commands (now uses the handlers)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'commands.rb')
 
+# Annotation Modules
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_hover_face_util.rb') 
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_room_annotation.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_section_annotation.rb')

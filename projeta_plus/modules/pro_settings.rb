@@ -4,10 +4,8 @@ require 'sketchup.rb'
 module ProjetaPlus
   module Modules
     module ProSettings 
-      # Namespace for SketchUp's preference storage for global settings
+      
       PLUGIN_ID = "ProjetaPlus_GlobalSettings".freeze
-
-      # --- Configuration Options Definitions (with frontend hints) ---
 
       def self.get_available_fonts
         [
@@ -74,7 +72,7 @@ module ProjetaPlus
       # --- Default Values for Global Settings ---
       DEFAULT_FONT = "Century Gothic".freeze
       DEFAULT_SCALE_NUMERATOR = 1
-      DEFAULT_SCALE_DENOMINATOR = 50
+      DEFAULT_SCALE_DENOMINATOR = 25
       DEFAULT_FLOOR_LEVEL = 0.0
       DEFAULT_CUT_HEIGHT = 1.45
       DEFAULT_HEADROOM_HEIGHT = 2.50
