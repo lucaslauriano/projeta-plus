@@ -33,7 +33,7 @@ messages:
   pd_label: 'PD'
   room_annotation_prompt: 'Clique em uma face para ANOTAR. ESC para sair.'
   error_adding_room_name: 'Erro ao adicionar nome do ambiente'
-  ceilling_height_label: 'ALTURA PÉ DIREITO'
+  ceilling_height_label: 'PD'
   no_object_selected_for_section: 'Nenhum objeto foi selecionado para anotação de corte. Por favor, selecione um.'
   invalid_section_annotation_values: 'Altura da anotação e Escala devem ser valores positivos.'
   section_label_default_name: 'Corte %{number}'

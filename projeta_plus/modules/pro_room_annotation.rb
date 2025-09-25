@@ -13,9 +13,10 @@ module ProjetaPlus
       DEFAULT_ROOM_ANNOTATION_SCALE   = ProjetaPlus::Modules::ProSettingsUtils.get_scale
       DEFAULT_ROOM_ANNOTATION_FONT    = ProjetaPlus::Modules::ProSettingsUtils.get_font
       DEFAULT_ROOM_ANNOTATION_FLOOR_HEIGHT_STR = "0,00" 
-      DEFAULT_ROOM_ANNOTATION_SHOW_CEILLING_HEIGHT = "Sim" 
+      DEFAULT_ROOM_ANNOTATION_SHOW_CEILLING_HEIGHT = true 
       DEFAULT_ROOM_ANNOTATION_CEILLING_HEIGHT_STR  = "0,00" 
-      DEFAULT_ROOM_ANNOTATION_SHOW_LEVEL = "Sim" 
+      DEFAULT_ROOM_ANNOTATION_SHOW_LEVEL = true 
+      IS_AUTO_LEVEL = true
       DEFAULT_ROOM_ANNOTATION_LEVEL_STR = "0,00" 
 
       METERS_PER_INCH = 0.0254
@@ -23,11 +24,35 @@ module ProjetaPlus
       def self.get_defaults
         {
           floor_height: Sketchup.read_default("RoomAnnotation", "floor_height", DEFAULT_ROOM_ANNOTATION_FLOOR_HEIGHT_STR),
-          show_ceilling_height: Sketchup.read_default("RoomAnnotation", "show_ceilling_height", DEFAULT_ROOM_ANNOTATION_SHOW_CEILLING_HEIGHT),
+          show_ceilling_height: convert_to_boolean(Sketchup.read_default("RoomAnnotation", "show_ceilling_height", DEFAULT_ROOM_ANNOTATION_SHOW_CEILLING_HEIGHT)),
           ceilling_height: Sketchup.read_default("RoomAnnotation", "ceilling_height", DEFAULT_ROOM_ANNOTATION_CEILLING_HEIGHT_STR),
-          show_level: Sketchup.read_default("RoomAnnotation", "show_level", DEFAULT_ROOM_ANNOTATION_SHOW_LEVEL),
-          level: Sketchup.read_default("RoomAnnotation", "level", DEFAULT_ROOM_ANNOTATION_LEVEL_STR)
+          show_level: convert_to_boolean(Sketchup.read_default("RoomAnnotation", "show_level", DEFAULT_ROOM_ANNOTATION_SHOW_LEVEL)),
+          is_auto_level: convert_to_boolean(Sketchup.read_default("RoomAnnotation", "is_auto_level", IS_AUTO_LEVEL)),
+          level_value: Sketchup.read_default("RoomAnnotation", "level_value", DEFAULT_ROOM_ANNOTATION_LEVEL_STR)
         }
+      end
+
+      # Convert various input types to boolean
+      def self.convert_to_boolean(value)
+        case value
+        when true, false
+          value
+        when String
+          case value.to_s.strip.downcase
+          when "true", "sim", "yes", "1", "on"
+            true
+          when "false", "não", "no", "0", "off", ""
+            false
+          else
+            !!value # Default: truthy values become true, falsy become false
+          end
+        when Numeric
+          value != 0
+        when nil
+          false
+        else
+          !!value
+        end
       end
 
       def self.calculate_area_of_group(group)
@@ -70,8 +95,8 @@ module ProjetaPlus
         defs  = model.definitions
         
         candidates = []
-        candidates << File.join(File.dirname(model.path), 'components', 'Nível Corte.skp') if model.path && !model.path.empty?
-        candidates << File.join(ProjetaPlus::PATH, 'projeta_plus', 'components', 'Nível Corte.skp')
+        candidates << File.join(File.dirname(model.path), 'components', 'Nível Planta.skp') if model.path && !model.path.empty?
+        candidates << File.join(ProjetaPlus::PATH, 'projeta_plus', 'components', 'Nível Planta.skp')
         
         # Finds the first existing path (first existing path)
         path = candidates.find { |p| File.exist?(p) }
@@ -102,49 +127,52 @@ module ProjetaPlus
         # Uses a layer '-2D-LEGENDA AMBIENTE' (Environment Legend)
         layer = model.layers.add('-2D-LEGENDA AMBIENTE')
 
-        # Extracts parameters from the frontend args
         enviroment_name   = args['enviroment_name'].to_s
         scale           = DEFAULT_ROOM_ANNOTATION_SCALE
         font            = DEFAULT_ROOM_ANNOTATION_FONT
-        show_ceilling_height      = args['show_ceilling_height'].to_s.strip.downcase == "sim"
+        show_ceilling_height      = convert_to_boolean(args['show_ceilling_height'])
         ceilling_height_str          = args['ceilling_height'].to_s
-        show_level   = args['show_level'].to_s.strip.downcase == "sim"
-        manual_level    = args['level'].to_s # What was 'manual_level' is now 'level' in the UI
+        show_level   = convert_to_boolean(args['show_level'])
+        is_auto_level = convert_to_boolean(args['is_auto_level'])
+        level_value    = args['level_value'].to_s # What was 'level_value' is now 'level' in the UI
         
-        # Persist module-specific values (Sketchup.read_default/write_default)
-        # Note: scale and font use global settings values
-        %w[floor_height show_ceilling_height ceilling_height show_level level].each do |key|
-          Sketchup.write_default("RoomAnnotation", key, args[key].to_s)
-        end
+        Sketchup.write_default("RoomAnnotation", "floor_height", args['floor_height'].to_s)
+        Sketchup.write_default("RoomAnnotation", "show_ceilling_height", show_ceilling_height)
+        Sketchup.write_default("RoomAnnotation", "ceilling_height", args['ceilling_height'].to_s)
+        Sketchup.write_default("RoomAnnotation", "show_level", show_level)
+        Sketchup.write_default("RoomAnnotation", "is_auto_level", is_auto_level)
+        Sketchup.write_default("RoomAnnotation", "level_value", args['level_value'].to_s)
 
-        # --------------------- Area logic ---------------------
         area_str = calculate_face_area_formatted(hover_face)
         
         main_text = "#{enviroment_name}\n#{ProjetaPlus::Localization.t("messages.area_label")}: #{area_str} m²"
         main_text += "\n#{ProjetaPlus::Localization.t("messages.ceilling_height_label")}: #{ceilling_height_str}m" if show_ceilling_height
 
-        # --------------------- Centro XY e Altura Z ---------------------
-        # Use the floor height (floor_height) from the global settings or the form
-        floor_height_from_form_str = args['floor_height'].to_s.tr(',', '.')
-        floor_height_from_form = floor_height_from_form_str.to_f # Altura do piso em metros
-        
-        # Use the cut height from the global settings
-        cut_height_from_settings = ProjetaPlus::Modules::ProSettings.read("cut_height", ProjetaPlus::Modules::ProSettings::DEFAULT_CUT_HEIGHT).to_f
-        
-        z_height = (floor_height_from_form + cut_height_from_settings).m # Convert to meters, then to inches (internal unit of SketchUp)
+        cut_height_from_settings = ProjetaPlus::Modules::ProSettings.read("cut_height", ProjetaPlus::Modules::ProSettings::DEFAULT_CUT_HEIGHT).m
+   
 
         if hover_face && hover_extents
           bb_global = hover_extents 
-          center_xy = Geom::Point3d.new(bb_global.center.x, bb_global.center.y, 0)
+          center_xy = Geom::Point3d.new(bb_global.center.x, bb_global.center.y, 0)    
+          
+          face_z_global = bb_global.min.z
         else
           center_xy = grupo.bounds.center
+          face_z_global = grupo.bounds.min.z
         end
+        puts "face_z_global: #{face_z_global}"
+        puts "level_value: #{level_value}"
+
+        if is_auto_level
+          nivel_valor_m = face_z_global * METERS_PER_INCH
+          nivel_label = "#{format('%.2f', nivel_valor_m).gsub('.', ',')} m"
+        else #Is Manual
+          nivel_label = "#{level_value.gsub('.', ',')} m"
+        end
+       
+        z_height = face_z_global + ProjetaPlus::Modules::ProSettings::DEFAULT_CUT_HEIGHT.m
         center = Geom::Point3d.new(center_xy.x, center_xy.y, z_height)
-
-        # --------------------- Level ---------------------
-        nivel_label = "#{manual_level} m" 
-
-        # --------------------- Creating objects ---------------------
+        
         text_group = test_text(main_text, center, scale, font)
         text_group.layer = layer
 
@@ -233,6 +261,7 @@ module ProjetaPlus
           end
 
           result = ProjetaPlus::Modules::ProRoomAnnotation.process_room_annotation(holder, @args, @hover_face, hover_extents)
+
           if result[:success]
             model.commit_operation
             ::UI.messagebox(ProjetaPlus::Localization.t("messages.room_annotation_success"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
