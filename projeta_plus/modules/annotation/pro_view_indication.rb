@@ -1,4 +1,5 @@
 # encoding: UTF-8
+require_relative '../pro_hover_face_util.rb'
 
 module ProjetaPlus
   module Modules

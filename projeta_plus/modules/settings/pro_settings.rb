@@ -76,6 +76,7 @@ module ProjetaPlus
       DEFAULT_FLOOR_LEVEL = 0.0
       DEFAULT_CUT_HEIGHT = 1.45
       DEFAULT_HEADROOM_HEIGHT = 2.50
+      DEFAULT_TEXT_COLOR = "black".freeze
       DEFAULT_STYLES_FOLDER = "".freeze
       DEFAULT_SHEETS_FOLDER = "".freeze
       DEFAULT_LANGUAGE = "en".freeze
@@ -109,6 +110,7 @@ module ProjetaPlus
           'floor_level' => read("floor_level", DEFAULT_FLOOR_LEVEL),
           'cut_height' => read("cut_height", DEFAULT_CUT_HEIGHT),
           'headroom_height' => read("headroom_height", DEFAULT_HEADROOM_HEIGHT),
+          'text_color' => read("text_color", DEFAULT_TEXT_COLOR),
           'styles_folder' => read("styles_folder", DEFAULT_STYLES_FOLDER),
           'sheets_folder' => read("sheets_folder", DEFAULT_SHEETS_FOLDER),
           'language' => read("language", DEFAULT_LANGUAGE),

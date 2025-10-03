@@ -1,8 +1,8 @@
 # encoding: UTF-8
 require 'sketchup.rb'
-require_relative 'pro_settings.rb' # Certifique-se que pro_settings.rb está carregado
-require_relative 'pro_settings_utils.rb'
-require_relative '../localization.rb'
+require_relative '../settings/pro_settings.rb' # Certifique-se que pro_settings.rb está carregado
+require_relative '../settings/pro_settings_utils.rb'
+require_relative '../../localization.rb'
 
 module ProjetaPlus
   module Modules

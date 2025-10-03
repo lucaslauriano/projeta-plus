@@ -46,6 +46,15 @@ module ProjetaPlus
         end
       end
 
+      # Get text color from settings with fallback
+      def self.get_text_color
+        if defined?(ProjetaPlus::Modules::ProSettings)
+          ProjetaPlus::Modules::ProSettings.read("text_color", ProjetaPlus::Modules::ProSettings::DEFAULT_TEXT_COLOR)
+        else
+          "black"
+        end
+      end
+
     end # module ProSettingsUtils
   end # module Modules
 end # module ProjetaPlus

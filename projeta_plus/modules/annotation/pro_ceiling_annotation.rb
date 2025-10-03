@@ -1,9 +1,9 @@
 # encoding: UTF-8
 require 'sketchup.rb'
-require_relative 'pro_settings.rb'
-require_relative 'pro_settings_utils.rb'
-require_relative 'pro_hover_face_util.rb' 
-require_relative '../localization.rb'
+require_relative '../settings/pro_settings.rb'
+require_relative '../settings/pro_settings_utils.rb'
+require_relative '../pro_hover_face_util.rb' 
+require_relative '../../localization.rb'
 
 module ProjetaPlus
   module Modules
@@ -153,15 +153,15 @@ module ProjetaPlus
           result = ProjetaPlus::Modules::ProCeilingAnnotation.process_ceilling_face(@hover_face, @path, @args)
           if result[:success]
             model.commit_operation
-           puts(ProjetaPlus::Localization.t("messages.ceiling_annotation_success"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            ::UI.messagebox(ProjetaPlus::Localization.t("messages.ceiling_annotation_success"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
           else
             model.abort_operation
-            puts(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            ::UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
           end
           Sketchup.active_model.select_tool(nil)
         rescue StandardError => e
           model.abort_operation
-          puts("#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}", MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+          ::UI.messagebox("#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}", MB_OK, ProjetaPlus::Localization.t("plugin_name"))
           Sketchup.active_model.select_tool(nil)
         end
         

@@ -1,9 +1,9 @@
 # encoding: UTF-8
 require 'sketchup.rb'
-require_relative 'pro_settings.rb' 
-require_relative 'pro_settings_utils.rb'
-require_relative 'pro_hover_face_util.rb'
-require_relative '../localization.rb'
+require_relative '../settings/pro_settings.rb'
+require_relative '../settings/pro_settings_utils.rb'
+require_relative '../pro_hover_face_util.rb'
+require_relative '../../localization.rb'
 
 module ProjetaPlus
   module Modules
