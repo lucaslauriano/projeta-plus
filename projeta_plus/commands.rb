@@ -54,7 +54,10 @@ module ProjetaPlus
 
     def self.recreate_toolbar
       existing_toolbar = ::UI.toolbar(ProjetaPlus::UI::TOOLBAR_NAME)
-      existing_toolbar.visible = false if existing_toolbar
+      if existing_toolbar
+        existing_toolbar.hide
+        existing_toolbar = nil
+      end
 
       ProjetaPlus::UI.create_toolbar
     end
