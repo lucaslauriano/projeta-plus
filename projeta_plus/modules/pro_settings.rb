@@ -101,17 +101,17 @@ module ProjetaPlus
         sketchup_units = get_sketchup_model_display_units
 
         {
-          'font' => read("Font", DEFAULT_FONT),
-          'measurement_unit' => read("MeasurementUnit", sketchup_units[:length]),
-          'area_unit' => read("AreaUnit", sketchup_units[:area]),
-          'scale_numerator' => read("ScaleNumerator", DEFAULT_SCALE_NUMERATOR),
-          'scale_denominator' => read("ScaleDenominator", DEFAULT_SCALE_DENOMINATOR),
-          'floor_level' => read("FloorLevel", DEFAULT_FLOOR_LEVEL),
-          'cut_height' => read("CutHeight", DEFAULT_CUT_HEIGHT),
-          'headroom_height' => read("HeadroomHeight", DEFAULT_HEADROOM_HEIGHT),
-          'styles_folder' => read("StylesFolder", DEFAULT_STYLES_FOLDER),
-          'sheets_folder' => read("SheetsFolder", DEFAULT_SHEETS_FOLDER),
-          'language' => read("Language", DEFAULT_LANGUAGE),
+          'font' => read("font", DEFAULT_FONT),
+          'measurement_unit' => read("measurement_unit", sketchup_units[:length]),
+          'area_unit' => read("area_unit", sketchup_units[:area]),
+          'scale_numerator' => read("scale_numerator", DEFAULT_SCALE_NUMERATOR),
+          'scale_denominator' => read("scale_denominator", DEFAULT_SCALE_DENOMINATOR),
+          'floor_level' => read("floor_level", DEFAULT_FLOOR_LEVEL),
+          'cut_height' => read("cut_height", DEFAULT_CUT_HEIGHT),
+          'headroom_height' => read("headroom_height", DEFAULT_HEADROOM_HEIGHT),
+          'styles_folder' => read("styles_folder", DEFAULT_STYLES_FOLDER),
+          'sheets_folder' => read("sheets_folder", DEFAULT_SHEETS_FOLDER),
+          'language' => read("language", DEFAULT_LANGUAGE),
           'frontend_options' => {
             'fonts' => get_available_fonts,
             'measurement_units' => get_measurement_units,

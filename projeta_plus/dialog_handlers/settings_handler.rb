@@ -10,6 +10,8 @@ module ProjetaPlus
         register_request_all_settings
         register_load_global_settings
         register_change_language
+        register_update_setting
+        register_select_folder_path
       end
       
       private
@@ -61,6 +63,36 @@ module ProjetaPlus
             end
           rescue => e
             log("Error changing language: #{e.message}")
+          end
+          nil
+        end
+      end
+      
+      def register_update_setting
+        @dialog.add_action_callback("updateSetting") do |action_context, json_payload|
+          begin
+            args = JSON.parse(json_payload)
+            result = ProjetaPlus::Modules::ProSettings.update_setting(args)
+            log("Setting updated: #{args.inspect} -> #{result.inspect}")
+            send_json_response("handleSettingUpdate", result)
+          rescue => e
+            error_result = handle_error(e, "update setting")
+            send_json_response("handleSettingUpdate", error_result)
+          end
+          nil
+        end
+      end
+      
+      def register_select_folder_path
+        @dialog.add_action_callback("selectFolderPath") do |action_context, json_payload|
+          begin
+            args = JSON.parse(json_payload)
+            result = ProjetaPlus::Modules::ProSettings.select_folder_path(args)
+            log("Folder selected: #{args.inspect} -> #{result.inspect}")
+            send_json_response("handleFolderSelection", result)
+          rescue => e
+            error_result = handle_error(e, "folder selection")
+            send_json_response("handleFolderSelection", error_result)
           end
           nil
         end
