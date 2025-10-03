@@ -10,6 +10,7 @@ module ProjetaPlus
         register_room_annotation_callbacks
         register_section_annotation_callbacks
         register_ceiling_annotation_callbacks
+        register_view_indication_callbacks
       end
       
       private
@@ -37,10 +38,15 @@ module ProjetaPlus
       end
       
       def register_section_annotation_callbacks
-        @dialog.add_action_callback("loadSectionAnnotationDefaults") do |action_context|
-          defaults = ProjetaPlus::Modules::ProSectionAnnotation.get_defaults
-          log("Loading section annotation defaults: #{defaults.inspect}")
-          send_json_response("handleSectionDefaults", defaults)
+        @dialog.add_action_callback("startSectionAnnotation") do |action_context, json_payload|
+          begin
+            result = ProjetaPlus::Modules::ProSectionAnnotation.start_interactive_annotation
+            log("Section annotation started (using fixed module values)")
+            send_json_response("handleSectionAnnotationResult", result)
+          rescue => e
+            error_result = handle_error(e, "section annotation")
+            send_json_response("handleSectionAnnotationResult", error_result)
+          end
           nil
         end
       end
@@ -51,6 +57,90 @@ module ProjetaPlus
           log("Loading ceiling annotation defaults: #{defaults.inspect}")
           send_json_response("handleCeilingDefaults", defaults)
           nil
+        end
+      end
+      
+      def register_view_indication_callbacks
+        @dialog.add_action_callback("activate_view_indication_tool") do |action_context|
+          activate_view_indication_tool
+        end
+        
+        @dialog.add_action_callback("get_view_indication_settings") do |action_context|
+          get_view_indication_settings
+        end
+        
+        @dialog.add_action_callback("update_view_indication_settings") do |action_context, settings_json|
+          update_view_indication_settings(settings_json)
+        end
+      end
+      
+      def activate_view_indication_tool
+        begin
+          model = Sketchup.active_model
+          
+          if model.nil?
+            @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.no_model_open")}', 'error');")
+            return
+          end
+          
+          # Activate the view indication tool
+          tool = ProjetaPlus::Modules::ProViewIndication::ViewIndicationTool.new
+          model.select_tool(tool)
+          
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.view_indication_tool_activated")}', 'success');")
+          
+        rescue => e
+          puts "[ProjetaPlus] Error activating view indication tool: #{e.message}"
+          puts e.backtrace.join("\n")
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.error_activating_tool")}', 'error');")
+        end
+      end
+      
+      def get_view_indication_settings
+        begin
+          settings = ProjetaPlus::ProSettings.get_settings
+          
+          view_indication_settings = {
+            cut_level: settings[:cut_height] || ProjetaPlus::Modules::ProViewIndication::CUT_LEVEL,
+            default_scale: settings[:scale] || ProjetaPlus::Modules::ProViewIndication::DEFAULT_SCALE,
+            block_name: ProjetaPlus::Modules::ProViewIndication::BLOCK_NAME
+          }
+          
+          @dialog.execute_script("updateViewIndicationSettings(#{view_indication_settings.to_json});")
+          
+        rescue => e
+          puts "[ProjetaPlus] Error getting view indication settings: #{e.message}"
+          puts e.backtrace.join("\n")
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.error_getting_settings")}', 'error');")
+        end
+      end
+      
+      def update_view_indication_settings(settings_json)
+        begin
+          settings = JSON.parse(settings_json, symbolize_names: true)
+          
+          # Validate settings
+          cut_level = settings[:cut_level].to_f
+          default_scale = settings[:default_scale].to_f
+          
+          if cut_level <= 0 || default_scale <= 0
+            @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.invalid_view_indication_values")}', 'error');")
+            return
+          end
+          
+          # Update settings
+          ProjetaPlus::ProSettings.update_setting(:cut_height, cut_level)
+          ProjetaPlus::ProSettings.update_setting(:scale, default_scale)
+          
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.view_indication_settings_updated")}', 'success');")
+          
+        rescue JSON::ParserError => e
+          puts "[ProjetaPlus] JSON parsing error in view indication settings: #{e.message}"
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.json_parse_error")}', 'error');")
+        rescue => e
+          puts "[ProjetaPlus] Error updating view indication settings: #{e.message}"
+          puts e.backtrace.join("\n")
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.error_updating_settings")}', 'error');")
         end
       end
       

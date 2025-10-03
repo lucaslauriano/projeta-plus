@@ -12,7 +12,6 @@ module ProjetaPlus
 
       DEFAULT_ROOM_ANNOTATION_SCALE   = ProjetaPlus::Modules::ProSettingsUtils.get_scale
       DEFAULT_ROOM_ANNOTATION_FONT    = ProjetaPlus::Modules::ProSettingsUtils.get_font
-      DEFAULT_ROOM_ANNOTATION_FLOOR_HEIGHT_STR = "0,00" 
       DEFAULT_ROOM_ANNOTATION_SHOW_CEILLING_HEIGHT = true 
       DEFAULT_ROOM_ANNOTATION_CEILLING_HEIGHT_STR  = "0,00" 
       DEFAULT_ROOM_ANNOTATION_SHOW_LEVEL = true 
@@ -23,7 +22,6 @@ module ProjetaPlus
 
       def self.get_defaults
         {
-          floor_height: Sketchup.read_default("RoomAnnotation", "floor_height", DEFAULT_ROOM_ANNOTATION_FLOOR_HEIGHT_STR),
           show_ceilling_height: convert_to_boolean(Sketchup.read_default("RoomAnnotation", "show_ceilling_height", DEFAULT_ROOM_ANNOTATION_SHOW_CEILLING_HEIGHT)),
           ceilling_height: Sketchup.read_default("RoomAnnotation", "ceilling_height", DEFAULT_ROOM_ANNOTATION_CEILLING_HEIGHT_STR),
           show_level: convert_to_boolean(Sketchup.read_default("RoomAnnotation", "show_level", DEFAULT_ROOM_ANNOTATION_SHOW_LEVEL)),
@@ -128,15 +126,14 @@ module ProjetaPlus
         layer = model.layers.add('-2D-LEGENDA AMBIENTE')
 
         enviroment_name   = args['enviroment_name'].to_s
-        scale           = DEFAULT_ROOM_ANNOTATION_SCALE
-        font            = DEFAULT_ROOM_ANNOTATION_FONT
+        scale           = ProjetaPlus::Modules::ProSettingsUtils.get_scale
+        font            = ProjetaPlus::Modules::ProSettingsUtils.get_font
         show_ceilling_height      = convert_to_boolean(args['show_ceilling_height'])
         ceilling_height_str          = args['ceilling_height'].to_s
         show_level   = convert_to_boolean(args['show_level'])
         is_auto_level = convert_to_boolean(args['is_auto_level'])
         level_value    = args['level_value'].to_s # What was 'level_value' is now 'level' in the UI
         
-        Sketchup.write_default("RoomAnnotation", "floor_height", args['floor_height'].to_s)
         Sketchup.write_default("RoomAnnotation", "show_ceilling_height", show_ceilling_height)
         Sketchup.write_default("RoomAnnotation", "ceilling_height", args['ceilling_height'].to_s)
         Sketchup.write_default("RoomAnnotation", "show_level", show_level)
