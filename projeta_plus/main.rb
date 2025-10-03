@@ -33,6 +33,7 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_hover_face_
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_room_annotation.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_section_annotation.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_ceiling_annotation.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_view_indication.rb')
 
 
 # UI
