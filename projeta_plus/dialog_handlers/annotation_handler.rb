@@ -11,6 +11,8 @@ module ProjetaPlus
         register_section_annotation_callbacks
         register_ceiling_annotation_callbacks
         register_view_indication_callbacks
+        register_lighting_annotation_callbacks
+        register_circuit_connection_callbacks
       end
       
       private
@@ -56,6 +58,19 @@ module ProjetaPlus
           defaults = ProjetaPlus::Modules::ProCeilingAnnotation.get_defaults
           log("Loading ceiling annotation defaults: #{defaults.inspect}")
           send_json_response("handleCeilingDefaults", defaults)
+          nil
+        end
+        
+        @dialog.add_action_callback("startCeilingAnnotation") do |action_context, json_payload|
+          begin
+            args = JSON.parse(json_payload)
+            result = ProjetaPlus::Modules::ProCeilingAnnotation.start_interactive_annotation(args)
+            log("Ceiling annotation started with args: #{args.inspect}")
+            send_json_response("handleCeilingAnnotationResult", result)
+          rescue => e
+            error_result = handle_error(e, "ceiling annotation")
+            send_json_response("handleCeilingAnnotationResult", error_result)
+          end
           nil
         end
       end
@@ -114,6 +129,7 @@ module ProjetaPlus
           @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.error_getting_settings")}', 'error');")
         end
       end
+
       
       def update_view_indication_settings(settings_json)
         begin
@@ -141,6 +157,42 @@ module ProjetaPlus
           puts "[ProjetaPlus] Error updating view indication settings: #{e.message}"
           puts e.backtrace.join("\n")
           @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.error_updating_settings")}', 'error');")
+        end
+      end
+      
+      def register_lighting_annotation_callbacks
+        @dialog.add_action_callback("loadLightingAnnotationDefaults") do |action_context|
+          defaults = ProjetaPlus::Modules::ProLightingAnnotation.get_defaults
+          log("Loading lighting annotation defaults: #{defaults.inspect}")
+          send_json_response("handleLightingDefaults", defaults)
+          nil
+        end
+        
+        @dialog.add_action_callback("startLightingAnnotation") do |action_context, json_payload|
+          begin
+            args = JSON.parse(json_payload)
+            result = ProjetaPlus::Modules::ProLightingAnnotation.start_interactive_annotation(args)
+            log("Lighting annotation started with args: #{args.inspect}")
+            send_json_response("handleLightingAnnotationResult", result)
+          rescue => e
+            error_result = handle_error(e, "lighting annotation")
+            send_json_response("handleLightingAnnotationResult", error_result)
+          end
+          nil
+        end
+      end
+      
+      def register_circuit_connection_callbacks
+        @dialog.add_action_callback("startCircuitConnection") do |action_context|
+          begin
+            result = ProjetaPlus::Modules::ProCircuitConnection.start_interactive_connection
+            log("Circuit connection tool started")
+            send_json_response("handleCircuitConnectionResult", result)
+          rescue => e
+            error_result = handle_error(e, "circuit connection")
+            send_json_response("handleCircuitConnectionResult", error_result)
+          end
+          nil
         end
       end
       

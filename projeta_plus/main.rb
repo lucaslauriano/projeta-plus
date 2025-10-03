@@ -8,7 +8,7 @@ unless defined?(ProjetaPlus) && defined?(ProjetaPlus::PATH)
 end
 
 # Modules (load settings first as other modules depend on it)
-require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_settings.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'settings', 'pro_settings.rb')
 puts "[ProjetaPlus Debug] ProSettings loaded: #{defined?(ProjetaPlus::Modules::ProSettings)}"
 
 # load localization module
@@ -30,10 +30,12 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'commands.rb')
 
 # Annotation Modules
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_hover_face_util.rb') 
-require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_room_annotation.rb')
-require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_section_annotation.rb')
-require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_ceiling_annotation.rb')
-require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_view_indication.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_room_annotation.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_section_annotation.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_ceiling_annotation.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_lighting_annotation.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_circuit_connection.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_view_indication.rb')
 
 
 # UI
