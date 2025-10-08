@@ -18,6 +18,7 @@
 /su_sandbox
 /5d_auto_tag
 /__MACOSX
+/frontend
 
 *su_dynamiccomponents.rb
 *su_sandbox.rb
