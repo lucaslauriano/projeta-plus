@@ -10,7 +10,7 @@ module ProjetaPlus
 
       DEFAULT_SECTION_LINE_HEIGHT_CM = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
       DEFAULT_SECTION_SCALE_FACTOR = ProjetaPlus::Modules::ProSettingsUtils.get_scale.to_s
-      DEFAULT_SECTION_SCALE = 2.54
+      CM_TO_INCHES_CONVERSION_FACTOR = 2.54
 
       def self.get_defaults
         {
@@ -20,7 +20,7 @@ module ProjetaPlus
       end
 
       def self.create_black_triangle(entities, position, orientation, scale_factor)
-        size = (1 / DEFAULT_SECTION_SCALE) * scale_factor 
+        size = (1 / CM_TO_INCHES_CONVERSION_FACTOR) * scale_factor 
         half_size = size / 2.0
       
         pt1 = [0, -half_size, 0]
@@ -209,14 +209,14 @@ module ProjetaPlus
         line_height_cm = DEFAULT_SECTION_LINE_HEIGHT_CM.to_f
         scale_factor = DEFAULT_SECTION_SCALE_FACTOR.to_f
         
-        line_height = line_height_cm / DEFAULT_SECTION_SCALE # Converter cm para polegadas
+        line_height = line_height_cm / CM_TO_INCHES_CONVERSION_FACTOR # Converter cm para polegadas
       
         # Use the entity's bounding box for positioning
         entity_bounds = entity.bounds
         entity_center = entity_bounds.center
         
         # Extend lines beyond the entity bounds
-        extend_distance = (scale_factor / DEFAULT_SECTION_SCALE) * 2 # Extend lines beyond entity
+        extend_distance = (scale_factor / CM_TO_INCHES_CONVERSION_FACTOR) * 2 # Extend lines beyond entity
         bb = Geom::BoundingBox.new
         bb.add([entity_bounds.min.x - extend_distance, entity_bounds.min.y - extend_distance, entity_bounds.min.z])
         bb.add([entity_bounds.max.x + extend_distance, entity_bounds.max.y + extend_distance, entity_bounds.max.z])
@@ -229,10 +229,10 @@ module ProjetaPlus
         all_lines_group.layer = layer
       
         # Constantes para o estilo de linha (padrão arquitetônico muito visível - 100% maior)
-        dash_length = 20 / DEFAULT_SECTION_SCALE;     # Traço longo muito visível (50mm - dobrado)
-        dot_diameter = 0.4 / DEFAULT_SECTION_SCALE;   # Ponto muito grande e visível (5mm de diâmetro - dobrado)
-        gap_length = 0.4 / DEFAULT_SECTION_SCALE      # Espaçamento muito maior para legibilidade (10mm - dobrado)
-        font_size = (0.3 / DEFAULT_SECTION_SCALE)
+        dash_length = 10 / CM_TO_INCHES_CONVERSION_FACTOR;     # Traço longo muito visível (50mm - dobrado)
+        dot_diameter = 0.2 / CM_TO_INCHES_CONVERSION_FACTOR;   # Ponto muito grande e visível (5mm de diâmetro - dobrado)
+        gap_length = 2 / CM_TO_INCHES_CONVERSION_FACTOR      # Espaçamento muito maior para legibilidade (10mm - dobrado)
+        font_size = (0.3 / CM_TO_INCHES_CONVERSION_FACTOR) 
 
         section_planes.each_with_index do |entity, i|
           plane = entity.get_plane
@@ -250,13 +250,13 @@ module ProjetaPlus
           # Determina as extremidades da linha baseadas no centro do grupo/componente
           if orientation.y.abs > orientation.x.abs
             # Plano mais alinhado com Y - linha horizontal passando pelo centro
-            line_start = [bb.min.x - (scale_factor / DEFAULT_SECTION_SCALE), position.y, 0]
-            line_end   = [bb.max.x + (scale_factor / DEFAULT_SECTION_SCALE), position.y, 0]
+            line_start = [bb.min.x - (scale_factor / CM_TO_INCHES_CONVERSION_FACTOR), position.y, 0]
+            line_end   = [bb.max.x + (scale_factor / CM_TO_INCHES_CONVERSION_FACTOR), position.y, 0]
             text_offset_direction = :x
           else
             # Plano mais alinhado com X - linha vertical passando pelo centro
-            line_start = [position.x, bb.min.y - (scale_factor / DEFAULT_SECTION_SCALE), 0]
-            line_end   = [position.x, bb.max.y + (scale_factor / DEFAULT_SECTION_SCALE), 0]
+            line_start = [position.x, bb.min.y - (scale_factor / CM_TO_INCHES_CONVERSION_FACTOR), 0]
+            line_end   = [position.x, bb.max.y + (scale_factor / CM_TO_INCHES_CONVERSION_FACTOR), 0]
             text_offset_direction = :y
           end
       
@@ -328,7 +328,7 @@ module ProjetaPlus
           return { success: false, message: invalid_values_msg }
         end
       
-        line_height = line_height_cm / DEFAULT_SECTION_SCALE # Converter cm para polegadas (unidade interna do SketchUp)
+        line_height = line_height_cm / CM_TO_INCHES_CONVERSION_FACTOR # Converter cm para polegadas (unidade interna do SketchUp)
       
         model.start_operation(ProjetaPlus::Localization.t("commands.section_annotation_operation_name"), true)
         
@@ -343,11 +343,11 @@ module ProjetaPlus
         all_lines_group.layer = layer
       
         # Constantes para o estilo de linha (valores muito maiores - 100% de aumento)
-        dash_length = 50.mm # Traço muito longo e visível (50mm - dobrado)
-        dot_diameter = 5.mm # Ponto muito grande e visível (5mm - dobrado)
-        gap_length = 5.mm # Espaçamento muito maior (5mm - dobrado)
+        dash_length = 10 / CM_TO_INCHES_CONVERSION_FACTOR # Traço muito longo e visível (50mm - dobrado)
+        dot_diameter = 10 / CM_TO_INCHES_CONVERSION_FACTOR # Ponto muito grande e visível (5mm - dobrado)
+        gap_length = 10 / CM_TO_INCHES_CONVERSION_FACTOR # Espaçamento muito maior (5mm - dobrado)
 
-        font_size = (0.3 / DEFAULT_SECTION_SCALE) # Base para o tamanho do texto (em polegadas)
+        font_size = (0.3 / CM_TO_INCHES_CONVERSION_FACTOR) # Base para o tamanho do texto (em polegadas)
 
         section_planes.each_with_index do |entity, i|
           plane = entity.get_plane
@@ -365,13 +365,13 @@ module ProjetaPlus
           # Determina as extremidades da linha de corte com base na orientação do plano e bounding box da seleção
           if orientation.y.abs > orientation.x.abs
             # Plano de corte mais alinhado com o eixo Y (corte "horizontal" no modelo)
-            line_start = [bb.min.x - (scale_factor / DEFAULT_SECTION_SCALE), position.y, 0] # Adiciona um offset para que a linha saia um pouco da seleção
-            line_end   = [bb.max.x + (scale_factor / DEFAULT_SECTION_SCALE), position.y, 0]
+            line_start = [bb.min.x - (scale_factor / CM_TO_INCHES_CONVERSION_FACTOR), position.y, 0] # Adiciona um offset para que a linha saia um pouco da seleção
+            line_end   = [bb.max.x + (scale_factor / CM_TO_INCHES_CONVERSION_FACTOR), position.y, 0]
             text_offset_direction = :x
           else
             # Plano de corte mais alinhado com o eixo X (corte "vertical" no modelo)
-            line_start = [position.x, bb.min.y - (scale_factor / DEFAULT_SECTION_SCALE), 0]
-            line_end   = [position.x, bb.max.y + (scale_factor / DEFAULT_SECTION_SCALE), 0]
+            line_start = [position.x, bb.min.y - (scale_factor / CM_TO_INCHES_CONVERSION_FACTOR), 0]
+            line_end   = [position.x, bb.max.y + (scale_factor / CM_TO_INCHES_CONVERSION_FACTOR), 0]
             text_offset_direction = :y
           end
       
