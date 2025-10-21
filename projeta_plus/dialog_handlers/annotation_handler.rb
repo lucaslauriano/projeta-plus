@@ -130,7 +130,6 @@ module ProjetaPlus
         end
       end
 
-      
       def update_view_indication_settings(settings_json)
         begin
           settings = JSON.parse(settings_json, symbolize_names: true)

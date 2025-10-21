@@ -132,7 +132,7 @@ module ProjetaPlus
         ceilling_height_str          = args['ceilling_height'].to_s
         show_level   = convert_to_boolean(args['show_level'])
         is_auto_level = convert_to_boolean(args['is_auto_level'])
-        level_value    = args['level_value'].to_s # What was 'level_value' is now 'level' in the UI
+        level_value    = args['level_value'].to_s 
         
         Sketchup.write_default("RoomAnnotation", "show_ceilling_height", show_ceilling_height)
         Sketchup.write_default("RoomAnnotation", "ceilling_height", args['ceilling_height'].to_s)
@@ -167,7 +167,7 @@ module ProjetaPlus
           nivel_label = "#{level_value.gsub('.', ',')} m"
         end
        
-        z_height = face_z_global + ProjetaPlus::Modules::ProSettings::DEFAULT_CUT_HEIGHT.m
+        z_height = face_z_global + cut_height_from_settings
         center = Geom::Point3d.new(center_xy.x, center_xy.y, z_height)
         
         text_group = test_text(main_text, center, scale, font)
