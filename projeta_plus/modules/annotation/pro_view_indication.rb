@@ -1,11 +1,15 @@
 # encoding: UTF-8
 require_relative '../pro_hover_face_util.rb'
+require_relative '../settings/pro_settings.rb'
+require_relative '../settings/pro_settings_utils.rb'
+require_relative '../../localization.rb'
 
 module ProjetaPlus
   module Modules
     module ProViewIndication
-    CUT_LEVEL = 1.45
-    DEFAULT_SCALE = 25.0
+    CUT_LEVEL = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+    DEFAULT_VIEW_INDICATION_SCALE   = ProjetaPlus::Modules::ProSettingsUtils.get_scale
+    CM_TO_INCHES_CONVERSION_FACTOR = 2.54
     BLOCK_NAME = 'proViewIndication_abcd.skp'
     
     def self.global_transformation(path, face)
@@ -116,7 +120,7 @@ module ProjetaPlus
         model.start_operation(ProjetaPlus::Localization.t("commands.view_indication_operation_name"), true)
         
         # Offset the center point by cut level
-        center_point = center_point.offset(z_axis, CUT_LEVEL.m)
+        center_point = center_point.offset(z_axis, CUT_LEVEL.to_f / CM_TO_INCHES_CONVERSION_FACTOR)
         
         # Create transformation
         transformation = Geom::Transformation.axes(center_point, x_axis, y_axis, z_axis)
@@ -125,7 +129,7 @@ module ProjetaPlus
         instance = model.active_entities.add_instance(component_definition, transformation)
         
         # Scale the instance
-        instance.transform!(Geom::Transformation.scaling(instance.bounds.center, DEFAULT_SCALE.to_f))
+        instance.transform!(Geom::Transformation.scaling(instance.bounds.center, DEFAULT_VIEW_INDICATION_SCALE))
         
         # Select the instance
         model.selection.clear
