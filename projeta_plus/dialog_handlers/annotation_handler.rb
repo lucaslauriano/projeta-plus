@@ -170,6 +170,12 @@ module ProjetaPlus
         @dialog.add_action_callback("startLightingAnnotation") do |action_context, json_payload|
           begin
             args = JSON.parse(json_payload)
+            puts "args: #{args.inspect}"
+            puts "args['circuit_text']: #{args['circuit_text']}"
+            puts "args['circuit_scale']: #{args['circuit_scale']}"
+            puts "args['circuit_height_cm']: #{args['circuit_height_cm']}"
+            puts "args['circuit_font']: #{args['circuit_font']}"
+            puts "args['circuit_text_color']: #{args['circuit_text_color']}"
             result = ProjetaPlus::Modules::ProLightingAnnotation.start_interactive_annotation(args)
             log("Lighting annotation started with args: #{args.inspect}")
             send_json_response("handleLightingAnnotationResult", result)
