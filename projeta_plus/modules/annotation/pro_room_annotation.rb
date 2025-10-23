@@ -114,12 +114,7 @@ module ProjetaPlus
         inst.transform!(Geom::Transformation.scaling(inst.bounds.center, scale.to_f))
         inst
       end
-      
-      # Removed parse_num (use to_f directly, or methods of Localization)
-      # Removed global_transformation e global_piso_z (simplest Bounds logic used in process_room_annotation)
-      # Removed coletar_config (settings come from Next.js)
 
-      # Now accepts 'args' from the Next.js frontend.
       def self.process_room_annotation(grupo, args, hover_face = nil, hover_extents = nil)
         model = Sketchup.active_model
         # Uses a layer '-2D-LEGENDA AMBIENTE' (Environment Legend)

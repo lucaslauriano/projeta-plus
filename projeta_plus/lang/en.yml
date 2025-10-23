@@ -46,6 +46,9 @@ messages:
   view_indication_settings_updated: 'View indication settings updated successfully!'
   error_getting_settings: 'Error getting view indication settings'
   error_updating_settings: 'Error updating view indication settings'
+  circuit_annotation_success: 'Circuit annotation added successfully!'
+  error_adding_circuit_annotation: 'Error adding circuit annotation'
+  circuit_tool_activated: 'Circuit annotation tool activated. Click on a face to annotate.'
 commands:
   room_annotation_operation_name: 'Room Annotation'
   ceiling_annotation_operation_name: 'Ceiling Annotation'
@@ -54,6 +57,8 @@ commands:
   all_section_lines_group_name: 'All Section Lines'
   section_line_group_name: 'Section Line'
   view_indication_operation_name: 'View Indication'
+  circuit_annotation_operation_name: 'Circuit Annotation'
+  circuit_annotation_instructions: 'Click on a face to add CIRCUIT. Use arrows to position. ESC to exit.'
 settings:
   global_settings_title: 'Global Settings'
   font: 'Font'

@@ -13,6 +13,8 @@ commands:
   all_section_lines_group_name: 'Todas as Linhas de Corte'
   section_line_group_name: 'Linha de Corte'
   view_indication_operation_name: 'Indicação de Vistas'
+  circuit_annotation_operation_name: 'Anotação de Circuito'
+  circuit_annotation_instructions: 'Clique em uma face para adicionar CIRCUITO. Use setas para posicionar. ESC para sair.'
 messages:
   logout_info: 'O logout de usuário agora é gerenciado pelo aplicativo remoto na Vercel (via Clerk). Por favor, gerencie sua sessão diretamente lá, ou feche e reabra o aplicativo para um novo login.'
   room_annotation_success: 'Nome do ambiente e anotações adicionados com sucesso!'
@@ -54,6 +56,9 @@ messages:
   view_indication_settings_updated: 'Configurações de indicação de vistas atualizadas com sucesso!'
   error_getting_settings: 'Erro ao obter configurações de indicação de vistas'
   error_updating_settings: 'Erro ao atualizar configurações de indicação de vistas'
+  circuit_annotation_success: 'Anotação de circuito adicionada com sucesso!'
+  error_adding_circuit_annotation: 'Erro ao adicionar anotação de circuito'
+  circuit_tool_activated: 'Ferramenta de anotação de circuito ativada. Clique em uma face para anotar.'
 settings:
   global_settings_title: 'Configurações Globais'
   font: 'Fonte'

@@ -12,14 +12,14 @@ module ProjetaPlus
       # Constants
       PREVIEW_COLOR = "#803965"
       CM_TO_INCHES_CONVERSION_FACTOR = 2.54
+      DEFAULT_LIGHTING_ANNOTATION_HEIGHT_STR = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm # 145
+      DEFAULT_LIGHTING_ANNOTATION_FONT = ProjetaPlus::Modules::ProSettingsUtils.get_font # Century Gothic
+      @default_scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale # 100
+      DEFAULT_LIGHTING_ANNOTATION_TEXT_COLOR = ProjetaPlus::Modules::ProSettingsUtils.get_text_color # black
 
       def self.get_defaults
         {
-          circuit_text: Sketchup.read_default("LightingCircuit", "text", "C1"),
-          circuit_scale: Sketchup.read_default("LightingCircuit", "scale", ProjetaPlus::Modules::ProSettingsUtils.get_scale),
-          circuit_height_cm: Sketchup.read_default("LightingCircuit", "height_z", ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm),
-          circuit_font: Sketchup.read_default("LightingCircuit", "font", ProjetaPlus::Modules::ProSettingsUtils.get_font),
-          circuit_text_color: Sketchup.read_default("LightingCircuit", "text_color", ProjetaPlus::Modules::ProSettingsUtils.get_text_color)
+          circuit_text: Sketchup.read_default("LightingCircuit", "text", "C1")
         }
       end
 
@@ -40,12 +40,12 @@ module ProjetaPlus
         return { success: false, message: "Invalid face reference" } unless face && face.valid?
         return { success: false, message: "Invalid path" } unless path && path.is_a?(Array)
         
-        # Extract parameters from frontend args
+        # Extract parameters from frontend args (only circuit_text comes from frontend)
         text = args['circuit_text'].to_s
-        scale = args['circuit_scale'].to_f
-        height_z_cm = args['circuit_height_cm'].to_s
-        font = args['circuit_font'].to_s
-        text_color = args['circuit_text_color'].to_s
+        scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
+        height_z_cm = DEFAULT_LIGHTING_ANNOTATION_HEIGHT_STR
+        font = DEFAULT_LIGHTING_ANNOTATION_FONT # Century Gothic
+        text_color = DEFAULT_LIGHTING_ANNOTATION_TEXT_COLOR
         
         # Validate text is not empty
         return { success: false, message: "Text cannot be empty" } if text.empty?
@@ -198,7 +198,18 @@ module ProjetaPlus
         
         def initialize(args)
           @args = args
-          @valid_pick = false
+          @text = args['circuit_text'].to_s
+          
+          # Usar valores padrão das configurações para os outros parâmetros
+          @font = DEFAULT_LIGHTING_ANNOTATION_FONT
+          @color = DEFAULT_LIGHTING_ANNOTATION_TEXT_COLOR
+          @scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
+          @height_z_cm = DEFAULT_LIGHTING_ANNOTATION_HEIGHT_STR
+          
+          @height_z = @height_z_cm.to_f / CM_TO_INCHES_CONVERSION_FACTOR # cm → inches
+          @text_height = 3.mm * @scale
+          @base_margin_cm = 0.5 # margem base em cm
+          @margin = (@base_margin_cm * @scale).cm / CM_TO_INCHES_CONVERSION_FACTOR
           @relative_position = 0 # 0=top, 1=right, 2=bottom, 3=left
           @preview_points = []
         end
@@ -219,35 +230,26 @@ module ProjetaPlus
         end
         
         def calculate_preview
-          return unless @hover_face && @path && @hover_face.valid?
+          return unless @hover_face && @path
           
-          # Use face bounding box for positioning
+          # Usar o bounding box da face para posicionamento
           bb = hover_extents
           
-          # Extract parameters for calculations
-          text = @args['circuit_text'].to_s
-          scale = @args['circuit_scale'].to_f
-          height_z_cm = @args['circuit_height_cm'].to_s
-          height_z = height_z_cm.to_f / CM_TO_INCHES_CONVERSION_FACTOR # cm → inches
-          text_height = 3.mm * scale
-          base_margin_cm = 0.5
-          margin = (base_margin_cm * scale).cm / CM_TO_INCHES_CONVERSION_FACTOR
-          
-          # Calculate position based on selected direction
+          # Calcular posição baseada na direção selecionada
           case @relative_position
-          when 0  # Top
-            position = Geom::Point3d.new(bb.center.x, bb.max.y + margin, height_z)
-          when 1  # Right
-            position = Geom::Point3d.new(bb.max.x + margin, bb.center.y, height_z)
-          when 2  # Bottom
-            position = Geom::Point3d.new(bb.center.x, bb.min.y - margin, height_z)
-          when 3  # Left
-            position = Geom::Point3d.new(bb.min.x - margin, bb.center.y, height_z)
+          when 0  # Cima
+            position = Geom::Point3d.new(bb.center.x, bb.max.y + @margin, @height_z)
+          when 1  # Direita
+            position = Geom::Point3d.new(bb.max.x + @margin, bb.center.y, @height_z)
+          when 2  # Baixo
+            position = Geom::Point3d.new(bb.center.x, bb.min.y - @margin, @height_z)
+          when 3  # Esquerda
+            position = Geom::Point3d.new(bb.min.x - @margin, bb.center.y, @height_z)
           end
           
-          # Create preview points (rectangle for text)
-          letter_size = text_height
-          approx_width = text.length * letter_size * 0.6
+          # Criar pontos de preview simples (retângulo do texto)
+          letter_size = @text_height
+          approx_width = @text.length * letter_size * 0.6
           approx_height = letter_size
           
           @preview_points = [
@@ -261,51 +263,85 @@ module ProjetaPlus
         def draw(view)
           draw_hover(view)
           
-          # Draw text preview
+          # Desenhar preview do texto
           if @preview_points.length == 4
             view.drawing_color = Sketchup::Color.new(PREVIEW_COLOR)
             view.line_stipple = "-"
             view.line_width = 2
             
-            # Draw preview rectangle
+            # Desenhar retângulo de preview
             view.draw(GL_LINE_LOOP, @preview_points)
             
-            # Draw preview text in center
+            # Desenhar texto do preview no centro
             center = Geom::Point3d.new(
               (@preview_points[0].x + @preview_points[2].x) / 2,
               (@preview_points[0].y + @preview_points[2].y) / 2,
               @preview_points[0].z
             )
             
-            view.draw_text(center, @args['circuit_text'].to_s, {
-              font: @args['circuit_font'].to_s,
+            view.draw_text(center, @text, {
+              font: @font,
               size: 12,
               bold: false,
-              align: TextAlignLeft,
+              align: TextAlignCenter,
               color: PREVIEW_COLOR
             })
           end
         end
         
         def onLButtonDown(flags, x, y, view)
-          return unless @valid_pick && @hover_face && @hover_face.valid?
-          
+          return unless @hover_face && @path
+
           model = Sketchup.active_model
-          model.start_operation(ProjetaPlus::Localization.t("commands.circuit_annotation_operation_name"), true)
           
-          result = ProjetaPlus::Modules::ProLightingAnnotation.process_circuit_annotation(@hover_face, @path, @args)
-          if result[:success]
-            model.commit_operation
-            ::UI.messagebox(ProjetaPlus::Localization.t("messages.circuit_annotation_success"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
-          else
-            model.abort_operation
-            ::UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+          # Pegar o objeto que contém a face (grupo ou componente pai)
+          holder = @hover_face.parent.instances[0] rescue @hover_face.parent
+          
+          # Usar o bounding box da face para posicionamento
+          bb = hover_extents
+          
+          # Calcular posição baseada na direção selecionada
+          case @relative_position
+          when 0  # Cima
+            position = Geom::Point3d.new(bb.center.x, bb.max.y + @margin, @height_z)
+          when 1  # Direita
+            position = Geom::Point3d.new(bb.max.x + @margin, bb.center.y, @height_z)
+          when 2  # Baixo
+            position = Geom::Point3d.new(bb.center.x, bb.min.y - @margin, @height_z)
+          when 3  # Esquerda
+            position = Geom::Point3d.new(bb.min.x - @margin, bb.center.y, @height_z)
           end
-          Sketchup.active_model.select_tool(nil)
-        rescue StandardError => e
-          model.abort_operation
-          ::UI.messagebox("#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}", MB_OK, ProjetaPlus::Localization.t("plugin_name"))
-          Sketchup.active_model.select_tool(nil)
+
+          text_group = model.entities.add_group
+
+          # Aplica a tag ao grupo
+          tag_name = "-ANOTACAO-ILUMINACAO CIRCUITOS"
+          tag = model.layers[tag_name] || model.layers.add(tag_name)
+          text_group.layer = tag
+
+          texto_3d = text_group.entities.add_3d_text(
+            @text,
+            TextAlignCenter,
+            @font,
+            false, false,
+            @text_height,
+            0.0,
+            0.0,
+            true
+          )
+
+          # Centraliza o texto na posição calculada
+          center_text = text_group.bounds.center
+          vector_move = position - center_text
+          text_group.transform!(Geom::Transformation.translation(vector_move))
+
+          # Aplica a cor nas faces do texto
+          text_group.entities.grep(Sketchup::Face).each do |face|
+            face.material = @color
+            face.back_material = @color
+          end
+
+          view.invalidate
         end
         
         def onKeyDown(key, repeat, flags, view)
