@@ -22,12 +22,11 @@ module ProjetaPlus
         }
       end
 
-      # Adaptação de FM_Extensions::AnotacaoForro.test_text_inverted
       def self.test_text_inverted(text, position, scale, font, alignment = TextAlignCenter)
         model = Sketchup.active_model
         g = model.entities.add_group
         ents = g.entities
-        height = 0.3.cm * scale # 0.3 cm como base para altura
+        height = 0.3.cm * scale 
         
         ents.add_3d_text(text, alignment, font, true, false, height, 0)
         
@@ -61,8 +60,8 @@ module ProjetaPlus
         layer.color = Sketchup::Color.new(0, 0, 0) 
 
         # Extrai parâmetros dos args do frontend
-        scale = args['scale'].to_f
-        font = args['font'].to_s
+        scale = DEFAULT_CEILING_ANNOTATION_SCALE
+        font = DEFAULT_CEILING_ANNOTATION_FONT
         floor_level_str = args['floor_level'].to_s.tr(',', '.')
         floor_level = floor_level_str.to_f # Nível do piso em metros
 
