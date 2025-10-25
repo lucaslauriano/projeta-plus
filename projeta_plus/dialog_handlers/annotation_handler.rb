@@ -13,6 +13,8 @@ module ProjetaPlus
         register_view_indication_callbacks
         register_lighting_annotation_callbacks
         register_circuit_connection_callbacks
+        register_height_annotation_callbacks
+        register_component_updater_callbacks
       end
       
       private
@@ -196,6 +198,50 @@ module ProjetaPlus
           rescue => e
             error_result = handle_error(e, "circuit connection")
             send_json_response("handleCircuitConnectionResult", error_result)
+          end
+          nil
+        end
+      end
+      
+      def register_height_annotation_callbacks
+        @dialog.add_action_callback("loadHeightAnnotationDefaults") do |action_context|
+          defaults = ProjetaPlus::Modules::ProHeightAnnotation.get_defaults
+          log("Loading height annotation defaults: #{defaults.inspect}")
+          send_json_response("handleHeightDefaults", defaults)
+          nil
+        end
+        
+        @dialog.add_action_callback("startHeightAnnotation") do |action_context, json_payload|
+          begin
+            args = JSON.parse(json_payload)
+            result = ProjetaPlus::Modules::ProHeightAnnotation.start_interactive_annotation(args)
+            log("Height annotation started with args: #{args.inspect}")
+            send_json_response("handleHeightAnnotationResult", result)
+          rescue => e
+            error_result = handle_error(e, "height annotation")
+            send_json_response("handleHeightAnnotationResult", error_result)
+          end
+          nil
+        end
+      end
+      
+      def register_component_updater_callbacks
+        @dialog.add_action_callback("loadComponentUpdaterDefaults") do |action_context|
+          defaults = ProjetaPlus::Modules::ProComponentUpdater.get_defaults
+          log("Loading component updater defaults: #{defaults.inspect}")
+          send_json_response("handleComponentUpdaterDefaults", defaults)
+          nil
+        end
+        
+        @dialog.add_action_callback("updateComponentAttributes") do |action_context, json_payload|
+          begin
+            args = JSON.parse(json_payload)
+            result = ProjetaPlus::Modules::ProComponentUpdater.update_component_attributes(args)
+            log("Component attributes updated with args: #{args.inspect}")
+            send_json_response("handleComponentUpdaterResult", result)
+          rescue => e
+            error_result = handle_error(e, "component updater")
+            send_json_response("handleComponentUpdaterResult", error_result)
           end
           nil
         end
