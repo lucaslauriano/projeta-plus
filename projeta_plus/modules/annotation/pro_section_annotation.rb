@@ -3,10 +3,12 @@ require 'sketchup.rb'
 require_relative '../settings/pro_settings.rb' # Certifique-se que pro_settings.rb está carregado
 require_relative '../settings/pro_settings_utils.rb'
 require_relative '../../localization.rb'
+require_relative '../pro_hover_face_util.rb'
 
 module ProjetaPlus
   module Modules
     module ProSectionAnnotation
+      include ProjetaPlus::Modules::ProHoverFaceUtil 
 
       DEFAULT_SECTION_LINE_HEIGHT_CM = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
       DEFAULT_SECTION_SCALE_FACTOR = ProjetaPlus::Modules::ProSettingsUtils.get_scale.to_s
@@ -46,11 +48,9 @@ module ProjetaPlus
         
         font = ProjetaPlus::Modules::ProSettings.read("font", ProjetaPlus::Modules::ProSettings::DEFAULT_FONT)
         
-        # O 3D Text no SketchUp usa TRUE para bold, FALSE para italic, e um valor para height
         text_group.entities.add_3d_text(text.upcase, TextAlignLeft, font,
                                                       false, false, font_size * scale_factor, 0, 0, true, 0)
         
-        # Coloca material preto no texto 3D
         black_material = model.materials['Black'] || model.materials.add('Black')
         black_material.color = 'black'
         text_group.entities.grep(Sketchup::Face).each do |entity|
@@ -126,9 +126,12 @@ module ProjetaPlus
       
       # Interactive tool class for section annotation
       class InteractiveSectionAnnotationTool
+        include ProjetaPlus::Modules::ProHoverFaceUtil 
         
         def initialize
           # Não precisa mais de args do frontend
+          @valid_pick = false
+          @target_entity = nil
         end
 
         def activate
@@ -140,24 +143,29 @@ module ProjetaPlus
           view.invalidate
         end
 
+        def onMouseMove(flags, x, y, view)
+          update_hover(view, x, y)
+          @target_entity = resolve_target_entity
+          @valid_pick = !@target_entity.nil?
+          view.invalidate
+        end
+
+        def draw(view)
+          draw_hover(view)
+        end
+
         def onLButtonDown(flags, x, y, view)
-          model = Sketchup.active_model
-          
-          # Pick entity at click location
-          picked_entity = view.pick_helper(x, y)
-          picked_entity.do_pick(x, y)
-          entity = picked_entity.best_picked
-          
-          # Check if clicked on a group or component
-          unless entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+          unless @valid_pick
             ::UI.messagebox(ProjetaPlus::Localization.t("messages.click_on_group_component_for_section"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
             return
           end
+
+          model = Sketchup.active_model
           
           model.start_operation(ProjetaPlus::Localization.t("commands.section_annotation_operation_name"), true)
           
           # Create annotations centered on the clicked group/component
-          result = ProjetaPlus::Modules::ProSectionAnnotation.create_lines_for_entity(nil, entity)
+          result = ProjetaPlus::Modules::ProSectionAnnotation.create_lines_for_entity(nil, @target_entity)
 
           if result[:success]
             model.commit_operation
@@ -176,6 +184,30 @@ module ProjetaPlus
 
         def onKeyDown(key, repeat, flags, view)
           Sketchup.active_model.select_tool(nil) if key == 27 # ESC key
+        end
+
+        private
+
+        def resolve_target_entity
+          return nil unless @hover_face && @path
+
+          group_or_component = @path.find do |entity|
+            entity.is_a?(Sketchup::Group) || entity.is_a?(Sketchup::ComponentInstance)
+          end
+
+          return group_or_component if group_or_component
+
+          owner = @hover_face.parent
+          owner = owner.parent if owner.respond_to?(:parent)
+
+          return owner if owner.is_a?(Sketchup::Group) || owner.is_a?(Sketchup::ComponentInstance)
+
+          if owner.respond_to?(:instances)
+            instance = owner.instances.find { |inst| inst.is_a?(Sketchup::ComponentInstance) }
+            return instance if instance
+          end
+
+          nil
         end
       end
 
@@ -207,7 +239,7 @@ module ProjetaPlus
       
         # Usa valores fixos do módulo (não vem mais do frontend)
         line_height_cm = DEFAULT_SECTION_LINE_HEIGHT_CM.to_f
-        scale_factor = DEFAULT_SECTION_SCALE_FACTOR.to_f
+        scale_factor = ProjetaPlus::Modules::ProSettingsUtils.get_scale.to_s
         
         line_height = line_height_cm / CM_TO_INCHES_CONVERSION_FACTOR # Converter cm para polegadas
       
