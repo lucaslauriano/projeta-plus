@@ -30,7 +30,6 @@ module ProjetaPlus
         }
       end
 
-      # Convert various input types to boolean
       def self.convert_to_boolean(value)
         case value
         when true, false

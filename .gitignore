@@ -19,9 +19,17 @@
 /5d_auto_tag
 /__MACOSX
 /frontend
+/dist
+/build
+
+build/obfuscated_build/
+build/encrypted_build/
+build/build_*_temp/
+build/test_extract/
 
 *su_dynamiccomponents.rb
 *su_sandbox.rb
+*habitat_site_context.rb
 *mad_floor_design.rb
 *5d_auto_tag.rb
 /projeta_plus/html
