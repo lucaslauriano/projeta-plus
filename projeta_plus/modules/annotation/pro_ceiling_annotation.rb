@@ -10,15 +10,11 @@ module ProjetaPlus
     module ProCeilingAnnotation
       include ProjetaPlus::Modules::ProHoverFaceUtil 
 
-      DEFAULT_CEILING_ANNOTATION_SCALE = ProjetaPlus::Modules::ProSettingsUtils.get_scale
-      DEFAULT_CEILING_ANNOTATION_FONT = ProjetaPlus::Modules::ProSettingsUtils.get_font
-      DEFAULT_CEILING_ANNOTATION_FLOOR_LEVEL_STR = ProjetaPlus::Modules::ProSettingsUtils.get_floor_level
-
       METERS_PER_INCH = 0.0254
 
       def self.get_defaults
         {
-          floor_level: Sketchup.read_default("AnotacaoForro", "floor_level", DEFAULT_CEILING_ANNOTATION_FLOOR_LEVEL_STR)
+          floor_level: Sketchup.read_default("AnotacaoForro", "floor_level", ProjetaPlus::Modules::ProSettingsUtils.get_floor_level)
         }
       end
 
@@ -60,8 +56,8 @@ module ProjetaPlus
         layer.color = Sketchup::Color.new(0, 0, 0) 
 
         # Extrai parâmetros dos args do frontend
-        scale = DEFAULT_CEILING_ANNOTATION_SCALE
-        font = DEFAULT_CEILING_ANNOTATION_FONT
+        scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
+        font = ProjetaPlus::Modules::ProSettingsUtils.get_font
         floor_level_str = args['floor_level'].to_s.tr(',', '.')
         floor_level = floor_level_str.to_f # Nível do piso em metros
 
