@@ -9,6 +9,13 @@ cd '/Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plug
 ./build_obfuscated.sh
 ```
 
+No Windows (PowerShell):
+
+```powershell
+cd "C:\Users\<YOU>\AppData\Roaming\SketchUp\SketchUp 2025\SketchUp\Plugins\projeta_plus\build"
+./build_obfuscated.ps1
+```
+
 O arquivo será criado em: `dist/projeta_plus_obfuscated_v2.0.0.rbz`
 
 ### O que faz:
@@ -30,6 +37,7 @@ SketchUp 2025 **removeu** a API `Sketchup.scramble_script`.
 **Não é possível** gerar arquivos `.rbs` criptografados.
 
 **Alternativas:**
+
 - Use SketchUp 2023 (última versão com suporte)
 - Use build ofuscado (atual)
 
@@ -38,6 +46,7 @@ SketchUp 2025 **removeu** a API `Sketchup.scramble_script`.
 ## 📋 Arquivos Gerados
 
 ### Após Build:
+
 - `dist/projeta_plus_obfuscated_v2.0.0.rbz` - Pronto para distribuir
 
 **Nota:** Diretórios temporários (`obfuscated_build/`, `encrypted_build/`) são removidos automaticamente após o build.
@@ -74,6 +83,14 @@ Ou tudo de uma vez:
 cd build/
 ./build_obfuscated.sh
 ```
+
+Windows (PowerShell):
+
+```powershell
+cd build
+./build_obfuscated.ps1
+```
+
 (O script executa a ofuscação automaticamente se necessário)
 
 ---
@@ -90,14 +107,14 @@ VERSION="2.0.1"  # Altere aqui
 
 ## 📊 Comparação: Original vs Ofuscado
 
-| Aspecto | Original | Ofuscado |
-|---------|----------|----------|
-| Tamanho | 100% | ~65-85% |
-| Comentários | ✅ | ❌ |
-| Espaços | Normal | Minificado |
-| Legibilidade | Alta | Baixa |
-| Funcionalidade | 100% | 100% |
-| Frontend | ✅ | ✅ |
+| Aspecto        | Original | Ofuscado   |
+| -------------- | -------- | ---------- |
+| Tamanho        | 100%     | ~65-85%    |
+| Comentários    | ✅       | ❌         |
+| Espaços        | Normal   | Minificado |
+| Legibilidade   | Alta     | Baixa      |
+| Funcionalidade | 100%     | 100%       |
+| Frontend       | ✅       | ✅         |
 
 ---
 
@@ -118,4 +135,3 @@ VERSION="2.0.1"  # Altere aqui
 - `obfuscate.rb`
 - `encrypt_*.rb`
 - Arquivos `.backup`
-

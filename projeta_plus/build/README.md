@@ -9,6 +9,13 @@ cd build/
 ./build_obfuscated.sh
 ```
 
+No Windows (PowerShell):
+
+```powershell
+cd build
+./build_obfuscated.ps1
+```
+
 O arquivo .rbz será criado em: `../dist/projeta_plus_obfuscated_v2.0.0.rbz`
 
 ---
@@ -27,6 +34,12 @@ O arquivo .rbz será criado em: `../dist/projeta_plus_obfuscated_v2.0.0.rbz`
 ### Gerar build
 ```bash
 ./build_obfuscated.sh
+```
+
+Windows (PowerShell):
+
+```powershell
+./build_obfuscated.ps1
 ```
 
 ### Limpar temporários
@@ -54,5 +67,7 @@ ruby obfuscate.rb
 ## 📖 Documentação Completa
 
 Veja: [BUILD_INSTRUCTIONS.md](./BUILD_INSTRUCTIONS.md)
+
+
 
 

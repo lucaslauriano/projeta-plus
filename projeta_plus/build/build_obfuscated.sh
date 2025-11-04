@@ -2,15 +2,30 @@
 # build_obfuscated.sh - Build com arquivos ofuscados
 
 PLUGIN_NAME="projeta_plus"
-VERSION="2.0.0"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+VERSION_FILE="$SCRIPT_DIR/version.txt"
+
+# Read and increment version
+if [ -f "$VERSION_FILE" ]; then
+  VERSION=$(cat "$VERSION_FILE")
+else
+  VERSION="2.0.0"
+  echo "$VERSION" > "$VERSION_FILE"
+fi
+
+# Auto-increment patch version (2.0.0 -> 2.0.1 -> 2.0.2, etc)
+IFS='.' read -r major minor patch <<< "$VERSION"
+patch=$((patch + 1))
+NEW_VERSION="${major}.${minor}.${patch}"
+echo "$NEW_VERSION" > "$VERSION_FILE"
+
 PLUGINS_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
 OBFUSCATED_DIR="$SCRIPT_DIR/obfuscated_build"
 BUILD_DIR="$SCRIPT_DIR/build_obfuscated_temp"
 DIST_DIR="$PLUGINS_DIR/dist"
-OUTPUT_FILE="$DIST_DIR/${PLUGIN_NAME}_obfuscated_v${VERSION}.rbz"
+OUTPUT_FILE="$DIST_DIR/${PLUGIN_NAME}_obfuscated_v${NEW_VERSION}.rbz"
 
-echo "🔀 Build Ofuscado - Projeta Plus v${VERSION}"
+echo "🔀 Build Ofuscado - Projeta Plus v${NEW_VERSION} (anterior: v${VERSION})"
 echo ""
 
 # Verificar se os arquivos ofuscados existem
@@ -35,7 +50,18 @@ mkdir -p "$DIST_DIR"
 
 # Copiar loader principal (não ofuscado - apenas registra extensão)
 echo "📦 Copiando loader..."
-cp "$PLUGINS_DIR/${PLUGIN_NAME}.rb" "$BUILD_DIR/"
+# O loader pode estar no diretório pai do plugin (estrutura padrão do SketchUp)
+WORKSPACE_DIR="$( cd "$PLUGINS_DIR/.." && pwd )"
+if [ -f "$PLUGINS_DIR/${PLUGIN_NAME}.rb" ]; then
+  cp "$PLUGINS_DIR/${PLUGIN_NAME}.rb" "$BUILD_DIR/"
+elif [ -f "$WORKSPACE_DIR/${PLUGIN_NAME}.rb" ]; then
+  cp "$WORKSPACE_DIR/${PLUGIN_NAME}.rb" "$BUILD_DIR/"
+else
+  echo "❌ Loader ${PLUGIN_NAME}.rb não encontrado em:"
+  echo "   - $PLUGINS_DIR"
+  echo "   - $WORKSPACE_DIR"
+  exit 1
+fi
 
 # Copiar arquivos ofuscados
 echo "📦 Copiando arquivos ofuscados..."
@@ -47,22 +73,22 @@ rsync -av \
 echo "📦 Copiando recursos (ícones, componentes, traduções)..."
 
 # Componentes .skp
-if [ -d "$PLUGINS_DIR/$PLUGIN_NAME/components" ]; then
-  rsync -av "$PLUGINS_DIR/$PLUGIN_NAME/components/" "$BUILD_DIR/$PLUGIN_NAME/components/"
+if [ -d "$PLUGINS_DIR/components" ]; then
+  rsync -av "$PLUGINS_DIR/components/" "$BUILD_DIR/$PLUGIN_NAME/components/"
 fi
 
 # Ícones
-if [ -d "$PLUGINS_DIR/$PLUGIN_NAME/icons" ]; then
-  rsync -av "$PLUGINS_DIR/$PLUGIN_NAME/icons/" "$BUILD_DIR/$PLUGIN_NAME/icons/"
+if [ -d "$PLUGINS_DIR/icons" ]; then
+  rsync -av "$PLUGINS_DIR/icons/" "$BUILD_DIR/$PLUGIN_NAME/icons/"
 fi
 
 # Traduções
-if [ -d "$PLUGINS_DIR/$PLUGIN_NAME/lang" ]; then
-  rsync -av "$PLUGINS_DIR/$PLUGIN_NAME/lang/" "$BUILD_DIR/$PLUGIN_NAME/lang/"
+if [ -d "$PLUGINS_DIR/lang" ]; then
+  rsync -av "$PLUGINS_DIR/lang/" "$BUILD_DIR/$PLUGIN_NAME/lang/"
 fi
 
 # CSS, HTML, etc (se houver)
-find "$PLUGINS_DIR/$PLUGIN_NAME" -maxdepth 1 \( -name "*.css" -o -name "*.html" -o -name "*.json" \) -exec cp {} "$BUILD_DIR/$PLUGIN_NAME/" \; 2>/dev/null
+find "$PLUGINS_DIR" -maxdepth 1 \( -name "*.css" -o -name "*.html" -o -name "*.json" \) -exec cp {} "$BUILD_DIR/$PLUGIN_NAME/" \; 2>/dev/null
 
 # Criar o .rbz
 echo ""

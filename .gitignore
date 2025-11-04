@@ -26,7 +26,7 @@ build/obfuscated_build/
 build/encrypted_build/
 build/build_*_temp/
 build/test_extract/
-
+projeta_plus_obfuscated_v*.rbz
 *su_dynamiccomponents.rb
 *su_sandbox.rb
 *habitat_site_context.rb
