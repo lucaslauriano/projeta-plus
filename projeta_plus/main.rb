@@ -35,6 +35,7 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'p
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_ceiling_annotation.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_lighting_annotation.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_circuit_connection.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_height_annotation.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_view_indication.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_component_updater.rb')
 

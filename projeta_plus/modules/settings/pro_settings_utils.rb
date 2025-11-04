@@ -6,7 +6,6 @@ module ProjetaPlus
   module Modules
     module ProSettingsUtils
       
-      # Get scale factor from settings with fallback
       def self.get_scale
         if defined?(ProjetaPlus::Modules::ProSettings)
           numerator = ProjetaPlus::Modules::ProSettings.read("scale_numerator", 1).to_f
@@ -17,7 +16,6 @@ module ProjetaPlus
         end
       end
 
-      # Get font from settings with fallback
       def self.get_font
         if defined?(ProjetaPlus::Modules::ProSettings)
           ProjetaPlus::Modules::ProSettings.read("font", "Century Gothic")
@@ -26,7 +24,6 @@ module ProjetaPlus
         end
       end
 
-      # Get floor level from settings with fallback, formatted as string
       def self.get_floor_level
         if defined?(ProjetaPlus::Modules::ProSettings)
           floor_level = ProjetaPlus::Modules::ProSettings.read("floor_level", ProjetaPlus::Modules::ProSettings::DEFAULT_FLOOR_LEVEL).to_f
@@ -36,7 +33,6 @@ module ProjetaPlus
         end
       end
 
-      # Get cut height from settings with fallback, in centimeters as string
       def self.get_cut_height_cm
         if defined?(ProjetaPlus::Modules::ProSettings)
           cut_height_m = ProjetaPlus::Modules::ProSettings.read("cut_height", ProjetaPlus::Modules::ProSettings::DEFAULT_CUT_HEIGHT).to_f
@@ -46,7 +42,6 @@ module ProjetaPlus
         end
       end
 
-      # Get text color from settings with fallback
       def self.get_text_color
         if defined?(ProjetaPlus::Modules::ProSettings)
           ProjetaPlus::Modules::ProSettings.read("text_color", ProjetaPlus::Modules::ProSettings::DEFAULT_TEXT_COLOR)
