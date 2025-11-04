@@ -12,10 +12,6 @@ module ProjetaPlus
       # Constants
       PREVIEW_COLOR = "#803965"
       CM_TO_INCHES_CONVERSION_FACTOR = 2.54
-      DEFAULT_LIGHTING_ANNOTATION_HEIGHT_STR = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm # 145
-      DEFAULT_LIGHTING_ANNOTATION_FONT = ProjetaPlus::Modules::ProSettingsUtils.get_font # Century Gothic
-      @default_scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale # 100
-      DEFAULT_LIGHTING_ANNOTATION_TEXT_COLOR = ProjetaPlus::Modules::ProSettingsUtils.get_text_color # black
 
       def self.get_defaults
         {
@@ -43,9 +39,9 @@ module ProjetaPlus
         # Extract parameters from frontend args (only circuit_text comes from frontend)
         text = args['circuit_text'].to_s
         scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
-        height_z_cm = DEFAULT_LIGHTING_ANNOTATION_HEIGHT_STR
-        font = DEFAULT_LIGHTING_ANNOTATION_FONT # Century Gothic
-        text_color = DEFAULT_LIGHTING_ANNOTATION_TEXT_COLOR
+        height_z_cm = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+        font = ProjetaPlus::Modules::ProSettingsUtils.get_font 
+        text_color = ProjetaPlus::Modules::ProSettingsUtils.get_text_color
         
         # Validate text is not empty
         return { success: false, message: "Text cannot be empty" } if text.empty?
@@ -201,10 +197,10 @@ module ProjetaPlus
           @text = args['circuit_text'].to_s
           
           # Usar valores padrão das configurações para os outros parâmetros
-          @font = DEFAULT_LIGHTING_ANNOTATION_FONT
-          @color = DEFAULT_LIGHTING_ANNOTATION_TEXT_COLOR
+          @font = ProjetaPlus::Modules::ProSettingsUtils.get_font
+          @color = ProjetaPlus::Modules::ProSettingsUtils.get_text_color
           @scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
-          @height_z_cm = DEFAULT_LIGHTING_ANNOTATION_HEIGHT_STR
+          @height_z_cm = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
           
           @height_z = @height_z_cm.to_f / CM_TO_INCHES_CONVERSION_FACTOR # cm → inches
           @text_height = 3.mm * @scale

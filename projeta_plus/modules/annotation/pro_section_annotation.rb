@@ -10,14 +10,12 @@ module ProjetaPlus
     module ProSectionAnnotation
       include ProjetaPlus::Modules::ProHoverFaceUtil 
 
-      DEFAULT_SECTION_LINE_HEIGHT_CM = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
-      DEFAULT_SECTION_SCALE_FACTOR = ProjetaPlus::Modules::ProSettingsUtils.get_scale.to_s
       CM_TO_INCHES_CONVERSION_FACTOR = 2.54
 
       def self.get_defaults
         {
-          line_height_cm: Sketchup.read_default("SectionAnnotation", "line_height_cm", DEFAULT_SECTION_LINE_HEIGHT_CM),
-          scale_factor: Sketchup.read_default("SectionAnnotation", "scale_factor", DEFAULT_SECTION_SCALE_FACTOR)
+          line_height_cm: Sketchup.read_default("SectionAnnotation", "line_height_cm", ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm),
+          scale_factor: Sketchup.read_default("SectionAnnotation", "scale_factor", ProjetaPlus::Modules::ProSettingsUtils.get_scale)
         }
       end
 
@@ -238,8 +236,8 @@ module ProjetaPlus
         end
       
         # Usa valores fixos do módulo (não vem mais do frontend)
-        line_height_cm = DEFAULT_SECTION_LINE_HEIGHT_CM.to_f
-        scale_factor = ProjetaPlus::Modules::ProSettingsUtils.get_scale.to_s
+        line_height_cm = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm.to_f
+        scale_factor = ProjetaPlus::Modules::ProSettingsUtils.get_scale
         
         line_height = line_height_cm / CM_TO_INCHES_CONVERSION_FACTOR # Converter cm para polegadas
       

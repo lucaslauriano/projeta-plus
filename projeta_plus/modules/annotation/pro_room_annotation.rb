@@ -10,8 +10,6 @@ module ProjetaPlus
     module ProRoomAnnotation
       include ProjetaPlus::Modules::ProHoverFaceUtil 
 
-      DEFAULT_ROOM_ANNOTATION_SCALE   = ProjetaPlus::Modules::ProSettingsUtils.get_scale
-      DEFAULT_ROOM_ANNOTATION_FONT    = ProjetaPlus::Modules::ProSettingsUtils.get_font
       DEFAULT_ROOM_ANNOTATION_SHOW_CEILLING_HEIGHT = true 
       DEFAULT_ROOM_ANNOTATION_CEILLING_HEIGHT_STR  = "0,00" 
       DEFAULT_ROOM_ANNOTATION_SHOW_LEVEL = true 
@@ -120,8 +118,8 @@ module ProjetaPlus
         layer = model.layers.add('-2D-LEGENDA AMBIENTE')
 
         enviroment_name   = args['enviroment_name'].to_s
-        scale           = ProjetaPlus::Modules::ProSettingsUtils.get_scale
-        font            = ProjetaPlus::Modules::ProSettingsUtils.get_font
+        scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
+        font = ProjetaPlus::Modules::ProSettingsUtils.get_font
         show_ceilling_height      = convert_to_boolean(args['show_ceilling_height'])
         ceilling_height_str          = args['ceilling_height'].to_s
         show_level   = convert_to_boolean(args['show_level'])

@@ -8,7 +8,6 @@ module ProjetaPlus
   module Modules
     module ProViewIndication
     CUT_LEVEL = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
-    DEFAULT_VIEW_INDICATION_SCALE   = ProjetaPlus::Modules::ProSettingsUtils.get_scale
     CM_TO_INCHES_CONVERSION_FACTOR = 2.54
     BLOCK_NAME = 'proViewIndication_abcd.skp'
     
@@ -129,7 +128,7 @@ module ProjetaPlus
         instance = model.active_entities.add_instance(component_definition, transformation)
         
         # Scale the instance
-        instance.transform!(Geom::Transformation.scaling(instance.bounds.center, DEFAULT_VIEW_INDICATION_SCALE))
+        instance.transform!(Geom::Transformation.scaling(instance.bounds.center, ProjetaPlus::Modules::ProSettingsUtils.get_scale))
         
         # Select the instance
         model.selection.clear
