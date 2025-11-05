@@ -49,6 +49,7 @@ messages:
   circuit_annotation_success: 'Circuit annotation added successfully!'
   error_adding_circuit_annotation: 'Error adding circuit annotation'
   circuit_tool_activated: 'Circuit annotation tool activated. Click on a face to annotate.'
+  circuit_connection_tool_activated: 'Circuit connection tool activated. Click on a face to create connection.'
   height_tool_activated: 'Height annotation tool activated. Click on a face to annotate.'
   component_updater_success: 'Component attributes updated successfully!'
   error_updating_components: 'Error updating component attributes'

@@ -11,117 +11,147 @@ module ProjetaPlus
       include ProjetaPlus::Modules::ProHoverFaceUtil 
 
       METERS_PER_INCH = 0.0254
+      TEXT_HEIGHT_SCALE = 0.3.cm
+      TEXT_OFFSET_FROM_CEILING = -5.0.cm
+      PREFERENCE_KEY = "AnotacaoForro"
 
       def self.get_defaults
         {
-          floor_level: Sketchup.read_default("AnotacaoForro", "floor_level", ProjetaPlus::Modules::ProSettingsUtils.get_floor_level)
+          floor_level: Sketchup.read_default(PREFERENCE_KEY, "floor_level", ProjetaPlus::Modules::ProSettingsUtils.get_floor_level)
         }
       end
 
-      def self.test_text_inverted(text, position, scale, font, alignment = TextAlignCenter)
+      # Cria texto 3D invertido no eixo Z para ser legível de baixo para cima
+      def self.create_inverted_text(text, position, scale, font, alignment = TextAlignCenter)
         model = Sketchup.active_model
-        g = model.entities.add_group
-        ents = g.entities
-        height = 0.3.cm * scale 
+        text_group = model.entities.add_group
         
-        ents.add_3d_text(text, alignment, font, true, false, height, 0)
+        # Adiciona texto 3D preto
+        add_3d_text_to_group(text_group, text, scale, font, alignment)
         
-        black_material = model.materials['Black'] || model.materials.add('Black')
-        black_material.color = 'black'
-        ents.grep(Sketchup::Face).each { |f| f.material = f.back_material = black_material }
+        # Posiciona o texto no centro desejado
+        text_group.transform!(Geom::Transformation.translation(position - text_group.bounds.center))
         
-        g.transform!(Geom::Transformation.translation(position - g.bounds.center))
+        # Inverte o texto no eixo Z para ficar legível de baixo
+        mirror_text_on_z_axis(text_group)
         
-        # Inverter no eixo Z para ficar legível de baixo para cima
-        # A inversão deve ocorrer após o posicionamento inicial
-        bb = g.bounds
-        pivot_z = bb.center.z # Ponto médio em Z do texto
-        
-        # Cria uma transformação de espelhamento no eixo Z, com pivô no centro Z do texto
-        tr = Geom::Transformation.scaling(Geom::Point3d.new(bb.center.x, bb.center.y, pivot_z), 1, 1, -1)
-        
-        model.start_operation(ProjetaPlus::Localization.t("commands.ceiling_mirror_z_operation_name"), true)
-        g.transform!(tr) # Aplica a transformação ao grupo
+        text_group
+      end
 
-        # Inverte as faces para que fiquem visíveis após o espelhamento
-        g.entities.grep(Sketchup::Face).each(&:reverse!)
+      # Adiciona texto 3D preto ao grupo
+      def self.add_3d_text_to_group(group, text, scale, font, alignment)
+        height = TEXT_HEIGHT_SCALE * scale
+        group.entities.add_3d_text(text, alignment, font, true, false, height, 0)
         
-        model.commit_operation
-        g
+        black_material = Sketchup.active_model.materials['Black'] || 
+                        Sketchup.active_model.materials.add('Black')
+        black_material.color = 'black'
+        
+        group.entities.grep(Sketchup::Face).each do |face|
+          face.material = face.back_material = black_material
+        end
+      end
+
+      # Espelha o texto no eixo Z usando o centro do grupo como pivô
+      def self.mirror_text_on_z_axis(text_group)
+        bounds = text_group.bounds
+        pivot_point = Geom::Point3d.new(bounds.center.x, bounds.center.y, bounds.center.z)
+        mirror_transformation = Geom::Transformation.scaling(pivot_point, 1, 1, -1)
+        
+        text_group.transform!(mirror_transformation)
+        text_group.entities.grep(Sketchup::Face).each(&:reverse!)
       end
 
       def self.process_ceilling_face(face, path, args)
         model = Sketchup.active_model
-        layer = model.layers.add('-ANOTACAO-FORRO')
-        layer.color = Sketchup::Color.new(0, 0, 0) 
-
-        # Extrai parâmetros dos args do frontend
+        layer = get_or_create_annotation_layer(model)
+        
         scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
         font = ProjetaPlus::Modules::ProSettingsUtils.get_font
-        floor_level_str = args['floor_level'].to_s.tr(',', '.')
-        floor_level = floor_level_str.to_f # Nível do piso em metros
-
-        # Persist module-specific values
-        Sketchup.write_default("AnotacaoForro", "floor_level", floor_level_str)
-
-        # --------------------- Lógica de Área ---------------------
-        area_inch = face.area
-        area_m2 = area_inch * 0.00064516 # Converter polegadas² para metros²
-        area_str = format('%.2f', area_m2).gsub('.', ',')
-
-        # --------------------- Calcular Altura Z (PD) ---------------------
-        # Pegar a transformação acumulada para coordenadas globais da face
-        tr = Geom::Transformation.new
-        path.each do |e|
-          tr *= e.transformation if e.respond_to?(:transformation)
-          break if e == face
-        end
+        floor_level = parse_and_save_floor_level(args['floor_level'])
         
-        # Pega um ponto da face e transforma para coordenadas globais
-        face_point = face.vertices.first.position
-        face_point_global = face_point.transform(tr)
-        altura_face_m = face_point_global.z * METERS_PER_INCH # Altura da face em metros
+        transformation = calculate_accumulated_transformation(path, face)
+        area_text = calculate_area_text(face)
+        ceiling_height_text = calculate_ceiling_height_text(face, transformation, floor_level)
         
-        # Desconta o nível do piso para obter o Pé Direito (PD)
-        pd_m = altura_face_m - floor_level
-        pd_str = format('%.2f', pd_m).gsub('.', ',')
-
-        texto = "#{ProjetaPlus::Localization.t("messages.area_label")}: #{area_str} m²\n#{ProjetaPlus::Localization.t("messages.pd_label")}: #{pd_str} m"
-
-        # Calcular centro da face e posição do texto
-        face_center_global = face.bounds.center.transform(tr)
+        annotation_text = "#{area_text}\n#{ceiling_height_text}"
+        text_position = calculate_text_position(face, transformation)
         
-        # Posição 5cm abaixo da face (em unidades internas do SketchUp)
-        offset_z_internal = -5.0.cm # Convert 5cm to internal units (inches)
-        text_position = Geom::Point3d.new(
-          face_center_global.x,
-          face_center_global.y,
-          face_center_global.z + offset_z_internal
-        )
-
-        # Criar texto invertido
-        text_group = test_text_inverted(texto, text_position, scale, font)
+        text_group = create_inverted_text(annotation_text, text_position, scale, font)
         text_group.layer = layer
 
         model.selection.clear
         model.selection.add(text_group)
+        
         { success: true, message: ProjetaPlus::Localization.t("messages.ceiling_annotation_success") }
       rescue StandardError => e
         { success: false, message: ProjetaPlus::Localization.t("messages.error_adding_ceiling_annotation") + ": #{e.message}" }
       end
 
-      # --------------------- Ferramenta Interativa ---------------------
+      # Obtém ou cria a camada de anotação de forro
+      def self.get_or_create_annotation_layer(model)
+        layer = model.layers.add('-ANOTACAO-FORRO')
+        layer.color = Sketchup::Color.new(0, 0, 0)
+        layer
+      end
+
+      # Converte string de nível do piso para float e salva nas preferências
+      def self.parse_and_save_floor_level(floor_level_str)
+        normalized_str = floor_level_str.to_s.tr(',', '.')
+        Sketchup.write_default(PREFERENCE_KEY, "floor_level", normalized_str)
+        normalized_str.to_f
+      end
+
+      # Calcula a transformação acumulada ao longo do caminho
+      def self.calculate_accumulated_transformation(path, face)
+        transformation = Geom::Transformation.new
+        path.each do |entity|
+          transformation *= entity.transformation if entity.respond_to?(:transformation)
+          break if entity == face
+        end
+        transformation
+      end
+
+      # Calcula e formata o texto da área
+      def self.calculate_area_text(face)
+        area_m2 = face.area * 0.00064516 # Converte polegadas² para m²
+        area_formatted = format('%.2f', area_m2).gsub('.', ',')
+        "#{ProjetaPlus::Localization.t("messages.area_label")}: #{area_formatted} m²"
+      end
+
+      # Calcula e formata o texto da altura (Pé Direito)
+      def self.calculate_ceiling_height_text(face, transformation, floor_level)
+        face_point_global = face.vertices.first.position.transform(transformation)
+        ceiling_height_m = face_point_global.z * METERS_PER_INCH
+        pd_m = ceiling_height_m - floor_level
+        pd_formatted = format('%.2f', pd_m).gsub('.', ',')
+        "#{ProjetaPlus::Localization.t("messages.pd_label")}: #{pd_formatted} m"
+      end
+
+      # Calcula a posição do texto (5cm abaixo do centro da face)
+      def self.calculate_text_position(face, transformation)
+        face_center_global = face.bounds.center.transform(transformation)
+        Geom::Point3d.new(
+          face_center_global.x,
+          face_center_global.y,
+          face_center_global.z + TEXT_OFFSET_FROM_CEILING
+        )
+      end
+
+      # Ferramenta interativa para anotar faces de forro/teto
       class InteractiveCeilingAnnotationTool
-        include ProjetaPlus::Modules::ProHoverFaceUtil # Inclui o utilitário de hover
+        include ProjetaPlus::Modules::ProHoverFaceUtil
         
-        # 'cfg' agora contém os 'args' vindos do frontend
         def initialize(args)
-          @args = args 
+          @args = args
           @valid_pick = false
         end
         
         def activate
-          Sketchup.set_status_text(ProjetaPlus::Localization.t("messages.ceiling_annotation_prompt"), SB_PROMPT)
+          Sketchup.set_status_text(
+            ProjetaPlus::Localization.t("messages.ceiling_annotation_prompt"), 
+            SB_PROMPT
+          )
           @view = Sketchup.active_model.active_view
         end
         
@@ -142,35 +172,76 @@ module ProjetaPlus
         def onLButtonDown(flags, x, y, view)
           return unless @valid_pick
           
-          model = Sketchup.active_model
-          model.start_operation(ProjetaPlus::Localization.t("commands.ceiling_annotation_operation_name"), true)
-          
-          result = ProjetaPlus::Modules::ProCeilingAnnotation.process_ceilling_face(@hover_face, @path, @args)
-          if result[:success]
-            model.commit_operation
-            ::UI.messagebox(ProjetaPlus::Localization.t("messages.ceiling_annotation_success"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
-          else
-            model.abort_operation
-            ::UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
-          end
-          Sketchup.active_model.select_tool(nil)
-        rescue StandardError => e
-          model.abort_operation
-          ::UI.messagebox("#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}", MB_OK, ProjetaPlus::Localization.t("plugin_name"))
-          Sketchup.active_model.select_tool(nil)
+          process_annotation_click
         end
         
         def onKeyDown(key, repeat, flags, view)
-          if key == VK_ESCAPE
-            Sketchup.active_model.select_tool(nil)
+          deactivate_tool if key == VK_ESCAPE
+        end
+
+        private
+
+        def process_annotation_click
+          model = Sketchup.active_model
+          model.start_operation(
+            ProjetaPlus::Localization.t("commands.ceiling_annotation_operation_name"), 
+            true
+          )
+          
+          result = ProjetaPlus::Modules::ProCeilingAnnotation.process_ceilling_face(
+            @hover_face, 
+            @path, 
+            @args
+          )
+          
+          handle_result(result, model)
+        rescue StandardError => e
+          handle_error(e, model)
+        end
+
+        def handle_result(result, model)
+          if result[:success]
+            model.commit_operation
+            show_success_message
+          else
+            model.abort_operation
+            show_error_message(result[:message])
           end
+          deactivate_tool
+        end
+
+        def handle_error(error, model)
+          model.abort_operation
+          error_message = "#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{error.message}"
+          show_error_message(error_message)
+          deactivate_tool
+        end
+
+        def show_success_message
+          ::UI.messagebox(
+            ProjetaPlus::Localization.t("messages.ceiling_annotation_success"),
+            MB_OK,
+            ProjetaPlus::Localization.t("plugin_name")
+          )
+        end
+
+        def show_error_message(message)
+          ::UI.messagebox(
+            message,
+            MB_OK,
+            ProjetaPlus::Localization.t("plugin_name")
+          )
+        end
+
+        def deactivate_tool
+          Sketchup.active_model.select_tool(nil)
         end
       end
 
+      # Inicia a ferramenta interativa de anotação
       def self.start_interactive_annotation(args)
-        if Sketchup.active_model.nil?
-          return { success: false, message: ProjetaPlus::Localization.t("messages.no_model_open") }
-        end
+        return { success: false, message: ProjetaPlus::Localization.t("messages.no_model_open") } if Sketchup.active_model.nil?
+        
         Sketchup.active_model.select_tool(InteractiveCeilingAnnotationTool.new(args))
         { success: true, message: ProjetaPlus::Localization.t("messages.ceiling_tool_activated") }
       rescue StandardError => e

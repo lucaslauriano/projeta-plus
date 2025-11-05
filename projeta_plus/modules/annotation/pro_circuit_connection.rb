@@ -396,7 +396,6 @@ module ProjetaPlus
           
           if result[:success]
             model.commit_operation
-            ::UI.messagebox(ProjetaPlus::Localization.t("messages.circuit_connection_success"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
           else
             model.abort_operation
             ::UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))

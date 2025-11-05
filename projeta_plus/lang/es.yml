@@ -24,6 +24,7 @@ messages:
   circuit_annotation_success: 'Anotación de circuito agregada correctamente!'
   error_adding_circuit_annotation: 'Error al agregar anotación de circuito'
   circuit_tool_activated: 'Herramienta de anotación de circuito activada. Haga clic en una cara para anotar.'
+  circuit_connection_tool_activated: 'Herramienta de conexión de circuito activada. Haga clic en una cara para crear conexión.'
   view_indication_settings_updated: 'Configuración de indicación de vistas actualizada correctamente!'
   error_getting_settings: 'Error al obtener configuración de indicación de vistas'
   error_updating_settings: 'Error al actualizar configuración de indicación de vistas'

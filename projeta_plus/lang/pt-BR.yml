@@ -59,6 +59,7 @@ messages:
   circuit_annotation_success: 'Anotação de circuito adicionada com sucesso!'
   error_adding_circuit_annotation: 'Erro ao adicionar anotação de circuito'
   circuit_tool_activated: 'Ferramenta de anotação de circuito ativada. Clique em uma face para anotar.'
+  circuit_connection_tool_activated: 'Ferramenta de conexão de circuito ativada. Clique em uma face para criar conexão.'
   height_tool_activated: 'Ferramenta de anotação de altura ativada. Clique em uma face para anotar.'
   component_updater_success: 'Atributos dos componentes atualizados com sucesso!'
   error_updating_components: 'Erro ao atualizar atributos dos componentes'
