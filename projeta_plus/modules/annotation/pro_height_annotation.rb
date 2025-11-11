@@ -10,422 +10,454 @@ module ProjetaPlus
     module ProHeightAnnotation
       include ProjetaPlus::Modules::ProHoverFaceUtil
 
-      # Constants
-      AVAILABLE_FONTS = ["Century Gothic", "Arial", "Arial Narrow", "Verdana", "Times New Roman"]
-      IDENTITY = Geom::Transformation.new
+      AVAILABLE_FONTS = ["Century Gothic", "Arial", "Arial Narrow", "Verdana", "Times New Roman"].freeze
       CM_TO_INCHES_CONVERSION_FACTOR = 2.54
-      
-      # Key codes for compatibility
-      VK_UP = 38 unless defined?(VK_UP)
-      VK_DOWN = 40 unless defined?(VK_DOWN)
-      VK_LEFT = 37 unless defined?(VK_LEFT)
-      VK_RIGHT = 39 unless defined?(VK_RIGHT)
-      VK_CONTROL = 17 unless defined?(VK_CONTROL)
-      VK_ADD = 107 unless defined?(VK_ADD)
-      VK_SUBTRACT = 109 unless defined?(VK_SUBTRACT)
+      ORIGIN = Geom::Point3d.new(0, 0, 0) unless defined?(ORIGIN)
 
-      def self.get_defaults
-        {
-          scale: Sketchup.read_default("HeightAnnotation", "scale", ProjetaPlus::Modules::ProSettingsUtils.get_scale).to_i,
-          height_z_cm: Sketchup.read_default("HeightAnnotation", "height_z", ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm).to_s,
-          font: Sketchup.read_default("HeightAnnotation", "font", ProjetaPlus::Modules::ProSettingsUtils.get_font),
-          show_usage: convert_to_boolean(Sketchup.read_default("HeightAnnotation", "show_usage", false))
-        }
-      end
+      # Keycodes
+      VK_LEFT = 37; VK_UP = 38; VK_RIGHT = 39; VK_DOWN = 40
+      VK_SHIFT = 16; VK_CTRL = 17; VK_ESC = 27; VK_ENTER = 13
+      VK_ADD = 107; VK_SUBTRACT = 109; VK_PLUS = 187; VK_MINUS = 189
+      VK_LEFT_MAC = 123; VK_UP_MAC = 126; VK_RIGHT_MAC = 124; VK_DOWN_MAC = 125
 
-      def self.convert_to_boolean(value)
-        case value
-        when true, false
-          value
-        when String
-          case value.to_s.strip.downcase
-          when "true", "sim", "yes", "1", "on"
-            true
-          when "false", "não", "no", "0", "off", ""
-            false
-          else
-            !!value
+      class << self
+        def convert_to_boolean(value)
+          case value
+          when true, false then value
+          when String
+            case value.to_s.strip.downcase
+            when 'true', 'sim', 'yes', '1', 'on' then true
+            when 'false', 'não', 'nao', 'no', '0', 'off', '' then false
+            else !!value
+            end
+          when Numeric then value != 0
+          when nil then false
+          else !!value
           end
-        when Numeric
-          value != 0
-        when nil
-          false
-        else
-          !!value
         end
-      end
 
-      def self.start_interactive_annotation(args)
-        if Sketchup.active_model.nil?
-          return { success: false, message: ProjetaPlus::Localization.t("messages.no_model_open") }
+        def get_defaults
+          {
+            scale: Sketchup.read_default('HeightAnnotation', 'scale', ProjetaPlus::Modules::ProSettingsUtils.get_scale).to_i,
+            height_z_cm: Sketchup.read_default('HeightAnnotation', 'height_z', ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm).to_s,
+            font: Sketchup.read_default('HeightAnnotation', 'font', ProjetaPlus::Modules::ProSettingsUtils.get_font),
+            show_usage: convert_to_boolean(Sketchup.read_default('HeightAnnotation', 'show_usage', false))
+          }
         end
-        Sketchup.active_model.select_tool(InteractiveHeightAnnotationTool.new(args))
-        { success: true, message: ProjetaPlus::Localization.t("messages.height_tool_activated") }
-      rescue StandardError => e
-        { success: false, message: ProjetaPlus::Localization.t("messages.error_activating_tool") + ": #{e.message}" }
+
+        def start_interactive_annotation(args)
+          return { success: false, message: ProjetaPlus::Localization.t('messages.no_model_open') } if Sketchup.active_model.nil?
+          Sketchup.active_model.select_tool(InteractiveHeightAnnotationTool.new(args))
+          { success: true, message: ProjetaPlus::Localization.t('messages.height_tool_activated') }
+        rescue => e
+          { success: false, message: ProjetaPlus::Localization.t('messages.error_activating_tool') + ": #{e.message}" }
+        end
       end
 
       class InteractiveHeightAnnotationTool
         include ProjetaPlus::Modules::ProHoverFaceUtil
-        
-        def initialize(args)
-          @args = args
-          @scale = args['scale'].to_i
-          @height_z = args['height_z_cm'].to_f / CM_TO_INCHES_CONVERSION_FACTOR
-          @font = args['font'].to_s
-          @show_usage = ProjetaPlus::Modules::ProHeightAnnotation.convert_to_boolean(args['show_usage'])
-          
+
+        def initialize(args = {})
+          @args = args || {}
+          @scale = (@args['scale'] || ProjetaPlus::Modules::ProSettingsUtils.get_scale).to_i
+          @height_z = (@args['height_z_cm'] || ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm).to_f / CM_TO_INCHES_CONVERSION_FACTOR
+          @font = (@args['font'] || ProjetaPlus::Modules::ProSettingsUtils.get_font).to_s
+          @show_usage = !!(@args['show_usage'].to_s =~ /^(true|1|sim|yes|on)$/i)
+
           @text_height = 2.mm * @scale
-          @base_margin = (1 * @scale).cm / CM_TO_INCHES_CONVERSION_FACTOR
+          
+          @line_spacing_factor = Sketchup.read_default('HeightAnnotation', 'line_spacing', 0.3).to_f
+          
+          @base_margin = (0.5 * @scale).cm / CM_TO_INCHES_CONVERSION_FACTOR
+
+          @rotation_90 = Sketchup.read_default('HeightAnnotation', 'rotation_90', 'false') == 'true'
+          @relative_position = Sketchup.read_default('HeightAnnotation', 'relative_position', 0).to_i
+          @offset_multiplier = Sketchup.read_default('HeightAnnotation', 'offset_multiplier', 1.0).to_f
+
+          @phase = :waiting_for_face
+          @hover_face = nil
+          @path = nil
+          @bb = nil
           @preview_points = []
-          @text_preview = nil
-          
-          # Load last used position, rotation, and offset
-          @rotation_90 = Sketchup.read_default("HeightAnnotation", "rotation_90", "false") == "true"
-          @relative_position = Sketchup.read_default("HeightAnnotation", "relative_position", 0).to_i
-          @offset_multiplier = Sketchup.read_default("HeightAnnotation", "offset_multiplier", 1.0).to_f
-          
-          # Save settings
-          Sketchup.write_default("HeightAnnotation", "scale", @scale)
-          Sketchup.write_default("HeightAnnotation", "height_z", args['height_z_cm'])
-          Sketchup.write_default("HeightAnnotation", "font", @font)
-          Sketchup.write_default("HeightAnnotation", "show_usage", @show_usage.to_s)
+          @confirmed_position = nil
+          @last_esc_at = Time.at(0)
+          @layout_mode = :vertical
+
+          @__text_cache = {}
         end
 
         def activate
-          positions = ["CIMA", "DIREITA", "BAIXO", "ESQUERDA"]
-          rotation_text = @rotation_90 ? "90°" : "0°"
-          Sketchup.set_status_text("Pos: #{positions[@relative_position]} | Rot: #{rotation_text} | Offset: x#{@offset_multiplier} | +/- ajusta offset", SB_PROMPT)
+          set_status('Selecione uma face. ESC duas vezes para sair.')
         end
 
         def deactivate(view)
           view.invalidate
         end
 
+        def onCancel(reason, view)
+          handle_escape(view)
+        end
+
+        def handle_escape(view)
+          now = Time.now
+          if (now - @last_esc_at) <= 0.7
+            Sketchup.active_model.select_tool(nil)
+          else
+            @phase = :waiting_for_face
+            @confirmed_position = nil
+            @preview_points.clear
+            set_status('Selecione uma face. ESC duas vezes para sair.')
+            view.invalidate
+          end
+          @last_esc_at = now
+        end
+
         def onMouseMove(flags, x, y, view)
           update_hover(view, x, y)
-          @valid_pick = @hover_face && @path
-          calculate_preview if @hover_face && @hover_face.valid?
+          return unless @hover_face && @hover_face.valid?
+          @path ||= (@hover_face ? @hover_face.path : nil) rescue @path
+          @bb = hover_extents
+          calculate_preview if @phase == :adjusting
           view.invalidate
         end
 
-        def calculate_preview
-          return unless @hover_face && @path
-          
-          # Find component/group that contains the attribute
-          holder = nil
-          height_value = nil
-          
-          # Traverse the path backwards to find the first object with attribute
-          @path.reverse.each do |entity|
-            if entity.is_a?(Sketchup::ComponentInstance) || entity.is_a?(Sketchup::Group)
-              temp_value = entity.get_attribute("dynamic_attributes", "a003_altura")
-              if temp_value.nil? && entity.is_a?(Sketchup::ComponentInstance)
-                temp_value = entity.definition.get_attribute("dynamic_attributes", "a003_altura")
-              end
-              
-              if temp_value
-                holder = entity
-                height_value = temp_value
-                break
-              end
-            end
-          end
-          
-          return unless height_value
-          
-          value_cm = height_value.to_f * CM_TO_INCHES_CONVERSION_FACTOR
-          height_text = if value_cm == 0.0
-                          "PISO"
-                        else
-                          (value_cm.round(1) == value_cm.round(0)) ? "H#{value_cm.round(0)}" : "H#{value_cm.round(1)}"
-                        end
-          
-          # Include usage if enabled
-          if @show_usage && holder
-            usage_value = holder.get_attribute("dynamic_attributes", "c002b_uso")
-            if usage_value.nil? && holder.is_a?(Sketchup::ComponentInstance)
-              usage_value = holder.definition.get_attribute("dynamic_attributes", "c002b_uso")
-            end
-            
-            if usage_value && !usage_value.to_s.strip.empty?
-              @text_preview = "#{usage_value}\n#{height_text}"
-              @has_usage = true
-              @usage_text = usage_value.to_s
-              @height_text = height_text
-            else
-              @text_preview = height_text
-              @has_usage = false
-            end
-          else
-            @text_preview = height_text
-            @has_usage = false
+        def onLButtonDown(flags, x, y, view)
+          update_hover(view, x, y)
+          return unless @hover_face && @hover_face.valid?
+
+          if @phase == :waiting_for_face
+            @phase = :adjusting
+            @bb = hover_extents
+            calculate_preview
+            set_status('Ajuste com setas e +/-. Ctrl rotaciona. Shift troca layout. Clique novamente ou Enter confirma.')
+            view.invalidate
+            return
           end
 
-          # Use face bounding box for positioning
-          bb = hover_extents
-          
-          # Calculate margin with offset multiplier
-          current_margin = @base_margin * @offset_multiplier
-          
-          # Calculate position based on selected direction
-          case @relative_position
-          when 0  # Top
-            text_position = Geom::Point3d.new(bb.center.x, bb.max.y + current_margin, @height_z)
-          when 1  # Right
-            text_position = Geom::Point3d.new(bb.max.x + current_margin, bb.center.y, @height_z)
-          when 2  # Bottom
-            text_position = Geom::Point3d.new(bb.center.x, bb.min.y - current_margin, @height_z)
-          when 3  # Left
-            text_position = Geom::Point3d.new(bb.min.x - current_margin, bb.center.y, @height_z)
+          if @phase == :adjusting
+            create_annotation
+            restart_flow(view)
           end
+        end
+
+        def restart_flow(view)
+          @phase = :waiting_for_face
+          @confirmed_position = nil
+          @preview_points.clear
+          set_status('Posicionado. Clique outra face ou ESC.')
+          view.invalidate
+        end
+
+        def get_text_alignment
           
-          letter_size = @text_height
-          
-          # Calculate preview size based on usage or height only
-          if @has_usage && @usage_text && @height_text
-            # With usage - two lines
-            usage_width = @usage_text.length * letter_size
-            height_width = @height_text.length * letter_size
-            individual_height = letter_size * 1.2
-            preview_spacing = letter_size * 0.1
-            
-            if @rotation_90
-              # 90°: Rotated text - preview should be NARROW and TALL
-              approx_width = individual_height * 2 + preview_spacing
-              approx_height = [usage_width, height_width].max
+          if @rotation_90
+            case @relative_position
+            when 0
+              TextAlignLeft
+            when 1
+              TextAlignCenter
+            when 2
+              TextAlignRight
+            when 3
+              TextAlignCenter
             else
-              # 0°: Normal text - preview WIDE and SHORT
-              approx_width = [usage_width, height_width].max
-              approx_height = (individual_height * 2) + preview_spacing
+              TextAlignCenter
             end
           else
-            # Height only - original behavior
-            if @rotation_90
-              # Rotated 90° - preview TALL
-              approx_width = letter_size * 1.2
-              approx_height = @text_preview.length * letter_size * 0.7
+            case @relative_position
+            when 0
+              TextAlignCenter
+            when 1
+              TextAlignLeft
+            when 2
+              TextAlignCenter
+            when 3
+              TextAlignRight
             else
-              # Normal (0°) - preview WIDE
-              approx_width = @text_preview.length * letter_size * 0.7
-              approx_height = letter_size * 1.2
+              TextAlignCenter
             end
           end
+        end
+
+        def create_temp_text_group(parent, lines_array)
+          g = parent.entities.add_group
+          alignment = get_text_alignment
           
-          # Preview at exact position where text will be created
-          @preview_points = [
-            Geom::Point3d.new(text_position.x - approx_width/2, text_position.y - approx_height/2, text_position.z),
-            Geom::Point3d.new(text_position.x + approx_width/2, text_position.y - approx_height/2, text_position.z),
-            Geom::Point3d.new(text_position.x + approx_width/2, text_position.y + approx_height/2, text_position.z),
-            Geom::Point3d.new(text_position.x - approx_width/2, text_position.y + approx_height/2, text_position.z)
-          ]
+          full_text = lines_array.join("\n")
           
-          # Save position for use on click
-          @final_text_position = text_position
+          g.entities.add_3d_text(
+            full_text, 
+            alignment, 
+            @font, 
+            false,
+            false,
+            @text_height,
+            0.0,
+            0.0,
+            true,
+            @line_spacing_factor
+          )
+
+          if @rotation_90
+            pivot = g.bounds.center
+            rot = Geom::Transformation.rotation(pivot, Geom::Vector3d.new(0, 0, 1), Math::PI / 2)
+            g.transform!(rot)
+          end
+          
+          g
+        end
+
+        def calculate_position_with_text_bounds(text_bounds)
+          return nil unless @bb && text_bounds
+          
+          margin = @base_margin * @offset_multiplier
+          
+          cx = @bb.center.x
+          cy = @bb.center.y
+          cz = @height_z
+
+          text_width = text_bounds.width
+          text_height = text_bounds.height
+
+          case @relative_position
+          when 0
+            offset_distance = (text_height / 2.0) + margin
+            Geom::Point3d.new(cx, @bb.max.y + offset_distance, cz)
+          when 1
+            offset_distance = (text_width / 2.0) + margin
+            Geom::Point3d.new(@bb.max.x + offset_distance, cy, cz)
+          when 2
+            offset_distance = (text_height / 2.0) + margin
+            Geom::Point3d.new(cx, @bb.min.y - offset_distance, cz)
+          when 3
+            offset_distance = (text_width / 2.0) + margin
+            Geom::Point3d.new(@bb.min.x - offset_distance, cy, cz)
+          else
+            offset_distance = (text_height / 2.0) + margin
+            Geom::Point3d.new(cx, @bb.max.y + offset_distance, cz)
+          end
+        end
+
+        def calculate_preview
+          return unless @phase == :adjusting
+          model = Sketchup.active_model
+          ents = model.active_entities
+          temp_group = ents.add_group
+
+          begin
+            holder, height_value = find_height_holder(@path)
+            return unless height_value
+
+            vcm = height_value.to_f * CM_TO_INCHES_CONVERSION_FACTOR
+            height_text = vcm.zero? ? 'PISO' : ((vcm.round(1) == vcm.round(0)) ? "H#{vcm.round(0)}" : "H#{vcm.round(1)}")
+
+            usage_text = nil
+            if @show_usage && holder
+              uv = holder.get_attribute('dynamic_attributes', 'c002b_uso') ||
+                  (holder.is_a?(Sketchup::ComponentInstance) ? holder.definition.get_attribute('dynamic_attributes', 'c002b_uso') : nil)
+              usage_text = uv.to_s.strip unless uv.nil? || uv.to_s.strip.empty?
+            end
+
+            lines = []
+            if usage_text
+              if @layout_mode == :vertical
+                lines = [usage_text, height_text]
+              else
+                lines = ["#{usage_text}-#{height_text}"]
+              end
+            else
+              lines = [height_text]
+            end
+
+            g = create_temp_text_group(temp_group, lines)
+
+            text_bounds = g.bounds
+            base_pos = calculate_position_with_text_bounds(text_bounds)
+            
+            g.transform!(Geom::Transformation.translation(base_pos - g.bounds.center))
+
+            bb = g.bounds
+            @preview_points = [
+              Geom::Point3d.new(bb.min.x, bb.min.y, bb.min.z),
+              Geom::Point3d.new(bb.max.x, bb.min.y, bb.min.z),
+              Geom::Point3d.new(bb.max.x, bb.max.y, bb.min.z),
+              Geom::Point3d.new(bb.min.x, bb.max.y, bb.min.z)
+            ]
+            @confirmed_position = base_pos
+
+          rescue => e
+            puts "Erro em calculate_preview: #{e.class} - #{e.message}"
+          ensure
+            temp_group.erase! if temp_group&.valid?
+          end
         end
 
         def draw(view)
           draw_hover(view)
-          
-          # Draw text preview
-          if @preview_points && @preview_points.length == 4 && @text_preview
-            view.drawing_color = Sketchup::Color.new(128, 57, 101)  # #803965
+          if @preview_points && @preview_points.length == 4
+            view.drawing_color = Sketchup::Color.new(128, 57, 101)
             view.line_stipple = "-"
-            
-            # Calculate line thickness based on zoom
             view_size = view.vpheight
-            zoom_factor = view.camera.height / view_size
-            line_width = [2, (zoom_factor * 10).to_i].max
-            view.line_width = line_width
-            
+            zoom_factor = view.camera.height / (view_size.zero? ? 1 : view_size)
+            view.line_width = [2, (zoom_factor * 10).to_i].max
             view.draw(GL_LINE_LOOP, @preview_points)
           end
         end
 
-        def onLButtonDown(flags, x, y, view)
-          return unless @hover_face && @path
-          
-          # Find component/group that contains the attribute
-          holder = nil
-          height_value = nil
-          
-          @path.reverse.each do |entity|
-            if entity.is_a?(Sketchup::ComponentInstance) || entity.is_a?(Sketchup::Group)
-              temp_value = entity.get_attribute("dynamic_attributes", "a003_altura")
-              if temp_value.nil? && entity.is_a?(Sketchup::ComponentInstance)
-                temp_value = entity.definition.get_attribute("dynamic_attributes", "a003_altura")
-              end
-              
-              if temp_value
-                holder = entity
-                height_value = temp_value
-                break
-              end
-            end
-          end
-          
-          unless height_value
-            puts "⚠️ 'a003_altura' not found in face hierarchy"
-            return
-          end
-
-          value_cm = height_value.to_f * CM_TO_INCHES_CONVERSION_FACTOR
-          height_text = if value_cm == 0.0
-                          "PISO"
-                        else
-                          (value_cm.round(1) == value_cm.round(0)) ? "H#{value_cm.round(0)}" : "H#{value_cm.round(1)}"
-                        end
-          
-          # Include usage if enabled
-          has_usage = false
-          usage_text = nil
-          if @show_usage && holder
-            usage_value = holder.get_attribute("dynamic_attributes", "c002b_uso")
-            if usage_value.nil? && holder.is_a?(Sketchup::ComponentInstance)
-              usage_value = holder.definition.get_attribute("dynamic_attributes", "c002b_uso")
-            end
-            
-            if usage_value && !usage_value.to_s.strip.empty?
-              has_usage = true
-              usage_text = usage_value.to_s
-            end
-          end
-
+        def create_annotation
+          return unless @confirmed_position
           model = Sketchup.active_model
-          model.start_operation("Imprimir Altura", true)
-
-          pos = @final_text_position
-
-          grp = model.entities.add_group
-          tag = model.layers["-ANOTACAO-TECNICO"] || model.layers.add("-ANOTACAO-TECNICO")
-          grp.layer = tag
-
-          if has_usage
-            # Create usage text (first line)
-            grp_usage = grp.entities.add_group
-            grp_usage.entities.add_3d_text(usage_text, TextAlignCenter, @font, false, false, @text_height)
-            center_usage = grp_usage.bounds.center
-            
-            # Create height text (second line)
-            grp_height = grp.entities.add_group
-            grp_height.entities.add_3d_text(height_text, TextAlignCenter, @font, false, false, @text_height)
-            center_height = grp_height.bounds.center
-            
-            # Positioning depends on rotation
-            spacing = @text_height * 1.5
-            
-            if @rotation_90
-              # For 90° rotation: position side by side BEFORE rotation
-              pos_usage = Geom::Point3d.new(pos.x - spacing/2, pos.y, pos.z)
-              pos_height = Geom::Point3d.new(pos.x + spacing/2, pos.y, pos.z)
-            else
-              # For 0°: position one on top of other
-              pos_usage = Geom::Point3d.new(pos.x, pos.y + spacing/2, pos.z)
-              pos_height = Geom::Point3d.new(pos.x, pos.y - spacing/2, pos.z)
-            end
-            
-            # Apply positioning
-            vec_usage = pos_usage - center_usage
-            grp_usage.transform!(Geom::Transformation.translation(vec_usage))
-            
-            vec_height = pos_height - center_height
-            grp_height.transform!(Geom::Transformation.translation(vec_height))
-            
-            # Apply rotation
-            if @rotation_90
-              pos_final_usage = grp_usage.bounds.center
-              rotation_usage = Geom::Transformation.rotation(pos_final_usage, Geom::Vector3d.new(0, 0, 1), Math::PI/2)
-              grp_usage.transform!(rotation_usage)
-              
-              pos_final_height = grp_height.bounds.center
-              rotation_height = Geom::Transformation.rotation(pos_final_height, Geom::Vector3d.new(0, 0, 1), Math::PI/2)
-              grp_height.transform!(rotation_height)
-            end
-            
-            # Apply black color
-            [grp_usage, grp_height].each do |subgrp|
-              subgrp.entities.grep(Sketchup::Face).each { |f| f.material = f.back_material = 'black' }
-            end
-          else
-            # Create only height text
-            grp.entities.add_3d_text(height_text, TextAlignCenter, @font, false, false, @text_height)
-            center_text = grp.bounds.center
-            vec = pos - center_text
-            grp.transform!(Geom::Transformation.translation(vec))
-            
-            # Apply rotation if necessary
-            if @rotation_90
-              pos_final = grp.bounds.center
-              rotation = Geom::Transformation.rotation(pos_final, Geom::Vector3d.new(0, 0, 1), Math::PI/2)
-              grp.transform!(rotation)
-            end
-            
-            grp.entities.grep(Sketchup::Face).each { |f| f.material = f.back_material = 'black' }
-          end
+          model.start_operation('Imprimir Altura', true)
           
-          calculate_preview if @hover_face
-          view.invalidate
+          begin
+            holder, height_value = find_height_holder(@path)
+            return unless height_value
 
-          model.commit_operation
+            vcm = height_value.to_f * CM_TO_INCHES_CONVERSION_FACTOR
+            height_text = vcm.zero? ? 'PISO' : ((vcm.round(1) == vcm.round(0)) ? "H#{vcm.round(0)}" : "H#{vcm.round(1)}")
+
+            usage_text = nil
+            if @show_usage && holder
+              uv = holder.get_attribute('dynamic_attributes', 'c002b_uso') ||
+                  (holder.is_a?(Sketchup::ComponentInstance) ? holder.definition.get_attribute('dynamic_attributes', 'c002b_uso') : nil)
+              usage_text = uv.to_s.strip unless uv.nil? || uv.to_s.strip.empty?
+            end
+
+            tag_name = '-ANOTACAO-TECNICO'
+            tag = model.layers[tag_name] || model.layers.add(tag_name)
+            grp_main = model.entities.add_group
+            grp_main.layer = tag
+
+            lines = []
+            if usage_text
+              if @layout_mode == :vertical
+                lines = [usage_text, height_text]
+              else
+                lines = ["#{usage_text} - #{height_text}"]
+              end
+            else
+              lines = [height_text]
+            end
+
+            g = create_temp_text_group(grp_main, lines)
+
+            text_bounds = g.bounds
+            base_pos = calculate_position_with_text_bounds(text_bounds)
+
+            g.transform!(Geom::Transformation.translation(base_pos - g.bounds.center))
+
+            colorize_safe(g)
+
+          rescue => e
+            UI.messagebox("Erro ao criar anotação: #{e.class} - #{e.message}")
+          ensure
+            model.commit_operation
+          end
+        end
+
+        def colorize_safe(group)
+          return unless group && group.valid?
+          
+          group.entities.each do |entity|
+            if entity.is_a?(Sketchup::Group)
+              colorize_safe(entity)
+            elsif entity.is_a?(Sketchup::Face)
+              begin
+                entity.material = entity.back_material = 'black'
+              rescue
+              end
+            end
+          end
+        end
+
+        def find_height_holder(path)
+          return [nil, nil] unless path && path.is_a?(Array)
+          path.reverse_each do |entity|
+            if entity.is_a?(Sketchup::ComponentInstance) || entity.is_a?(Sketchup::Group)
+              val = entity.get_attribute('dynamic_attributes', 'a003_altura')
+              if val.nil? && entity.is_a?(Sketchup::ComponentInstance)
+                val = entity.definition.get_attribute('dynamic_attributes', 'a003_altura')
+              end
+              return [entity, val] if val
+            end
+          end
+          [nil, nil]
         end
 
         def onKeyDown(key, repeat, flags, view)
           case key
-          when 27  # ESC
-            Sketchup.active_model.select_tool(nil)
-          when VK_UP  # Arrow up
-            @relative_position = 0
-            Sketchup.write_default("HeightAnnotation", "relative_position", @relative_position)
-            calculate_preview if @hover_face
-            update_status_text
-            view.invalidate
-          when VK_RIGHT  # Arrow right
-            @relative_position = 1
-            Sketchup.write_default("HeightAnnotation", "relative_position", @relative_position)
-            calculate_preview if @hover_face
-            update_status_text
-            view.invalidate
-          when VK_DOWN  # Arrow down
-            @relative_position = 2
-            Sketchup.write_default("HeightAnnotation", "relative_position", @relative_position)
-            calculate_preview if @hover_face
-            update_status_text
-            view.invalidate
-          when VK_LEFT  # Arrow left
-            @relative_position = 3
-            Sketchup.write_default("HeightAnnotation", "relative_position", @relative_position)
-            calculate_preview if @hover_face
-            update_status_text
-            view.invalidate
-          when VK_CONTROL  # Ctrl - toggle between 0° and 90°
+          when VK_ESC
+            handle_escape(view)
+            return
+          when VK_CTRL
             @rotation_90 = !@rotation_90
-            Sketchup.write_default("HeightAnnotation", "rotation_90", @rotation_90.to_s)
-            calculate_preview if @hover_face
-            update_status_text
-            view.invalidate
-          when 107, 187, VK_ADD  # + - increase offset
-            @offset_multiplier = [@offset_multiplier + 0.5, 5.0].min
-            Sketchup.write_default("HeightAnnotation", "offset_multiplier", @offset_multiplier)
-            calculate_preview if @hover_face
-            update_status_text
-            view.invalidate
-          when 109, 189, VK_SUBTRACT  # - - decrease offset
-            @offset_multiplier = [@offset_multiplier - 0.5, 0.5].max
-            Sketchup.write_default("HeightAnnotation", "offset_multiplier", @offset_multiplier)
-            calculate_preview if @hover_face
-            update_status_text
-            view.invalidate
+            Sketchup.write_default('HeightAnnotation', 'rotation_90', @rotation_90.to_s)
+          when VK_SHIFT
+            @layout_mode = (@layout_mode == :vertical) ? :horizontal : :vertical
+          when VK_ENTER
+            create_annotation
+            restart_flow(view)
+            return
+          when VK_ADD, VK_PLUS
+            if flags & COPY_MODIFIER_MASK != 0
+              @line_spacing_factor = [@line_spacing_factor + 0.1, 2.0].min
+              Sketchup.write_default('HeightAnnotation', 'line_spacing', @line_spacing_factor)
+            else
+              @offset_multiplier = [@offset_multiplier + 0.5, 5.0].min
+              Sketchup.write_default('HeightAnnotation', 'offset_multiplier', @offset_multiplier)
+            end
+          when VK_SUBTRACT, VK_MINUS
+            if flags & COPY_MODIFIER_MASK != 0
+              @line_spacing_factor = [@line_spacing_factor - 0.1, 0.0].max
+              Sketchup.write_default('HeightAnnotation', 'line_spacing', @line_spacing_factor)
+            else
+              @offset_multiplier = [@offset_multiplier - 0.5, 0.5].max
+              Sketchup.write_default('HeightAnnotation', 'offset_multiplier', @offset_multiplier)
+            end
+          when VK_UP, VK_UP_MAC
+            @relative_position = 0
+            Sketchup.write_default('HeightAnnotation', 'relative_position', @relative_position)
+          when VK_RIGHT, VK_RIGHT_MAC
+            @relative_position = 1
+            Sketchup.write_default('HeightAnnotation', 'relative_position', @relative_position)
+          when VK_DOWN, VK_DOWN_MAC
+            @relative_position = 2
+            Sketchup.write_default('HeightAnnotation', 'relative_position', @relative_position)
+          when VK_LEFT, VK_LEFT_MAC
+            @relative_position = 3
+            Sketchup.write_default('HeightAnnotation', 'relative_position', @relative_position)
+          else
+            return
           end
+
+          calculate_preview if @phase == :adjusting
+          update_status_text
+          view.invalidate
         end
-        
+
         def update_status_text
-          positions = ["CIMA", "DIREITA", "BAIXO", "ESQUERDA"]
-          rotation_text = @rotation_90 ? "90°" : "0°"
-          Sketchup.set_status_text("Pos: #{positions[@relative_position]} | Rot: #{rotation_text} | Offset: x#{@offset_multiplier} | +/- ajusta offset", SB_PROMPT)
+          positions = ['CIMA', 'DIREITA', 'BAIXO', 'ESQUERDA']
+          
+          alignment_text = case get_text_alignment
+                          when TextAlignLeft then 'ESQ'
+                          when TextAlignRight then 'DIR'
+                          when TextAlignCenter then 'CENTRO'
+                          else 'CENTRO'
+                          end
+          
+          rotation_text = @rotation_90 ? '90°' : '0°'
+          layout_text = (@layout_mode == :vertical) ? 'Vertical' : 'Lateral'
+          Sketchup.set_status_text("Pos: #{positions[@relative_position]} (#{alignment_text}) | Rot: #{rotation_text} | Layout: #{layout_text} | Offset: x#{@offset_multiplier} | Espaç: #{(@line_spacing_factor * 100).round}%", SB_PROMPT)
+        end
+
+        def set_status(msg)
+          Sketchup.set_status_text(msg, SB_PROMPT)
+        end
+
+        def getExtents
+          hover_extents
         end
       end
-
-    end # module ProHeightAnnotation
-  end # module Modules
-end # module ProjetaPlus
-
+    end
+  end
+end
