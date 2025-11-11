@@ -43,7 +43,7 @@ module ProjetaPlus
         top: 200
       )
 
-      #  @@main_dashboard_dialog.set_url("https://projeta-plus-html.vercel.app/")
+      # DEV_MODE: This URL will be automatically replaced during build
       @@main_dashboard_dialog.set_url("http://localhost:3000/")
 
       # Register all handlers using the new architecture

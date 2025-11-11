@@ -69,6 +69,13 @@ rsync -av \
   --exclude='.DS_Store' \
   "$OBFUSCATED_DIR/" "$BUILD_DIR/$PLUGIN_NAME/"
 
+# Replace localhost URL with production URL for build
+echo "🔄 Substituindo URL de desenvolvimento para produção..."
+if [ -f "$BUILD_DIR/$PLUGIN_NAME/commands.rb" ]; then
+  sed -i '' 's|http://localhost:3000/|https://projeta-plus-html.vercel.app/|g' "$BUILD_DIR/$PLUGIN_NAME/commands.rb"
+  echo "   ✓ URL atualizada em commands.rb"
+fi
+
 # Copiar arquivos não-Ruby (componentes, ícones, traduções)
 echo "📦 Copiando recursos (ícones, componentes, traduções)..."
 
