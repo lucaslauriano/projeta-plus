@@ -21,6 +21,7 @@
 /frontend
 /dist
 /build
+/frontend
 
 build/obfuscated_build/
 build/encrypted_build/
