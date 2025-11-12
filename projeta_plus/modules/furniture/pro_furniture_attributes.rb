@@ -9,7 +9,8 @@ module ProjetaPlus
   module Modules
     module ProFurnitureAttributes
 
-      DICTIONARY_NAME = "projeta_plus_furniture".freeze
+      DICTIONARY_NAME = "dynamic_attributes".freeze
+      ATTR_PREFIX = "pro_furn_".freeze
       CM_TO_INCHES = 2.54
 
       # Furniture type colors for annotations
@@ -33,17 +34,17 @@ module ProjetaPlus
 
       def self.initialize_default_attributes(component)
         default_attributes = {
-          "name" => "",
-          "color" => "",
-          "brand" => "",
-          "type" => "",
-          "dimension_format" => "L x P x A",
-          "dimension" => "",
-          "environment" => "",
-          "value" => "",
-          "link" => "",
-          "observations" => "",
-          "code" => ""
+          "#{ATTR_PREFIX}name" => "",
+          "#{ATTR_PREFIX}color" => "",
+          "#{ATTR_PREFIX}brand" => "",
+          "#{ATTR_PREFIX}type" => "",
+          "#{ATTR_PREFIX}dimension_format" => "L x P x A",
+          "#{ATTR_PREFIX}dimension" => "",
+          "#{ATTR_PREFIX}environment" => "",
+          "#{ATTR_PREFIX}value" => "",
+          "#{ATTR_PREFIX}link" => "",
+          "#{ATTR_PREFIX}observations" => "",
+          "#{ATTR_PREFIX}code" => ""
         }
 
         default_attributes.each do |attr_name, default_value|
@@ -54,10 +55,10 @@ module ProjetaPlus
         end
 
         # Set current dimension if not exists
-        if get_attribute_safe(component, "dimension", "").empty?
-          dimension_format = get_attribute_safe(component, "dimension_format", "L x P x A")
+        if get_attribute_safe(component, "#{ATTR_PREFIX}dimension", "").empty?
+          dimension_format = get_attribute_safe(component, "#{ATTR_PREFIX}dimension_format", "L x P x A")
           current_dim = calculate_dimension_string(component, dimension_format)
-          set_attribute_safe(component, "dimension", current_dim)
+          set_attribute_safe(component, "#{ATTR_PREFIX}dimension", current_dim)
         end
       end
 
@@ -171,7 +172,7 @@ module ProjetaPlus
             next unless component && component.valid?
 
             begin
-              type = get_attribute_safe(component, "type", "").to_s.strip
+              type = get_attribute_safe(component, "#{ATTR_PREFIX}type", "").to_s.strip
               arr << component unless type.empty?
             rescue => e
               puts "ERROR reading attributes: #{e.message}"
@@ -218,7 +219,7 @@ module ProjetaPlus
           collect_all_furniture_instances(model.entities, instances)
 
           instances.each do |inst|
-            type = get_attribute_safe(inst, "type", "").to_s.strip
+            type = get_attribute_safe(inst, "#{ATTR_PREFIX}type", "").to_s.strip
             next if type.empty?
             @instances_cache[type] ||= []
             @instances_cache[type] << inst

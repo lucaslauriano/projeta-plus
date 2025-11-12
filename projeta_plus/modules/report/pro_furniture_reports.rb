@@ -19,20 +19,21 @@ module ProjetaPlus
         instances = []
         ProFurnitureAttributes.collect_all_furniture_instances(model.entities, instances)
 
+        prefix = ProFurnitureAttributes::ATTR_PREFIX
         instances.each do |inst|
-          type = ProFurnitureAttributes.get_attribute_safe(inst, 'type', '').to_s.strip
+          type = ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}type", '').to_s.strip
           next if type.empty? || type != category
 
           key = [
-            ProFurnitureAttributes.get_attribute_safe(inst, 'name', ''),
-            ProFurnitureAttributes.get_attribute_safe(inst, 'color', ''),
-            ProFurnitureAttributes.get_attribute_safe(inst, 'brand', ''),
+            ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}name", ''),
+            ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}color", ''),
+            ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}brand", ''),
             type,
-            ProFurnitureAttributes.get_attribute_safe(inst, 'dimension', ''),
-            ProFurnitureAttributes.get_attribute_safe(inst, 'environment', ''),
-            ProFurnitureAttributes.get_attribute_safe(inst, 'observations', ''),
-            ProFurnitureAttributes.get_attribute_safe(inst, 'link', ''),
-            ProFurnitureAttributes.get_attribute_safe(inst, 'value', '')
+            ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}dimension", ''),
+            ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}environment", ''),
+            ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}observations", ''),
+            ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}link", ''),
+            ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}value", '')
           ]
 
           data[key][:quantity] += 1
@@ -51,20 +52,21 @@ module ProjetaPlus
 
           data = Hash.new { |h, k| h[k] = { quantity: 0, ids: [] } }
 
+          prefix = ProFurnitureAttributes::ATTR_PREFIX
           instances.each do |inst|
             next unless inst && inst.valid?
 
             begin
               key = [
-                ProFurnitureAttributes.get_attribute_safe(inst, "name", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "color", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "brand", ""),
+                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}name", ""),
+                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}color", ""),
+                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}brand", ""),
                 category,
-                ProFurnitureAttributes.get_attribute_safe(inst, "dimension", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "environment", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "observations", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "link", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "value", "")
+                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}dimension", ""),
+                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}environment", ""),
+                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}observations", ""),
+                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}link", ""),
+                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}value", "")
               ]
 
               data[key][:quantity] += 1
@@ -86,8 +88,9 @@ module ProjetaPlus
             highlight = (selected_key && key == selected_key)
 
             entity = Sketchup.active_model.entities.find { |e| e.entityID == id }
-            code = if entity && ProFurnitureAttributes.get_attribute_safe(entity, "code")
-                     ProFurnitureAttributes.get_attribute_safe(entity, "code")
+            prefix = ProFurnitureAttributes::ATTR_PREFIX
+            code = if entity && ProFurnitureAttributes.get_attribute_safe(entity, "#{prefix}code")
+                     ProFurnitureAttributes.get_attribute_safe(entity, "#{prefix}code")
                    else
                      generate_code(type, index)
                    end
@@ -289,8 +292,9 @@ module ProjetaPlus
               
               id = info[:ids].first
               entity = model.entities.find { |e| e.entityID == id }
-              code = if entity && ProFurnitureAttributes.get_attribute_safe(entity, "code")
-                       ProFurnitureAttributes.get_attribute_safe(entity, "code")
+              prefix = ProFurnitureAttributes::ATTR_PREFIX
+              code = if entity && ProFurnitureAttributes.get_attribute_safe(entity, "#{prefix}code")
+                       ProFurnitureAttributes.get_attribute_safe(entity, "#{prefix}code")
                      else
                        generate_code(type, i + 1)
                      end

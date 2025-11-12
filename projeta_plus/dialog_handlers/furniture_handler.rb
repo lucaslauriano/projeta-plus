@@ -289,7 +289,8 @@ module ProjetaPlus
         component = entity.is_a?(Sketchup::Group) ? entity.to_component : entity
 
         # Initialize attributes if type is set
-        type = Modules::ProFurnitureAttributes.get_attribute_safe(component, "type", "")
+        prefix = Modules::ProFurnitureAttributes::ATTR_PREFIX
+        type = Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}type", "")
         if !type.empty?
           Modules::ProFurnitureAttributes.initialize_default_attributes(component)
         end
@@ -303,19 +304,19 @@ module ProjetaPlus
           success: true,
           selected: true,
           entity_id: component.entityID,
-          name: Modules::ProFurnitureAttributes.get_attribute_safe(component, "name", ""),
-          color: Modules::ProFurnitureAttributes.get_attribute_safe(component, "color", ""),
-          brand: Modules::ProFurnitureAttributes.get_attribute_safe(component, "brand", ""),
+          name: Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}name", ""),
+          color: Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}color", ""),
+          brand: Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}brand", ""),
           type: type,
           width: dimensions[:width],
           depth: dimensions[:depth],
           height: dimensions[:height],
-          dimension_format: Modules::ProFurnitureAttributes.get_attribute_safe(component, "dimension_format", "L x P x A"),
-          dimension: Modules::ProFurnitureAttributes.get_attribute_safe(component, "dimension", ""),
-          environment: Modules::ProFurnitureAttributes.get_attribute_safe(component, "environment", ""),
-          value: Modules::ProFurnitureAttributes.get_attribute_safe(component, "value", ""),
-          link: Modules::ProFurnitureAttributes.get_attribute_safe(component, "link", ""),
-          observations: Modules::ProFurnitureAttributes.get_attribute_safe(component, "observations", ""),
+          dimension_format: Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}dimension_format", "L x P x A"),
+          dimension: Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}dimension", ""),
+          environment: Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}environment", ""),
+          value: Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}value", ""),
+          link: Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}link", ""),
+          observations: Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}observations", ""),
           object_name: component.definition.name || "Unnamed Object"
         }
 
@@ -343,9 +344,17 @@ module ProjetaPlus
 
         component = entity.is_a?(Sketchup::Group) ? entity.to_component : entity
 
+        # Add prefix to attribute keys
+        prefix = Modules::ProFurnitureAttributes::ATTR_PREFIX
+        prefixed_data = {}
+        data.each do |key, value|
+          prefixed_key = key.to_s.start_with?(prefix) ? key.to_s : "#{prefix}#{key}"
+          prefixed_data[prefixed_key] = value
+        end
+
         model.start_operation(ProjetaPlus::Localization.t('commands.save_furniture_attributes'), true)
 
-        result = Modules::ProFurnitureAttributes.save_furniture_attributes(component, data)
+        result = Modules::ProFurnitureAttributes.save_furniture_attributes(component, prefixed_data)
 
         if result[:success]
           model.commit_operation
