@@ -46,6 +46,21 @@ module ProjetaPlus
         get_available_languages.map { |lang| lang[:code] }
       end
 
+      def self.get_furniture_dimension_formats
+        [
+          "L x D x H",
+          "L x H x D",
+          "H x L x D",
+          "H x D x L",
+          "D x L x H",
+          "D x H x L"
+        ]
+      end
+
+      def self.get_furniture_types
+        DEFAULT_FURNITURE_TYPES
+      end
+
       def self.get_language_name_by_code(code)
         language = get_available_languages.find { |lang| lang[:code] == code }
         language ? language[:name] : code
@@ -80,6 +95,10 @@ module ProjetaPlus
       DEFAULT_STYLES_FOLDER = "".freeze
       DEFAULT_SHEETS_FOLDER = "".freeze
       DEFAULT_LANGUAGE = "en".freeze
+      
+      # Furniture Module Defaults
+      DEFAULT_FURNITURE_DIMENSION_FORMAT = "L x D x H".freeze
+      DEFAULT_FURNITURE_TYPES = ["Furniture", "Appliances", "Fixtures & Fittings", "Accessories", "Decoration"].freeze
 
       # Reads a specific setting from SketchUp's preferences.
       # @param key [String] The key of the setting (e.g., "Font").
@@ -114,11 +133,14 @@ module ProjetaPlus
           'styles_folder' => read("styles_folder", DEFAULT_STYLES_FOLDER),
           'sheets_folder' => read("sheets_folder", DEFAULT_SHEETS_FOLDER),
           'language' => read("language", DEFAULT_LANGUAGE),
+          'furniture_dimension_format' => read("furniture_dimension_format", DEFAULT_FURNITURE_DIMENSION_FORMAT),
           'frontend_options' => {
             'fonts' => get_available_fonts,
             'measurement_units' => get_measurement_units,
             'area_units' => get_area_units,
-            'languages' => get_available_languages
+            'languages' => get_available_languages,
+            'furniture_dimension_formats' => get_furniture_dimension_formats,
+            'furniture_types' => get_furniture_types
           }
         }
       end

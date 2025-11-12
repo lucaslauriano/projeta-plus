@@ -47,9 +47,13 @@ module ProjetaPlus
       @@main_dashboard_dialog.set_url("http://localhost:3000/")
 
       # Register all handlers using the new architecture
-      register_dialog_handlers
+      furniture_handler = register_dialog_handlers
       
-      @@main_dashboard_dialog.set_on_closed { @@main_dashboard_dialog = nil; puts "[ProjetaPlus Dialog] Main dialog closed." }
+      @@main_dashboard_dialog.set_on_closed do
+        furniture_handler&.detach_selection_observer
+        @@main_dashboard_dialog = nil
+        puts "[ProjetaPlus Dialog] Main dialog closed."
+      end
       @@main_dashboard_dialog.show
     end
 
@@ -71,16 +75,20 @@ module ProjetaPlus
       # Initialize all handlers
       settings_handler = ProjetaPlus::DialogHandlers::SettingsHandler.new(@@main_dashboard_dialog)
       model_handler = ProjetaPlus::DialogHandlers::ModelHandler.new(@@main_dashboard_dialog)
+      furniture_handler = ProjetaPlus::DialogHandlers::FurnitureHandler.new(@@main_dashboard_dialog)
       annotation_handler = ProjetaPlus::DialogHandlers::AnnotationHandler.new(@@main_dashboard_dialog)
       extension_handler = ProjetaPlus::DialogHandlers::ExtensionHandler.new(@@main_dashboard_dialog)
       
       # Register all callbacks
       settings_handler.register_callbacks
       model_handler.register_callbacks
+      furniture_handler.register_callbacks
       annotation_handler.register_callbacks
       extension_handler.register_callbacks
       
       puts "[ProjetaPlus Commands] All dialog handlers registered successfully."
+
+      furniture_handler
     end
 
   end # module Commands

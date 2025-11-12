@@ -22,6 +22,7 @@ end
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'base_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'settings_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'model_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'furniture_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'annotation_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'extension_handler.rb')
 
