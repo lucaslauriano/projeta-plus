@@ -270,8 +270,6 @@ module ProjetaPlus
 
       private
 
-      # ========== Selection Management ==========
-
       def get_selected_furniture_attributes
         model = Sketchup.active_model
         selection = model.selection
@@ -288,18 +286,15 @@ module ProjetaPlus
 
         component = entity.is_a?(Sketchup::Group) ? entity.to_component : entity
 
-        # Initialize attributes if type is set
         prefix = Modules::ProFurnitureAttributes::ATTR_PREFIX
         type = Modules::ProFurnitureAttributes.get_attribute_safe(component, "#{prefix}type", "")
         if !type.empty?
           Modules::ProFurnitureAttributes.initialize_default_attributes(component)
         end
 
-        # Get dimension components
         dimensions = Modules::ProFurnitureAttributes.get_dimension_components(entity)
         puts "[ProjetaPlus Furniture] Dimensions calculated: #{dimensions.inspect}"
 
-        # Get all attributes
         attributes = {
           success: true,
           selected: true,
@@ -326,8 +321,6 @@ module ProjetaPlus
         handle_error(e, 'get_furniture_attributes')
       end
 
-      # ========== Save Attributes ==========
-
       def save_furniture_attributes(json_data)
         data = parse_payload(json_data)
         
@@ -344,7 +337,6 @@ module ProjetaPlus
 
         component = entity.is_a?(Sketchup::Group) ? entity.to_component : entity
 
-        # Add prefix to attribute keys
         prefix = Modules::ProFurnitureAttributes::ATTR_PREFIX
         prefixed_data = {}
         data.each do |key, value|
@@ -358,8 +350,11 @@ module ProjetaPlus
 
         if result[:success]
           model.commit_operation
-          # Invalidate cache after saving
           Modules::ProFurnitureAttributes.invalidate_cache
+          
+          ::UI.start_timer(0.1, false) do
+            send_selection_update(selection, force: true)
+          end
         else
           model.abort_operation
         end
@@ -369,8 +364,6 @@ module ProjetaPlus
         model.abort_operation if model
         handle_error(e, 'save_furniture_attributes')
       end
-
-      # ========== Resize Operations ==========
 
       def resize_proportional(payload)
         params = parse_payload(payload)
@@ -388,7 +381,6 @@ module ProjetaPlus
 
         Modules::ProFurnitureAttributes.resize_proportional(entity, scale_factor.to_f)
 
-        # Return updated dimensions
         get_current_dimensions
       rescue => e
         handle_error(e, 'resize_proportional')
@@ -412,13 +404,10 @@ module ProjetaPlus
 
         Modules::ProFurnitureAttributes.resize_independent(entity, width, depth, height)
 
-        # Return updated dimensions
         get_current_dimensions
       rescue => e
         handle_error(e, 'resize_independent')
       end
-
-      # ========== Dimension Operations ==========
 
       def get_current_dimensions
         model = Sketchup.active_model
@@ -469,8 +458,6 @@ module ProjetaPlus
         end
       end
 
-      # ========== Isolation ==========
-
       def isolate_item(payload)
         params = parse_payload(payload)
         entity_id = params['entity_id'] || params[:entity_id]
@@ -494,8 +481,6 @@ module ProjetaPlus
         handle_error(e, 'isolate_furniture_item')
       end
 
-      # ========== Types ==========
-
       def get_available_types
         types = Modules::ProFurnitureAttributes.get_available_types
 
@@ -506,8 +491,6 @@ module ProjetaPlus
       rescue => e
         handle_error(e, 'get_furniture_types')
       end
-
-      # ========== Reports ==========
 
       def get_category_report_data(payload)
         params = parse_payload(payload)
@@ -539,8 +522,6 @@ module ProjetaPlus
       rescue => e
         handle_error(e, 'get_category_report_data')
       end
-
-      # ========== Export ==========
 
       def export_category_csv(payload)
         params = parse_payload(payload)

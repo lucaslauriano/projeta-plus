@@ -12,8 +12,8 @@ module ProjetaPlus
       DICTIONARY_NAME = "dynamic_attributes".freeze
       ATTR_PREFIX = "pro_furn_".freeze
       CM_TO_INCHES = 2.54
+      MIN_DIMENSION_CM = 1.0
 
-      # Furniture type colors for annotations
       TYPE_COLORS = {
         "Furniture" => Sketchup::Color.new(139, 69, 19),      # Brown
         "Appliances" => Sketchup::Color.new(70, 130, 180),    # Steel Blue
@@ -23,14 +23,12 @@ module ProjetaPlus
         "Other" => Sketchup::Color.new(128, 128, 128)         # Gray
       }.freeze
 
-      # Selection observer and cache
       @selection_observer = nil
       @instances_cache = {}
       @cache_timestamp = 0
       @processing_selection = false
       @last_processed_selection = nil
 
-      # ========== Attribute Management ==========
 
       def self.initialize_default_attributes(component)
         default_attributes = {
@@ -54,7 +52,6 @@ module ProjetaPlus
           end
         end
 
-        # Set current dimension if not exists
         if get_attribute_safe(component, "#{ATTR_PREFIX}dimension", "").empty?
           dimension_format = get_attribute_safe(component, "#{ATTR_PREFIX}dimension_format", "L x P x A")
           current_dim = calculate_dimension_string(component, dimension_format)
@@ -81,15 +78,13 @@ module ProjetaPlus
         end
       end
 
-      # ========== Dimension Calculations ==========
-
       def self.calculate_dimension_string(entity, format = "L x P x A")
         component = entity.is_a?(Sketchup::Group) ? entity.to_component : entity
         bounds = component.bounds
 
         width = format_number(bounds.width.to_f * CM_TO_INCHES)
-        depth = format_number(bounds.depth.to_f * CM_TO_INCHES)
-        height = format_number(bounds.height.to_f * CM_TO_INCHES)
+        depth = format_number(bounds.height.to_f * CM_TO_INCHES)
+        height = format_number(bounds.depth.to_f * CM_TO_INCHES)
 
         case format
         when "L x P x A" then "#{width} x #{depth} x #{height} cm"
@@ -112,16 +107,12 @@ module ProjetaPlus
 
       def self.get_dimension_components(entity)
         bounds = entity.bounds
-        # SketchUp bounds: width (X), depth (Y), height (Z)
-        # Note: bounds.depth is Z axis (height), bounds.height is Y axis (depth)
         {
           width: format_number(bounds.width.to_f * CM_TO_INCHES),
           depth: format_number(bounds.height.to_f * CM_TO_INCHES),
           height: format_number(bounds.depth.to_f * CM_TO_INCHES)
         }
       end
-
-      # ========== Component Name Generation ==========
 
       def self.generate_clean_name(name, brand, dimension)
         parts = []
@@ -132,6 +123,27 @@ module ProjetaPlus
         clean_name = parts.join(" - ")
         copy_to_clipboard(clean_name)
         clean_name
+      end
+
+      def self.build_dimension_label(entity, format)
+        dims = get_dimension_components(entity)
+        width = dims[:width]
+        depth = dims[:depth]
+        height = dims[:height]
+
+        case format
+        when "L x P x A"
+          return "#{width}L x #{depth}P x #{height}A" unless [width, depth, height].any?(&:empty?)
+        when "L x P"
+          return "#{width}L x #{depth}P" unless [width, depth].any?(&:empty?)
+        when "L x A"
+          return "#{width}L x #{height}A" unless [width, height].any?(&:empty?)
+        when "SEM DIMENSÃO"
+          return ""
+        end
+
+        return "#{width}L x #{depth}P x #{height}A" unless [width, depth, height].any?(&:empty?)
+        ""
       end
 
       def self.copy_to_clipboard(text)
@@ -236,8 +248,6 @@ module ProjetaPlus
         @cache_timestamp = 0
       end
 
-      # ========== Resizing Operations ==========
-
       def self.resize_proportional(entity, scale_factor)
         return unless entity && entity.valid? && scale_factor.to_f > 0
 
@@ -253,52 +263,89 @@ module ProjetaPlus
         puts "ERROR in resize_proportional: #{e.message}"
       end
 
-      def self.resize_independent(entity, new_width, new_depth, new_height)
+      def self.normalize_dimension_input(value)
+        str = value.to_s.strip
+        return nil if str.empty?
+        str.tr(',', '.').to_f
+      end
+
+      def self.resize_independent(entity, new_width, new_depth, new_height, live: false)
         return unless entity && entity.valid?
 
-        new_width_f = new_width.to_f
-        new_depth_f = new_depth.to_f
-        new_height_f = new_height.to_f
+        new_width_f = normalize_dimension_input(new_width)
+        new_depth_f = normalize_dimension_input(new_depth)
+        new_height_f = normalize_dimension_input(new_height)
 
-        return unless new_width_f > 0 && new_depth_f > 0 && new_height_f > 0
+        return unless new_width_f && new_depth_f && new_height_f
+
+        new_width_f = [new_width_f, MIN_DIMENSION_CM].max
+        new_depth_f = [new_depth_f, MIN_DIMENSION_CM].max
+        new_height_f = [new_height_f, MIN_DIMENSION_CM].max
 
         bounds = entity.bounds
         current_width_cm = bounds.width * CM_TO_INCHES
-        current_depth_cm = bounds.depth * CM_TO_INCHES
-        current_height_cm = bounds.height * CM_TO_INCHES
+        current_depth_cm = bounds.height * CM_TO_INCHES
+        current_height_cm = bounds.depth * CM_TO_INCHES
 
         return if current_width_cm <= 0 || current_depth_cm <= 0 || current_height_cm <= 0
 
         scale_x = new_width_f / current_width_cm
-        scale_y = new_depth_f / current_depth_cm
+        scale_y = new_depth_f / current_depth_cm      
         scale_z = new_height_f / current_height_cm
         origin = bounds.min
 
         model = Sketchup.active_model
         model.start_operation(ProjetaPlus::Localization.t('commands.resize_independent'), true)
-        entity.transform!(Geom::Transformation.scaling(origin, scale_x, scale_z, scale_y))
+        entity.transform!(Geom::Transformation.scaling(origin, scale_x, scale_y, scale_z))
         model.commit_operation
       rescue => e
         model.abort_operation if model
         puts "ERROR in resize_independent: #{e.message}"
       end
 
-      # ========== Save Attributes ==========
-
       def self.save_furniture_attributes(component, attributes)
-        return { success: false, message: ProjetaPlus::Localization.t('messages.no_component_selected') } unless component
+        return { success: false, message: nil } unless component
 
         begin
+          new_width = attributes["#{ATTR_PREFIX}width"]
+          new_depth = attributes["#{ATTR_PREFIX}depth"]
+          new_height = attributes["#{ATTR_PREFIX}height"]
+
           attributes.each do |key, value|
+            next if key == "#{ATTR_PREFIX}width" || key == "#{ATTR_PREFIX}depth" || key == "#{ATTR_PREFIX}height"
             set_attribute_safe(component, key, value)
           end
 
-          # Generate and set clean name
-          name = attributes['name']
-          brand = attributes['brand']
-          dimension = attributes['dimension']
 
-          clean_name = generate_clean_name(name, brand, dimension)
+          if new_width && new_depth && new_height
+            width_f = normalize_dimension_input(new_width)
+            depth_f = normalize_dimension_input(new_depth)
+            height_f = normalize_dimension_input(new_height)
+
+            if width_f && depth_f && height_f && width_f > 0 && depth_f > 0 && height_f > 0
+ 
+              current_dims = get_dimension_components(component)
+              current_width = normalize_dimension_input(current_dims[:width]) || 0
+              current_depth = normalize_dimension_input(current_dims[:depth]) || 0
+              current_height = normalize_dimension_input(current_dims[:height]) || 0
+
+
+              if (width_f - current_width).abs > 0.01 || 
+                 (depth_f - current_depth).abs > 0.01 || 
+                 (height_f - current_height).abs > 0.01
+                resize_independent(component, width_f, depth_f, height_f)
+              end
+            end
+          end
+
+          # Generate clean name using current dimensions
+          name = attributes["#{ATTR_PREFIX}name"] || attributes['name'] || ""
+          brand = attributes["#{ATTR_PREFIX}brand"] || attributes['brand'] || ""
+          format = attributes["#{ATTR_PREFIX}dimension_format"] ||
+                   get_attribute_safe(component, "#{ATTR_PREFIX}dimension_format", "L x P x A")
+          
+          dimension_label = build_dimension_label(component, format)
+          clean_name = generate_clean_name(name, brand, dimension_label)
           component.definition.name = clean_name
 
           { success: true, message: ProjetaPlus::Localization.t('messages.attributes_saved_success') }
@@ -306,8 +353,6 @@ module ProjetaPlus
           { success: false, message: "#{ProjetaPlus::Localization.t('messages.error_saving_attributes')}: #{e.message}" }
         end
       end
-
-      # ========== Visibility Operations ==========
 
       def self.set_visible_recursive(component, value)
         component.visible = value
@@ -322,15 +367,12 @@ module ProjetaPlus
 
       def self.isolate_item(target)
         model = Sketchup.active_model
-        
-        # Navigate to 'general' scene if exists
         scene_name = "general"
         scene = model.pages.find { |p| p.name.downcase == scene_name.downcase }
         model.pages.selected_page = scene if scene
 
         model.start_operation(ProjetaPlus::Localization.t('commands.isolate_item'), true)
 
-        # Find highest parent
         current = target
         highest_parent = current
 
@@ -340,7 +382,6 @@ module ProjetaPlus
           current = current.parent
         end
 
-        # Select and isolate
         model.selection.clear
         model.selection.add(highest_parent)
 
@@ -352,7 +393,6 @@ module ProjetaPlus
 
         model.commit_operation
 
-        # Adjust camera
         view = model.active_view
         eye = Geom::Point3d.new(-1000, -1000, 1000)
         target_pt = Geom::Point3d.new(0, 0, 0)
@@ -365,8 +405,6 @@ module ProjetaPlus
         model.abort_operation if model
         puts "ERROR in isolate_item: #{e.message}"
       end
-
-      # ========== Type Management ==========
 
       def self.get_available_types
         [
@@ -390,4 +428,3 @@ module ProjetaPlus
     end
   end
 end
-
