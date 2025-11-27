@@ -78,6 +78,7 @@ module ProjetaPlus
       furniture_handler = ProjetaPlus::DialogHandlers::FurnitureHandler.new(@@main_dashboard_dialog)
       annotation_handler = ProjetaPlus::DialogHandlers::AnnotationHandler.new(@@main_dashboard_dialog)
       extension_handler = ProjetaPlus::DialogHandlers::ExtensionHandler.new(@@main_dashboard_dialog)
+      layers_handler = ProjetaPlus::DialogHandlers::LayersHandler.new(@@main_dashboard_dialog)
       
       # Register all callbacks
       settings_handler.register_callbacks
@@ -85,6 +86,7 @@ module ProjetaPlus
       furniture_handler.register_callbacks
       annotation_handler.register_callbacks
       extension_handler.register_callbacks
+      layers_handler.register_callbacks
       
       puts "[ProjetaPlus Commands] All dialog handlers registered successfully."
 

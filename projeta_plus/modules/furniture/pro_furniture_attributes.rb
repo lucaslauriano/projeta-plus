@@ -15,12 +15,12 @@ module ProjetaPlus
       MIN_DIMENSION_CM = 1.0
 
       TYPE_COLORS = {
-        "Furniture" => Sketchup::Color.new(139, 69, 19),      # Brown
-        "Appliances" => Sketchup::Color.new(70, 130, 180),    # Steel Blue
-        "Fixtures" => Sketchup::Color.new(60, 179, 113),      # Medium Sea Green
-        "Accessories" => Sketchup::Color.new(255, 140, 0),    # Dark Orange
-        "Decoration" => Sketchup::Color.new(186, 85, 211),    # Medium Orchid
-        "Other" => Sketchup::Color.new(128, 128, 128)         # Gray
+        "Furniture" => Sketchup::Color.new(139, 69, 19),      
+        "Appliances" => Sketchup::Color.new(70, 130, 180),    
+        "Fixtures" => Sketchup::Color.new(60, 179, 113),     
+        "Accessories" => Sketchup::Color.new(255, 140, 0),    
+        "Decoration" => Sketchup::Color.new(186, 85, 211),    
+        "Other" => Sketchup::Color.new(128, 128, 128)         
       }.freeze
 
       @selection_observer = nil
@@ -28,7 +28,6 @@ module ProjetaPlus
       @cache_timestamp = 0
       @processing_selection = false
       @last_processed_selection = nil
-
 
       def self.initialize_default_attributes(component)
         default_attributes = {
@@ -161,8 +160,6 @@ module ProjetaPlus
         end
       end
 
-      # ========== Component Collection ==========
-
       def self.collect_all_furniture_instances(entities, arr, level=0)
         return if level > 5
 
@@ -219,8 +216,6 @@ module ProjetaPlus
         end
         nil
       end
-
-      # ========== Cache Management ==========
 
       def self.get_cached_instances(model)
         current_time = Time.now.to_f
@@ -290,17 +285,82 @@ module ProjetaPlus
         return if current_width_cm <= 0 || current_depth_cm <= 0 || current_height_cm <= 0
 
         scale_x = new_width_f / current_width_cm
-        scale_y = new_depth_f / current_depth_cm      
+        scale_y = new_depth_f / current_depth_cm
         scale_z = new_height_f / current_height_cm
+
+        origin = bounds.min
+        model = Sketchup.active_model
+
+        # No Mac, operações ao vivo precisam ser tratadas diferentemente
+        if live
+          # No modo ao vivo, não use start/commit operation no Mac
+          # Isso evita o overhead e permite atualizações mais rápidas
+          if mac?
+            begin
+              # Transformação direta sem operação
+              entity.transform!(Geom::Transformation.scaling(origin, scale_x, scale_y, scale_z))
+              # Força atualização da view
+              model.active_view.invalidate
+            rescue => e
+              puts "ERROR in live resize (Mac): #{e.message}"
+            end
+          else
+            # No Windows, pode usar operação transparente
+            model.start_operation(ProjetaPlus::Localization.t('commands.resize_independent'), true, false, true)
+            entity.transform!(Geom::Transformation.scaling(origin, scale_x, scale_y, scale_z))
+            model.commit_operation
+          end
+        else
+          # Modo normal (não ao vivo) - funciona igual em todas as plataformas
+          model.start_operation(ProjetaPlus::Localization.t('commands.resize_independent'), true)
+          entity.transform!(Geom::Transformation.scaling(origin, scale_x, scale_y, scale_z))
+          model.commit_operation
+        end
+      rescue => e
+        model.abort_operation if model && !live
+        puts "ERROR in resize_independent: #{e.message}"
+      end
+
+      def self.mac?
+        RUBY_PLATFORM =~ /darwin/
+      end
+
+      def self.resize_independent_with_timer(entity, new_width, new_depth, new_height)
+        return unless entity && entity.valid?
+
+        new_width_f = normalize_dimension_input(new_width)
+        new_depth_f = normalize_dimension_input(new_depth)
+        new_height_f = normalize_dimension_input(new_height)
+
+        return unless new_width_f && new_depth_f && new_height_f
+
+        new_width_f = [new_width_f, MIN_DIMENSION_CM].max
+        new_depth_f = [new_depth_f, MIN_DIMENSION_CM].max
+        new_height_f = [new_height_f, MIN_DIMENSION_CM].max
+
+        bounds = entity.bounds
+        current_width_cm = bounds.width * CM_TO_INCHES
+        current_depth_cm = bounds.height * CM_TO_INCHES
+        current_height_cm = bounds.depth * CM_TO_INCHES
+
+        return if current_width_cm <= 0 || current_depth_cm <= 0 || current_height_cm <= 0
+
+        scale_x = new_width_f / current_width_cm
+        scale_y = new_depth_f / current_depth_cm
+        scale_z = new_height_f / current_height_cm
+
         origin = bounds.min
 
-        model = Sketchup.active_model
-        model.start_operation(ProjetaPlus::Localization.t('commands.resize_independent'), true)
-        entity.transform!(Geom::Transformation.scaling(origin, scale_x, scale_y, scale_z))
-        model.commit_operation
-      rescue => e
-        model.abort_operation if model
-        puts "ERROR in resize_independent: #{e.message}"
+        # Usa timer para garantir que a operação rode na thread principal
+        UI.start_timer(0, false) do
+          model = Sketchup.active_model
+          begin
+            entity.transform!(Geom::Transformation.scaling(origin, scale_x, scale_y, scale_z))
+            model.active_view.invalidate
+          rescue => e
+            puts "ERROR in timer resize: #{e.message}"
+          end
+        end
       end
 
       def self.save_furniture_attributes(component, attributes)
@@ -338,7 +398,6 @@ module ProjetaPlus
             end
           end
 
-          # Generate clean name using current dimensions
           name = attributes["#{ATTR_PREFIX}name"] || attributes['name'] || ""
           brand = attributes["#{ATTR_PREFIX}brand"] || attributes['brand'] || ""
           format = attributes["#{ATTR_PREFIX}dimension_format"] ||
