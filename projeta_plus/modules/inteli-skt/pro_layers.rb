@@ -50,6 +50,79 @@ module ProjetaPlus
         result
       end
 
+      def self.add_folder(folder_name)
+        model = Sketchup.active_model
+        return { success: false, message: "No model" } unless model
+        
+        return { success: false, message: "Folder name required" } if folder_name.nil? || folder_name.strip.empty?
+        
+        layers = model.layers
+        
+        unless layers.respond_to?(:folders)
+          return { success: false, message: "Folders not supported in this SketchUp version" }
+        end
+        
+        existing = layers.folders.find { |f| f.name == folder_name }
+        return { success: false, message: "Folder already exists" } if existing
+        
+        model.start_operation("Add Folder", true)
+        begin
+          folder = layers.add_folder(folder_name)
+          model.commit_operation
+          return { success: true, message: "Folder created", folder: { name: folder.name } }
+        rescue => e
+          model.abort_operation
+          return { success: false, message: e.message }
+        end
+      end
+
+      def self.add_tag(tag_name, color_array, folder_name = nil)
+        model = Sketchup.active_model
+        return { success: false, message: "No model" } unless model
+        
+        return { success: false, message: "Tag name required" } if tag_name.nil? || tag_name.strip.empty?
+        
+        layers = model.layers
+        
+        existing = layers[tag_name]
+        return { success: false, message: "Tag already exists" } if existing
+        
+        model.start_operation("Add Tag", true)
+        begin
+          layer = layers.add(tag_name)
+          
+          if color_array && color_array.is_a?(Array) && color_array.length >= 3
+            layer.color = Sketchup::Color.new(color_array[0], color_array[1], color_array[2])
+          end
+          
+          if folder_name && folder_name != "root" && layers.respond_to?(:folders)
+            folder = layers.folders.find { |f| f.name == folder_name }
+            if folder
+              begin
+                folder.add_layer(layer)
+              rescue => e
+                puts "Warning: Could not add tag to folder: #{e.message}"
+              end
+            end
+          end
+          
+          model.commit_operation
+          
+          return { 
+            success: true, 
+            message: "Tag created",
+            tag: {
+              name: layer.name,
+              visible: layer.visible?,
+              color: layer.color.to_a[0..2]
+            }
+          }
+        rescue => e
+          model.abort_operation
+          return { success: false, message: e.message }
+        end
+      end
+
       def self.delete_layer(name)
         model = Sketchup.active_model
         return { success: false, message: "No model" } unless model
