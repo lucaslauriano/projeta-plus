@@ -123,6 +123,39 @@ module ProjetaPlus
         end
       end
 
+      def self.delete_folder(folder_name)
+        model = Sketchup.active_model
+        return { success: false, message: "No model" } unless model
+        
+        return { success: false, message: "Folder name required" } if folder_name.nil? || folder_name.strip.empty?
+        
+        layers = model.layers
+        
+        unless layers.respond_to?(:folders)
+          return { success: false, message: "Folders not supported in this SketchUp version" }
+        end
+        
+        folder = layers.folders.find { |f| f.name == folder_name }
+        return { success: false, message: "Folder not found" } unless folder
+        
+        model.start_operation("Delete Folder", true)
+        begin
+          # Move tags out of folder before deleting
+          folder.layers.each do |layer|
+            begin
+              folder.remove_layer(layer)
+            rescue; end
+          end
+          
+          layers.remove_folder(folder)
+          model.commit_operation
+          return { success: true, message: "Folder deleted" }
+        rescue => e
+          model.abort_operation
+          return { success: false, message: e.message }
+        end
+      end
+
       def self.delete_layer(name)
         model = Sketchup.active_model
         return { success: false, message: "No model" } unless model
@@ -160,34 +193,74 @@ module ProjetaPlus
         return { success: false, message: e.message }
       end
 
-      def self.get_json_path
+      def self.get_default_json_path
         plugin_dir = File.dirname(__FILE__)
-        json_file = File.join(plugin_dir, '..', '..', 'data', 'tags_data.json')
+        json_file = File.join(plugin_dir, 'json_data', 'tags_data.json')
         File.expand_path(json_file)
+      end
+
+      def self.get_user_json_path
+        plugin_dir = File.dirname(__FILE__)
+        json_file = File.join(plugin_dir, 'json_data', 'user_tags_data.json')
+        File.expand_path(json_file)
+      end
+
+      # Mantém compatibilidade - usa arquivo do usuário
+      def self.get_json_path
+        get_user_json_path
       end
 
       def self.save_to_json(json_data)
         begin
           data = json_data.is_a?(String) ? JSON.parse(json_data) : json_data
-          json_path = get_json_path
+          json_path = get_user_json_path
           
           dir = File.dirname(json_path)
           Dir.mkdir(dir) unless Dir.exist?(dir)
           
           File.open(json_path, 'w:UTF-8') { |f| f.write(JSON.pretty_generate(data)) }
-          return { success: true, message: "Saved to JSON", path: json_path }
+          return { success: true, message: "Saved to user JSON", path: json_path }
         rescue => e
           return { success: false, message: e.message }
         end
       end
 
       def self.load_from_json
-        json_path = get_json_path
-        return { folders: [], tags: [], success: false, message: "File not found" } unless File.exist?(json_path)
+        # Tenta carregar do arquivo do usuário primeiro
+        user_path = get_user_json_path
+        if File.exist?(user_path)
+          begin
+            data = JSON.parse(File.read(user_path, encoding: 'UTF-8'))
+            return data.merge({ success: true, message: "Loaded from user JSON" })
+          rescue => e
+            # Se falhar, tenta carregar do padrão
+          end
+        end
+        
+        # Carrega do arquivo padrão
+        default_path = get_default_json_path
+        return { folders: [], tags: [], success: false, message: "Default file not found" } unless File.exist?(default_path)
         
         begin
-          data = JSON.parse(File.read(json_path, encoding: 'UTF-8'))
-          return data.merge({ success: true, message: "Loaded from JSON" })
+          data = JSON.parse(File.read(default_path, encoding: 'UTF-8'))
+          return data.merge({ success: true, message: "Loaded from default JSON" })
+        rescue => e
+          return { folders: [], tags: [], success: false, message: e.message }
+        end
+      end
+
+      def self.load_default_tags
+        # Sempre carrega do arquivo padrão (redefinir)
+        default_path = get_default_json_path
+        return { folders: [], tags: [], success: false, message: "Default file not found" } unless File.exist?(default_path)
+        
+        begin
+          data = JSON.parse(File.read(default_path, encoding: 'UTF-8'))
+          
+          # Salva no arquivo do usuário
+          save_to_json(data)
+          
+          return data.merge({ success: true, message: "Default tags loaded" })
         rescue => e
           return { folders: [], tags: [], success: false, message: e.message }
         end

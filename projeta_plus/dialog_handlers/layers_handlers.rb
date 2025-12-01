@@ -65,8 +65,23 @@ module ProjetaPlus
           nil
         end
 
-        @dialog.add_action_callback("deleteLayer") do |action_context, layer_name|
+        @dialog.add_action_callback("deleteFolder") do |action_context, json_payload|
           begin
+            args = JSON.parse(json_payload)
+            folder_name = args['name']
+            result = ProjetaPlus::Modules::ProLayers.delete_folder(folder_name)
+            send_json_response("handleDeleteFolderResult", result)
+          rescue => e
+            error_result = handle_error(e, "delete folder")
+            send_json_response("handleDeleteFolderResult", error_result)
+          end
+          nil
+        end
+
+        @dialog.add_action_callback("deleteLayer") do |action_context, json_payload|
+          begin
+            args = JSON.parse(json_payload)
+            layer_name = args['name']
             result = ProjetaPlus::Modules::ProLayers.delete_layer(layer_name)
             send_json_response("handleDeleteLayerResult", result)
           rescue => e
@@ -109,6 +124,17 @@ module ProjetaPlus
           rescue => e
             error_result = handle_error(e, "load from JSON")
             send_json_response("handleLoadFromJsonResult", error_result)
+          end
+          nil
+        end
+
+        @dialog.add_action_callback("loadDefaultTags") do |action_context|
+          begin
+            result = ProjetaPlus::Modules::ProLayers.load_default_tags
+            send_json_response("handleLoadDefaultTagsResult", result)
+          rescue => e
+            error_result = handle_error(e, "load default tags")
+            send_json_response("handleLoadDefaultTagsResult", error_result)
           end
           nil
         end
