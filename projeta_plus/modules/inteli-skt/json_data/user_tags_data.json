@@ -1,0 +1,1311 @@
+{
+  "folders": [
+    {
+      "name": "2D",
+      "tags": [
+        {
+          "name": "-2D-AMBIENTE",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-2D-ESQUADRIA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-2D-ETIQUETAS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-2D-MOBILIARIO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-2D-PROJECOES",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-2D-SIMBOLOGIAS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ANOTACAO",
+      "tags": [
+        {
+          "name": "-ANOTACAO-AMBIENTE",
+          "visible": true,
+          "color": [
+            180,
+            180,
+            180
+          ]
+        },
+        {
+          "name": "-ANOTACAO-ESQUADRIA",
+          "visible": true,
+          "color": [
+            180,
+            180,
+            180
+          ]
+        },
+        {
+          "name": "-ANOTACAO-FORRO",
+          "visible": true,
+          "color": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "-ANOTACAO-ILUMINACAO CIRCUITOS",
+          "visible": true,
+          "color": [
+            180,
+            180,
+            180
+          ]
+        },
+        {
+          "name": "-ANOTACAO-ILUMINACAO LINHAS",
+          "visible": true,
+          "color": [
+            180,
+            180,
+            180
+          ]
+        },
+        {
+          "name": "-ANOTACAO-MOBILIARIO",
+          "visible": true,
+          "color": [
+            180,
+            180,
+            180
+          ]
+        },
+        {
+          "name": "-ANOTACAO-SECAO",
+          "visible": true,
+          "color": [
+            180,
+            180,
+            180
+          ]
+        },
+        {
+          "name": "-ANOTACAO-TECNICO",
+          "visible": true,
+          "color": [
+            180,
+            180,
+            180
+          ]
+        },
+        {
+          "name": "-ANOTACAO-VISTA",
+          "visible": true,
+          "color": [
+            180,
+            180,
+            180
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ARQUITETURA",
+      "tags": [
+        {
+          "name": "-ARQUITETURA-BASE ALVENARIA",
+          "visible": true,
+          "color": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-CHURRASQUEIRA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-DRYWALL",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-ESCADA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-ESQUADRIA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-ESQUADRIA-FOLHA JANELA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-ESQUADRIA-FOLHA PORTA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-GUARDA CORPO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-PAREDE",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-PILAR",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-PISO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-RALO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-REVESTIMENTO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-VIDRACARIA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ARQUITETURA-VIGA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BANHO",
+      "tags": [
+        {
+          "name": "-BANHO-ACESSORIOS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-BANHO-BACIA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-BANHO-BOX",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-BANHO-CHUVEIRO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-BANHO-LOUCAS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-BANHO-LOUCAS E METAIS",
+          "visible": false,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-BANHO-METAIS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-BANHO-NICHO BOX",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-BANHO-PAPELEIRA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CIVIL",
+      "tags": [
+        {
+          "name": "-CIVIL-CONSTRUIR",
+          "visible": true,
+          "color": [
+            80,
+            140,
+            195
+          ]
+        },
+        {
+          "name": "-CIVIL-DEMOLIR",
+          "visible": true,
+          "color": [
+            215,
+            70,
+            75
+          ]
+        },
+        {
+          "name": "-CIVIL-DRYWALL",
+          "visible": true,
+          "color": [
+            120,
+            150,
+            105
+          ]
+        }
+      ]
+    },
+    {
+      "name": "COBERTURA",
+      "tags": [
+        {
+          "name": "-COBERTURA-EQUIPAMENTOS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-COBERTURA-ESTRUTURA CAIXA DAGUA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-COBERTURA-TELHA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-COBERTURA-TELHADO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ILUMINACAO",
+      "tags": [
+        {
+          "name": "-ILUMINACAO-DECORATIVO MARCENARIA",
+          "visible": true,
+          "color": [
+            242,
+            225,
+            140
+          ]
+        },
+        {
+          "name": "-ILUMINACAO-HACHURA LUZ",
+          "visible": true,
+          "color": [
+            242,
+            225,
+            140
+          ]
+        },
+        {
+          "name": "-ILUMINACAO-HACHURA LUZ MARCENARIA",
+          "visible": true,
+          "color": [
+            242,
+            225,
+            140
+          ]
+        },
+        {
+          "name": "-ILUMINACAO-LEGENDA",
+          "visible": true,
+          "color": [
+            242,
+            225,
+            140
+          ]
+        },
+        {
+          "name": "-ILUMINACAO-LUMINARIA",
+          "visible": true,
+          "color": [
+            242,
+            225,
+            140
+          ]
+        },
+        {
+          "name": "-ILUMINACAO-MARCENARIA",
+          "visible": true,
+          "color": [
+            242,
+            225,
+            140
+          ]
+        },
+        {
+          "name": "-ILUMINACAO-SPOTLIGTH ENSCAPE",
+          "visible": true,
+          "color": [
+            242,
+            225,
+            140
+          ]
+        },
+        {
+          "name": "-ILUMINACAO-SPOTLIGTH VRAY",
+          "visible": true,
+          "color": [
+            242,
+            225,
+            140
+          ]
+        }
+      ]
+    },
+    {
+      "name": "INTERIORES",
+      "tags": [
+        {
+          "name": "-INTERIORES-ADORNO",
+          "visible": true,
+          "color": [
+            255,
+            235,
+            215
+          ]
+        },
+        {
+          "name": "-INTERIORES-CORTINA",
+          "visible": true,
+          "color": [
+            245,
+            220,
+            235
+          ]
+        },
+        {
+          "name": "-INTERIORES-ELETRO (AEREO)",
+          "visible": true,
+          "color": [
+            220,
+            240,
+            255
+          ]
+        },
+        {
+          "name": "-INTERIORES-ELETRO (MARCENARIA)",
+          "visible": true,
+          "color": [
+            240,
+            225,
+            210
+          ]
+        },
+        {
+          "name": "-INTERIORES-ELETRO (MARMORARIA)",
+          "visible": true,
+          "color": [
+            225,
+            240,
+            230
+          ]
+        },
+        {
+          "name": "-INTERIORES-ELETRO (PISO)",
+          "visible": true,
+          "color": [
+            235,
+            235,
+            215
+          ]
+        },
+        {
+          "name": "-INTERIORES-EXISTENTE",
+          "visible": true,
+          "color": [
+            200,
+            200,
+            200
+          ]
+        },
+        {
+          "name": "-INTERIORES-LOUCAS",
+          "visible": true,
+          "color": [
+            200,
+            200,
+            200
+          ]
+        },
+        {
+          "name": "-INTERIORES-LOUCAS E METAIS",
+          "visible": false,
+          "color": [
+            200,
+            200,
+            200
+          ]
+        },
+        {
+          "name": "-INTERIORES-METAIS",
+          "visible": true,
+          "color": [
+            200,
+            200,
+            200
+          ]
+        },
+        {
+          "name": "-INTERIORES-MOBILIARIO",
+          "visible": true,
+          "color": [
+            220,
+            200,
+            180
+          ]
+        },
+        {
+          "name": "-INTERIORES-QUADRO",
+          "visible": true,
+          "color": [
+            230,
+            230,
+            255
+          ]
+        },
+        {
+          "name": "-INTERIORES-TAPETE",
+          "visible": true,
+          "color": [
+            245,
+            245,
+            220
+          ]
+        },
+        {
+          "name": "-INTERIORES-VIDRACARIA",
+          "visible": true,
+          "color": [
+            200,
+            200,
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LOCAL",
+      "tags": [
+        {
+          "name": "-LOCAL-EXTERIOR",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-LOCAL-INTERIOR",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MARCENARIA",
+      "tags": [
+        {
+          "name": "-MARCENARIA-AEREO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-MARCENARIA-GERAL",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-MARCENARIA-PORTA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-MARCENARIA-PROJECAO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-MARCENARIA-SERRALHERIA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MARMORARIA",
+      "tags": [
+        {
+          "name": "-MARMORARIA-BANCADA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-MARMORARIA-LOUCAS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-MARMORARIA-LOUCAS E METAIS",
+          "visible": false,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-MARMORARIA-METAIS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-MARMORARIA-SOLEIRAS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "NIVEL",
+      "tags": [
+        {
+          "name": "-NIVEL-01",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-NIVEL-02",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-NIVEL-03",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-NIVEL-04",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OUTRO",
+      "tags": [
+        {
+          "name": "-OUTRO-ARVORE",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-OUTRO-RENDER",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-OUTRO-VEGETACAO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RODAPE",
+      "tags": [
+        {
+          "name": "-RODAPE-ACABAMENTO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-RODAPE-BASE ALVENARIA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-RODAPE-MARCACAO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-RODAPE-MARMORARIA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TECNICO",
+      "tags": [
+        {
+          "name": "-TECNICO-COMPATIBILIZACAO(SOLTOS)",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-LEGENDA AR-COND",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-LEGENDA COMPLETA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-LEGENDA GUIA ILUMINACAO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-LEGENDA HIDRO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-LEGENDA ILUMINACAO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-LEGENDA OCULTAR",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-LEGENDA SPK",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-LEGENDA VISTA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-PONTO ESPELHO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-PONTO HIDRO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-PONTO ILUMINACAO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-PONTO REGISTRO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-PONTO SPK",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TECNICO-REGISTRO ACABAMENTO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TERRENO",
+      "tags": [
+        {
+          "name": "-TERRENO-ALINHAMENTO",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TERRENO-CALCADAS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TERRENO-ESTRADA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TERRENO-GRAMA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TERRENO-MURO FRONTAL",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TERRENO-MURO LATERAL",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TERRENO-PISCINA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-TERRENO-VIZINHOS",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TETO",
+      "tags": [
+        {
+          "name": "-FORRO-CORTINEIRO",
+          "visible": true,
+          "color": [
+            165,
+            183,
+            147
+          ]
+        },
+        {
+          "name": "-FORRO-CORTINEIRO ILUMINADO",
+          "visible": true,
+          "color": [
+            235,
+            195,
+            95
+          ]
+        },
+        {
+          "name": "-FORRO-EXISTENTE",
+          "visible": true,
+          "color": [
+            127,
+            127,
+            127
+          ]
+        },
+        {
+          "name": "-FORRO-NEGATIVO",
+          "visible": true,
+          "color": [
+            239,
+            177,
+            122
+          ]
+        },
+        {
+          "name": "-FORRO-NOVO",
+          "visible": true,
+          "color": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "name": "-FORRO-SANCA",
+          "visible": true,
+          "color": [
+            113,
+            158,
+            186
+          ]
+        },
+        {
+          "name": "-FORRO-TABICA",
+          "visible": true,
+          "color": [
+            147,
+            96,
+            130
+          ]
+        },
+        {
+          "name": "-TETO-COMPLETO",
+          "visible": true,
+          "color": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "name": "-TETO-LAJE",
+          "visible": true,
+          "color": [
+            190,
+            190,
+            190
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ZOOM",
+      "tags": [
+        {
+          "name": "-ZOOM-MARGEM",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ZOOM-VISTA",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        },
+        {
+          "name": "-ZOOM-XREF",
+          "visible": true,
+          "color": [
+            244,
+            244,
+            244
+          ]
+        }
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "-DET-1",
+      "visible": true,
+      "color": [
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "name": "-DET-2",
+      "visible": true,
+      "color": [
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "name": "-DET-3",
+      "visible": true,
+      "color": [
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "name": "-DET-4",
+      "visible": true,
+      "color": [
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "name": "-DET-5",
+      "visible": true,
+      "color": [
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "name": "-DET-6",
+      "visible": true,
+      "color": [
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "name": "-DET-7",
+      "visible": true,
+      "color": [
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "name": "-DET-8",
+      "visible": true,
+      "color": [
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "name": "-DET-9",
+      "visible": true,
+      "color": [
+        180,
+        180,
+        180
+      ]
+    }
+  ]
+}

@@ -84,6 +84,21 @@ module ProjetaPlus
           nil
         end
 
+        @dialog.add_action_callback('resize_independent_live') do |_context, payload|
+          begin
+            puts "[ProjetaPlus Handler] resize_independent_live chamado com payload: #{payload.inspect}"
+            result = resize_independent_live(payload)
+            # Não envia resposta para não bloquear a UI durante digitação
+            log("Resize independent live: #{result[:success] ? 'success' : 'failed'}")
+            puts "[ProjetaPlus Handler] Resultado: #{result.inspect}"
+          rescue => e
+            puts "[ProjetaPlus Handler] ERRO em resize_independent_live: #{e.message}"
+            puts e.backtrace.join("\n") if e.respond_to?(:backtrace)
+            log("Error in resize_independent_live: #{e.message}")
+          end
+          nil
+        end
+
         @dialog.add_action_callback('get_dimensions') do |_context, _payload|
           begin
             result = get_current_dimensions
@@ -161,6 +176,7 @@ module ProjetaPlus
           nil
         end
 
+        # Anexa o observer automaticamente para sincronizar a seleção
         attach_selection_observer
         send_selection_update(force: true)
       end
@@ -324,6 +340,8 @@ module ProjetaPlus
       def save_furniture_attributes(json_data)
         data = parse_payload(json_data)
         
+        puts "[ProjetaPlus Handler] Dados recebidos: #{data.inspect}"
+        
         model = Sketchup.active_model
         selection = model.selection
         entity = selection.detect { |e| e.is_a?(Sketchup::ComponentInstance) || e.is_a?(Sketchup::Group) }
@@ -344,6 +362,8 @@ module ProjetaPlus
           prefixed_data[prefixed_key] = value
         end
 
+        puts "[ProjetaPlus Handler] Dimensões antes de salvar - W: #{prefixed_data["#{prefix}width"]}, D: #{prefixed_data["#{prefix}depth"]}, H: #{prefixed_data["#{prefix}height"]}"
+
         model.start_operation(ProjetaPlus::Localization.t('commands.save_furniture_attributes'), true)
 
         result = Modules::ProFurnitureAttributes.save_furniture_attributes(component, prefixed_data)
@@ -352,16 +372,21 @@ module ProjetaPlus
           model.commit_operation
           Modules::ProFurnitureAttributes.invalidate_cache
           
-          ::UI.start_timer(0.1, false) do
-            send_selection_update(selection, force: true)
-          end
+          puts "[ProjetaPlus Handler] Atributos salvos com sucesso"
+          
+          # Não envia atualização automática após salvar
+          # O frontend reseta o formulário para feedback visual de sucesso
+          # O SelectionObserver atualizará quando o usuário selecionar outro componente
         else
           model.abort_operation
+          puts "[ProjetaPlus Handler] Erro ao salvar atributos: #{result[:message]}"
         end
 
         result
       rescue => e
         model.abort_operation if model
+        puts "[ProjetaPlus Handler] EXCEPTION em save_furniture_attributes: #{e.message}"
+        puts e.backtrace.join("\n") if e.respond_to?(:backtrace)
         handle_error(e, 'save_furniture_attributes')
       end
 
@@ -407,6 +432,77 @@ module ProjetaPlus
         get_current_dimensions
       rescue => e
         handle_error(e, 'resize_independent')
+      end
+
+      def resize_independent_live(payload)
+        puts "[ProjetaPlus Handler] ========== resize_independent_live INICIADO =========="
+        params = parse_payload(payload)
+        width = params['width'] || params[:width]
+        depth = params['depth'] || params[:depth]
+        height = params['height'] || params[:height]
+        
+        puts "[ProjetaPlus Handler] Dimensões recebidas - W: #{width}, D: #{depth}, H: #{height}"
+        
+        # Valida se as dimensões são válidas
+        if width.to_s.strip.empty? && depth.to_s.strip.empty? && height.to_s.strip.empty?
+          puts "[ProjetaPlus Handler] Todas as dimensões estão vazias, retornando false"
+          return { success: false }
+        end
+        
+        model = Sketchup.active_model
+        selection = model.selection
+        entity = selection.detect { |e| e.is_a?(Sketchup::ComponentInstance) || e.is_a?(Sketchup::Group) }
+
+        if entity.nil?
+          puts "[ProjetaPlus Handler] Nenhuma entidade selecionada, retornando false"
+          return { success: false }
+        end
+
+        # Valida entidade
+        unless entity.valid?
+          puts "[ProjetaPlus Handler] Entidade inválida, retornando false"
+          return { success: false }
+        end
+
+        puts "[ProjetaPlus Handler] Entidade válida encontrada: #{entity.class}"
+
+        # Obtém dimensões atuais para usar como fallback
+        current_dims = Modules::ProFurnitureAttributes.get_dimension_components(entity)
+        current_width = Modules::ProFurnitureAttributes.normalize_dimension_input(current_dims[:width]) || 0
+        current_depth = Modules::ProFurnitureAttributes.normalize_dimension_input(current_dims[:depth]) || 0
+        current_height = Modules::ProFurnitureAttributes.normalize_dimension_input(current_dims[:height]) || 0
+
+        puts "[ProjetaPlus Handler] Dimensões atuais - W: #{current_width}, D: #{current_depth}, H: #{current_height}"
+
+        # Usa as dimensões fornecidas ou mantém as atuais
+        width_f = width.to_s.strip.empty? ? current_width : Modules::ProFurnitureAttributes.normalize_dimension_input(width)
+        depth_f = depth.to_s.strip.empty? ? current_depth : Modules::ProFurnitureAttributes.normalize_dimension_input(depth)
+        height_f = height.to_s.strip.empty? ? current_height : Modules::ProFurnitureAttributes.normalize_dimension_input(height)
+
+        puts "[ProjetaPlus Handler] Dimensões processadas - W: #{width_f}, D: #{depth_f}, H: #{height_f}"
+
+        # Valida dimensões - não aceita valores zerados ou negativos
+        unless width_f && depth_f && height_f && width_f > 0 && depth_f > 0 && height_f > 0
+          puts "[ProjetaPlus Handler] Dimensões inválidas (zero ou negativo), retornando false"
+          return { success: false }
+        end
+
+        puts "[ProjetaPlus Handler] Chamando resize_independent com live: true"
+        # Redimensiona ao vivo (sem operação undo/redo)
+        Modules::ProFurnitureAttributes.resize_independent(entity, width_f, depth_f, height_f, live: true)
+        puts "[ProjetaPlus Handler] resize_independent concluído"
+
+        # No modo live, não atualiza a interface automaticamente para evitar loops
+        # A interface será atualizada quando o usuário salvar ou quando a seleção mudar
+
+        puts "[ProjetaPlus Handler] ========== resize_independent_live CONCLUÍDO COM SUCESSO =========="
+        { success: true }
+      rescue => e
+        puts "[ProjetaPlus Handler] ========== ERRO em resize_independent_live =========="
+        puts "[ProjetaPlus Handler] #{e.message}"
+        puts e.backtrace.join("\n") if e.respond_to?(:backtrace)
+        log("Error in resize_independent_live: #{e.message}")
+        { success: false }
       end
 
       def get_current_dimensions

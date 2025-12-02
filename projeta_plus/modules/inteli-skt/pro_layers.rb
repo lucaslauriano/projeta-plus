@@ -141,12 +141,17 @@ module ProjetaPlus
         model.start_operation("Delete Folder", true)
         begin
           # Move tags out of folder before deleting
-          folder.layers.each do |layer|
+          # Cria uma cópia da lista para evitar problemas durante iteração
+          layers_to_remove = folder.layers.to_a
+          layers_to_remove.each do |layer|
             begin
               folder.remove_layer(layer)
-            rescue; end
+            rescue => e
+              puts "Warning: Could not remove layer '#{layer.name}' from folder: #{e.message}"
+            end
           end
           
+          # Remove a pasta
           layers.remove_folder(folder)
           model.commit_operation
           return { success: true, message: "Folder deleted" }
@@ -170,6 +175,20 @@ module ProjetaPlus
         
         model.start_operation("Delete Layer", true)
         begin
+          # Se a layer está em uma pasta, remove da pasta primeiro
+          if layers.respond_to?(:folders)
+            layers.folders.each do |folder|
+              if folder.layers.include?(layer)
+                begin
+                  folder.remove_layer(layer)
+                rescue => e
+                  puts "Warning: Could not remove layer from folder: #{e.message}"
+                end
+              end
+            end
+          end
+          
+          # Remove a layer
           layers.remove(layer)
           model.commit_operation
           return { success: true, message: "Layer deleted" }
@@ -196,12 +215,14 @@ module ProjetaPlus
       def self.get_default_json_path
         plugin_dir = File.dirname(__FILE__)
         json_file = File.join(plugin_dir, 'json_data', 'tags_data.json')
+        # File.expand_path funciona corretamente no Windows e Mac
         File.expand_path(json_file)
       end
 
       def self.get_user_json_path
         plugin_dir = File.dirname(__FILE__)
         json_file = File.join(plugin_dir, 'json_data', 'user_tags_data.json')
+        # File.expand_path funciona corretamente no Windows e Mac
         File.expand_path(json_file)
       end
 
@@ -214,11 +235,19 @@ module ProjetaPlus
         begin
           data = json_data.is_a?(String) ? JSON.parse(json_data) : json_data
           json_path = get_user_json_path
-          
           dir = File.dirname(json_path)
-          Dir.mkdir(dir) unless Dir.exist?(dir)
           
-          File.open(json_path, 'w:UTF-8') { |f| f.write(JSON.pretty_generate(data)) }
+          # Cria o diretório se não existir (compatível Windows/Mac)
+          unless Dir.exist?(dir)
+            require 'fileutils'
+            FileUtils.mkdir_p(dir)
+          end
+          
+          # Escreve com encoding UTF-8 explícito
+          File.open(json_path, 'w:UTF-8') do |f|
+            f.write(JSON.pretty_generate(data))
+          end
+          
           return { success: true, message: "Saved to user JSON", path: json_path }
         rescue => e
           return { success: false, message: e.message }
@@ -228,21 +257,32 @@ module ProjetaPlus
       def self.load_from_json
         # Tenta carregar do arquivo do usuário primeiro
         user_path = get_user_json_path
+        
+        # No Windows, File.exist? funciona com ambos os separadores, mas normalizamos para consistência
         if File.exist?(user_path)
           begin
-            data = JSON.parse(File.read(user_path, encoding: 'UTF-8'))
+            # Lê com encoding UTF-8 explícito e BOM handling
+            content = File.read(user_path, encoding: 'UTF-8')
+            # Remove BOM se presente
+            content = content.force_encoding('UTF-8').sub(/^\xEF\xBB\xBF/, '')
+            data = JSON.parse(content)
             return data.merge({ success: true, message: "Loaded from user JSON" })
           rescue => e
             # Se falhar, tenta carregar do padrão
+            puts "Error loading user JSON: #{e.message}"
           end
         end
         
         # Carrega do arquivo padrão
         default_path = get_default_json_path
+        
         return { folders: [], tags: [], success: false, message: "Default file not found" } unless File.exist?(default_path)
         
         begin
-          data = JSON.parse(File.read(default_path, encoding: 'UTF-8'))
+          # Lê com encoding UTF-8 explícito e BOM handling
+          content = File.read(default_path, encoding: 'UTF-8')
+          content = content.force_encoding('UTF-8').sub(/^\xEF\xBB\xBF/, '')
+          data = JSON.parse(content)
           return data.merge({ success: true, message: "Loaded from default JSON" })
         rescue => e
           return { folders: [], tags: [], success: false, message: e.message }
@@ -252,10 +292,14 @@ module ProjetaPlus
       def self.load_default_tags
         # Sempre carrega do arquivo padrão (redefinir)
         default_path = get_default_json_path
+        
         return { folders: [], tags: [], success: false, message: "Default file not found" } unless File.exist?(default_path)
         
         begin
-          data = JSON.parse(File.read(default_path, encoding: 'UTF-8'))
+          # Lê com encoding UTF-8 explícito e BOM handling
+          content = File.read(default_path, encoding: 'UTF-8')
+          content = content.force_encoding('UTF-8').sub(/^\xEF\xBB\xBF/, '')
+          data = JSON.parse(content)
           
           # Salva no arquivo do usuário
           save_to_json(data)
@@ -271,7 +315,11 @@ module ProjetaPlus
         return { folders: [], tags: [], success: false, message: "No file selected" } unless file_path
         
         begin
-          data = JSON.parse(File.read(file_path, encoding: 'UTF-8'))
+          # Lê com encoding UTF-8 explícito e BOM handling
+          content = File.read(file_path, encoding: 'UTF-8')
+          content = content.force_encoding('UTF-8').sub(/^\xEF\xBB\xBF/, '')
+          data = JSON.parse(content)
+          
           unless data.is_a?(Hash) && data.key?("folders") && data.key?("tags")
             return { folders: [], tags: [], success: false, message: "Invalid JSON structure" }
           end
@@ -294,7 +342,7 @@ module ProjetaPlus
           layers = model.layers
           created_count = 0
           
-          label_layer = layers["2D-ETIQUETAS"] || layers.add("2D-ETIQUETAS")
+          label_layer = layers["-2D-ETIQUETAS"] || layers.add("-2D-ETIQUETAS")
           
           main_group = model.active_entities.add_group
           main_group.name = "REFERENCIAS_TAGS"
