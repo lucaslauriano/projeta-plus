@@ -79,6 +79,9 @@ module ProjetaPlus
       annotation_handler = ProjetaPlus::DialogHandlers::AnnotationHandler.new(@@main_dashboard_dialog)
       extension_handler = ProjetaPlus::DialogHandlers::ExtensionHandler.new(@@main_dashboard_dialog)
       layers_handler = ProjetaPlus::DialogHandlers::LayersHandler.new(@@main_dashboard_dialog)
+      eletrical_handler = ProjetaPlus::DialogHandlers::EletricalHandler.new(@@main_dashboard_dialog)
+      lightning_handler = ProjetaPlus::DialogHandlers::LightningHandler.new(@@main_dashboard_dialog)
+      baseboards_handler = ProjetaPlus::DialogHandlers::BaseboardsHandler.new(@@main_dashboard_dialog)
       
       # Register all callbacks
       settings_handler.register_callbacks
@@ -87,6 +90,9 @@ module ProjetaPlus
       annotation_handler.register_callbacks
       extension_handler.register_callbacks
       layers_handler.register_callbacks
+      eletrical_handler.register_callbacks
+      lightning_handler.register_callbacks
+      baseboards_handler.register_callbacks
       
       puts "[ProjetaPlus Commands] All dialog handlers registered successfully."
 

@@ -18,6 +18,9 @@ rescue => e
   puts "[ProjetaPlus] Warning: Could not load localization module: #{e.message}"
 end
 
+# Load generic blocks module (used by electrical, lightning, baseboards)
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_blocks.rb')
+
 # Dialog Handlers (load before commands as commands depend on them)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'base_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'settings_handler.rb')
@@ -26,6 +29,9 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'furnitu
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'annotation_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'extension_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'layers_handlers.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'eletrical_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'lightning_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'baseboards_handler.rb')
 
 # Commands (now uses the handlers)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'commands.rb')
