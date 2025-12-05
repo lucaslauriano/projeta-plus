@@ -9,7 +9,6 @@
 *.bak
 *.swp
 *.DS_Store
-*.skp
 *.style
 
 /mad_floor_design
