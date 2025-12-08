@@ -244,7 +244,7 @@ module ProjetaPlus
         bb.add([entity_bounds.min.x - extend_distance, entity_bounds.min.y - extend_distance, entity_bounds.min.z])
         bb.add([entity_bounds.max.x + extend_distance, entity_bounds.max.y + extend_distance, entity_bounds.max.z])
         
-        layer_name = '-2D-LEGENDA CORTES'
+        layer_name = '-ANOTAÇÃO-SECAO'
         layer = model.layers.add(layer_name)
         
         all_lines_group = entities.add_group
