@@ -12,16 +12,7 @@
             244
           ]
         },
-        {
-          "name": "-2D-LEGENDA AMBIENTE",
-          "visible": true,
-          "color": [
-            244,
-            244,
-            244
-          ]
-        },
-        {
+                {
           "name": "-2D-MOBILIARIO",
           "visible": false,
           "color": [
@@ -32,15 +23,6 @@
         },
         {
           "name": "-2D-LEGENDA ESQUADRIA",
-          "visible": false,
-          "color": [
-            244,
-            244,
-            244
-          ]
-        },
-        {
-          "name": "-2D-LEGENDA CORTES",
           "visible": false,
           "color": [
             244,
