@@ -51,6 +51,18 @@ module ProjetaPlus
           nil
         end
 
+        @dialog.add_action_callback('capture_selected_component') do |_context, _payload|
+          begin
+            log("Manual capture requested - sending current selection")
+            send_selection_update(force: true)
+            # Retorna sucesso para o frontend
+            { success: true, message: "Selection captured" }
+          rescue => e
+            send_json_response('handleFurnitureAttributes', handle_error(e, 'capture_selected_component'))
+          end
+          nil
+        end
+
         @dialog.add_action_callback('save_furniture_attributes') do |_context, payload|
           begin
             result = save_furniture_attributes(payload)
@@ -177,8 +189,10 @@ module ProjetaPlus
         end
 
         # Anexa o observer automaticamente para sincronizar a seleção
+        # Observer ativo apenas para detectar quando a seleção é limpa
         attach_selection_observer
-        send_selection_update(force: true)
+        # Não envia update inicial - usuário deve usar botão "Selecionar Componente"
+        # send_selection_update(force: true)
       end
 
       def attach_selection_observer
@@ -191,7 +205,7 @@ module ProjetaPlus
         detach_selection_observer
 
         @selection_observer = SelectionObserver.new(self)
-        selection.add_observer(@selection_observer)
+        #selection.add_observer(@selection_observer)
         log('Furniture selection observer attached.')
       rescue => e
         handle_error(e, 'attach_selection_observer')
@@ -225,6 +239,35 @@ module ProjetaPlus
         @processing_selection = true
         @last_processed_selection = signature
 
+        # Se a seleção está vazia, apenas notifica o frontend para mostrar o botão
+        if signature.empty?
+          puts "[ProjetaPlus Furniture] Selection cleared - notifying frontend"
+          ::UI.start_timer(0, false) do
+            send_json_response(
+              'handleFurnitureAttributes',
+              { success: false, selected: false, message: "Seleção limpa" }
+            )
+            send_json_response(
+              'handleFurnitureDimensions',
+              { success: false }
+            )
+            puts "[ProjetaPlus Furniture] Nenhum componente selecionado."
+            puts "[ProjetaPlus Furniture] ═══════════════════════════════════════\n"
+            log("Selection change -> Seleção limpa")
+          end
+          @processing_selection = false
+          return
+        end
+
+        # Se NÃO for force (manual), ignora seleção automática
+        unless force
+          puts "[ProjetaPlus Furniture] Seleção automática ignorada (use o botão 'Selecionar Componente')"
+          puts "[ProjetaPlus Furniture] ═══════════════════════════════════════\n"
+          @processing_selection = false
+          return
+        end
+
+        # Só carrega atributos se force = true (botão clicado)
         puts "[ProjetaPlus Furniture] Getting attributes and dimensions..."
         attributes_response = get_selected_furniture_attributes
         dimensions_response = get_current_dimensions
