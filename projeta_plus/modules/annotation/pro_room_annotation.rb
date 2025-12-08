@@ -90,8 +90,8 @@ module ProjetaPlus
         defs  = model.definitions
         
         candidates = []
-        candidates << File.join(File.dirname(model.path), 'components', 'Nível Planta.skp') if model.path && !model.path.empty?
-        candidates << File.join(ProjetaPlus::PATH, 'projeta_plus', 'components', 'Nível Planta.skp')
+        candidates << File.join(File.dirname(model.path), 'components', 'level_plant_symbol.skp') if model.path && !model.path.empty?
+        candidates << File.join(ProjetaPlus::PATH, 'projeta_plus', 'components', 'level_plant_symbol.skp')
         
         # Finds the first existing path (first existing path)
         path = candidates.find { |p| File.exist?(p) }
