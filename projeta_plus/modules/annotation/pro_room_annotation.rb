@@ -99,7 +99,7 @@ module ProjetaPlus
         
         # Loads the definition if it is not already loaded (loads the definition if it 
         #is not already loaded)
-        sym_def = defs.load(path)
+        sym_def = defs.load(path, allow_newer: true)
         
         # Creates the instance and applies the scale transformation (creates the instance 
         #and applies the scale transformation)
