@@ -32,6 +32,7 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'layers_
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'eletrical_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'lightning_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'baseboards_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'custom_components_handler.rb')
 
 # Commands (now uses the handlers)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'commands.rb')

@@ -135,3 +135,102 @@ VERSION="2.0.1"  # Altere aqui
 - `obfuscate.rb`
 - `encrypt_*.rb`
 - Arquivos `.backup`
+
+---
+
+## ☁️ Upload de Componentes para S3
+
+### Pré-requisitos
+
+1. **Conta AWS** com acesso ao S3
+2. **Bucket S3** criado (ex: `projeta-plus-components`)
+3. **Credenciais IAM** com permissões S3
+
+### Configurar Credenciais AWS
+
+**macOS/Linux:**
+
+```bash
+export AWS_ACCESS_KEY_ID="sua-access-key"
+export AWS_SECRET_ACCESS_KEY="sua-secret-key"
+```
+
+**Windows (PowerShell):**
+
+```powershell
+$env:AWS_ACCESS_KEY_ID="sua-access-key"
+$env:AWS_SECRET_ACCESS_KEY="sua-secret-key"
+```
+
+### Instalar AWS SDK
+
+```bash
+gem install aws-sdk-s3
+```
+
+### Executar Upload
+
+```bash
+cd build/
+ruby upload_to_s3.rb
+```
+
+O script irá:
+
+1. Listar todos os arquivos .skp que serão enviados
+2. Pedir confirmação
+3. Fazer upload para S3 com metadados
+
+### Estrutura no S3
+
+```
+projeta-plus-components/
+├── eletrical/
+│   ├── Geral/*.skp
+│   ├── Banheiro/*.skp
+│   └── ...
+├── lightning/
+│   └── Geral/*.skp
+└── baseboards/
+    └── Geral/*.skp
+```
+
+### Configurar Bucket S3
+
+1. **Criar Bucket:**
+
+   - Nome: `projeta-plus-components` (único globalmente)
+   - Região: `us-east-1` ou `sa-east-1` (Brasil)
+
+2. **Configurações:**
+
+   - Bloquear acesso público: **Ativado**
+   - Versionamento: **Ativado**
+   - Criptografia: **SSE-S3**
+
+3. **IAM Policy (mínima):**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::projeta-plus-components",
+        "arn:aws:s3:::projeta-plus-components/*"
+      ]
+    }
+  ]
+}
+```
+
+### Verificar Upload
+
+```bash
+# Listar arquivos no bucket
+aws s3 ls s3://projeta-plus-components/ --recursive
+```
+
+---
