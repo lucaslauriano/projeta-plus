@@ -139,6 +139,17 @@ module ProjetaPlus
           nil
         end
 
+        @dialog.add_action_callback("loadMyTags") do |action_context|
+          begin
+            result = ProjetaPlus::Modules::ProLayers.load_my_tags
+            send_json_response("handleLoadMyTagsResult", result)
+          rescue => e
+            error_result = handle_error(e, "load my tags")
+            send_json_response("handleLoadMyTagsResult", error_result)
+          end
+          nil
+        end
+
         @dialog.add_action_callback("loadFromFile") do |action_context|
           begin
             result = ProjetaPlus::Modules::ProLayers.load_from_file

@@ -233,24 +233,47 @@ module ProjetaPlus
 
       def self.save_to_json(json_data)
         begin
+          puts "[ProLayers] Iniciando save_to_json..."
+          puts "[ProLayers] Tipo de dado recebido: #{json_data.class}"
+          
           data = json_data.is_a?(String) ? JSON.parse(json_data) : json_data
+          puts "[ProLayers] Dados parseados com sucesso"
+          
           json_path = get_user_json_path
+          puts "[ProLayers] Caminho do arquivo: #{json_path}"
+          
           dir = File.dirname(json_path)
+          puts "[ProLayers] Diretório: #{dir}"
           
           # Cria o diretório se não existir (compatível Windows/Mac)
           unless Dir.exist?(dir)
+            puts "[ProLayers] Criando diretório..."
             require 'fileutils'
             FileUtils.mkdir_p(dir)
+          else
+            puts "[ProLayers] Diretório já existe"
           end
           
           # Escreve com encoding UTF-8 explícito
+          puts "[ProLayers] Escrevendo arquivo..."
           File.open(json_path, 'w:UTF-8') do |f|
             f.write(JSON.pretty_generate(data))
           end
+          puts "[ProLayers] Arquivo salvo com sucesso!"
           
-          return { success: true, message: "Saved to user JSON", path: json_path }
+          # Verifica se o arquivo foi realmente escrito
+          if File.exist?(json_path)
+            file_size = File.size(json_path)
+            puts "[ProLayers] Arquivo verificado - Tamanho: #{file_size} bytes"
+            return { success: true, message: "Tags salvas com sucesso", path: json_path }
+          else
+            puts "[ProLayers] ERRO: Arquivo não foi criado!"
+            return { success: false, message: "Arquivo não foi criado" }
+          end
         rescue => e
-          return { success: false, message: e.message }
+          puts "[ProLayers] ERRO ao salvar: #{e.message}"
+          puts e.backtrace.join("\n") if e.respond_to?(:backtrace)
+          return { success: false, message: "Erro ao salvar: #{e.message}" }
         end
       end
 
@@ -289,8 +312,28 @@ module ProjetaPlus
         end
       end
 
+      def self.load_my_tags
+        # Carrega apenas do arquivo do usuário (sem fallback para o padrão)
+        user_path = get_user_json_path
+        
+        unless File.exist?(user_path)
+          return { folders: [], tags: [], success: false, message: "Arquivo de usuário não encontrado. Salve suas tags primeiro." }
+        end
+        
+        begin
+          # Lê com encoding UTF-8 explícito e BOM handling
+          content = File.read(user_path, encoding: 'UTF-8')
+          content = content.force_encoding('UTF-8').sub(/^\xEF\xBB\xBF/, '')
+          data = JSON.parse(content)
+          return data.merge({ success: true, message: "Minhas tags carregadas" })
+        rescue => e
+          return { folders: [], tags: [], success: false, message: "Erro ao ler arquivo: #{e.message}" }
+        end
+      end
+
       def self.load_default_tags
         # Sempre carrega do arquivo padrão (redefinir)
+        # NOTA: Não salva automaticamente - usuário deve clicar em "Salvar JSON" se quiser persistir
         default_path = get_default_json_path
         
         return { folders: [], tags: [], success: false, message: "Default file not found" } unless File.exist?(default_path)
@@ -301,10 +344,7 @@ module ProjetaPlus
           content = content.force_encoding('UTF-8').sub(/^\xEF\xBB\xBF/, '')
           data = JSON.parse(content)
           
-          # Salva no arquivo do usuário
-          save_to_json(data)
-          
-          return data.merge({ success: true, message: "Default tags loaded" })
+          return data.merge({ success: true, message: "Tags padrão carregadas (clique em Salvar para persistir)" })
         rescue => e
           return { folders: [], tags: [], success: false, message: e.message }
         end
