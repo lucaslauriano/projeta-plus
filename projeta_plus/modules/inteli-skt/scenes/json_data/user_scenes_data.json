@@ -1,0 +1,98 @@
+{
+  "groups": [
+    {
+      "id": "1",
+      "name": "Cenas básicas",
+      "scenes": [
+        {
+          "id": "1-1",
+          "title": "Geral",
+          "segments": [
+
+          ]
+        },
+        {
+          "id": "1-2",
+          "title": "Desenhar",
+          "segments": [
+
+          ]
+        },
+        {
+          "id": "1-3",
+          "title": "Etiquetar",
+          "segments": [
+
+          ]
+        },
+        {
+          "id": "1-4",
+          "title": "Planos de Seção",
+          "segments": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Isométricas",
+      "scenes": [
+        {
+          "id": "2-1",
+          "title": "Isométrica",
+          "segments": [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "geral",
+      "name": "Geral",
+      "style": "FM_VISTAS",
+      "cameraType": "iso_perspectiva",
+      "activeLayers": [
+        "Layer0"
+      ]
+    },
+    {
+      "id": "desenhar",
+      "name": "Desenhar",
+      "style": "FM_VISTAS",
+      "cameraType": "topo_ortogonal",
+      "activeLayers": [
+        "Layer0"
+      ]
+    },
+    {
+      "id": "etiquetar",
+      "name": "Etiquetar",
+      "style": "FM_VISTAS",
+      "cameraType": "topo_ortogonal",
+      "activeLayers": [
+        "Layer0"
+      ]
+    },
+    {
+      "id": "planos_de_secao",
+      "name": "Planos de Seção",
+      "style": "FM_VISTAS",
+      "cameraType": "iso_perspectiva",
+      "activeLayers": [
+        "Layer0"
+      ]
+    },
+    {
+      "id": "isometrica",
+      "name": "Isométrica",
+      "style": "FM_VISTAS",
+      "cameraType": "iso_perspectiva",
+      "activeLayers": [
+        "Layer0"
+      ]
+    }
+  ]
+}

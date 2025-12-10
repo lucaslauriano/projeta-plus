@@ -142,6 +142,118 @@ module ProjetaPlus
         end
       end
 
+      # ========================================
+      # MÉTODOS PARA COMPONENTES CUSTOMIZADOS
+      # ========================================
+
+      # Retorna o caminho para componentes customizados
+      def self.get_custom_components_path
+        home = ENV['HOME'] || ENV['USERPROFILE']
+        File.join(home, '.projeta_plus', 'custom_components')
+      end
+
+      # Carrega blocos customizados do usuário
+      def self.load_custom_blocks
+        custom_path = get_custom_components_path
+        return [] unless File.directory?(custom_path)
+        
+        groups = []
+        
+        # Obter subpastas customizadas
+        subfolders = Dir.entries(custom_path)
+                        .select { |entry| File.directory?(File.join(custom_path, entry)) && !(entry == '.' || entry == '..') }
+                        .sort
+
+        subfolders.each do |subfolder|
+          subfolder_path = File.join(custom_path, subfolder)
+          skp_files = Dir.entries(subfolder_path)
+                         .select { |file| File.extname(file).downcase == ".skp" }
+                         .sort
+
+          items = skp_files.map do |file|
+            {
+              id: "custom_#{File.basename(file, '.skp')}",
+              name: File.basename(file, ".skp"),
+              path: File.join(subfolder, file),
+              source: 'custom'
+            }
+          end
+
+          next if items.empty?
+
+          groups << {
+            id: "custom-#{subfolder.downcase.gsub(/[^a-z0-9]+/, '-')}",
+            title: "#{subfolder} (Customizado)",
+            items: items,
+            source: 'custom'
+          }
+        end
+
+        groups
+      end
+
+      # Upload de componente customizado
+      def self.upload_custom_component(file_path, category = 'Geral')
+        begin
+          unless File.exist?(file_path)
+            return {
+              success: false,
+              message: "Arquivo não encontrado: #{file_path}"
+            }
+          end
+
+          custom_path = get_custom_components_path
+          category_path = File.join(custom_path, category)
+          
+          # Criar diretório se não existir
+          require 'fileutils'
+          FileUtils.mkdir_p(category_path)
+
+          # Copiar arquivo
+          filename = File.basename(file_path)
+          dest_path = File.join(category_path, filename)
+          FileUtils.cp(file_path, dest_path)
+
+          {
+            success: true,
+            message: "Componente adicionado com sucesso",
+            filename: File.basename(filename, '.skp')
+          }
+        rescue => e
+          {
+            success: false,
+            message: "Erro ao adicionar componente: #{e.message}"
+          }
+        end
+      end
+
+      # Remover componente customizado
+      def self.delete_custom_component(block_path)
+        begin
+          custom_path = get_custom_components_path
+          full_path = File.join(custom_path, block_path)
+
+          unless File.exist?(full_path)
+            return {
+              success: false,
+              message: "Componente não encontrado: #{block_path}"
+            }
+          end
+
+          File.delete(full_path)
+
+          {
+            success: true,
+            message: "Componente removido com sucesso"
+          }
+        rescue => e
+          {
+            success: false,
+            message: "Erro ao remover componente: #{e.message}"
+          }
+        end
+      end
+
     end
   end
 end

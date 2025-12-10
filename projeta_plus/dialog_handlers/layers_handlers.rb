@@ -1,7 +1,7 @@
 # encoding: UTF-8
 require 'sketchup.rb'
 require_relative 'base_handler.rb'
-require_relative '../modules/inteli-skt/pro_layers.rb'
+require_relative '../modules/inteli-skt/layers/pro_layers.rb'
 
 module ProjetaPlus
   module DialogHandlers
