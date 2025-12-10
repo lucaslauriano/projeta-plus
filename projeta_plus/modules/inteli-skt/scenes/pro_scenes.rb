@@ -193,15 +193,52 @@ module ProjetaPlus
       def self.apply_scene_config(name, config)
         begin
           model = Sketchup.active_model
-          page = model.pages.find { |p| p.name.downcase == name.downcase }
-
-          if page
-            # Atualizar cena existente
-            update_scene(name, config)
-          else
-            # Criar nova cena
-            add_scene(config.merge('name' => name))
+          
+          # Aplicar estilo
+          style = config['style'] || config[:style]
+          apply_style(style) if style && !style.empty?
+          
+          # Aplicar visibilidade de camadas
+          active_layers = config['activeLayers'] || config[:activeLayers]
+          apply_layers_visibility(active_layers) if active_layers
+          
+          # Aplicar configuração de câmera
+          camera_type = config['cameraType'] || config[:cameraType]
+          if camera_type
+            camera = model.active_view.camera
+            camera_type_sym = camera_type.is_a?(String) ? camera_type.to_sym : camera_type
+            
+            case camera_type_sym
+            when :iso_perspectiva, :iso
+              configure_iso_camera_direct
+              camera.perspective = true
+            when :iso_ortogonal
+              configure_iso_camera_direct
+              camera.perspective = false
+            when :iso_invertida_perspectiva
+              configure_inverted_camera_direct
+              camera.perspective = true
+            when :iso_invertida_ortogonal
+              configure_inverted_camera_direct
+              camera.perspective = false
+            when :topo_perspectiva, :topo
+              configure_top_camera_direct
+              camera.perspective = true
+            when :topo_ortogonal
+              configure_top_camera_direct
+              camera.perspective = false
+            end
+            
+            model.active_view.camera = camera
           end
+          
+          # Zoom extents
+          model.active_view.zoom_extents
+          
+          {
+            success: true,
+            message: "Configuração aplicada com sucesso"
+          }
         rescue => e
           {
             success: false,
@@ -442,6 +479,7 @@ module ProjetaPlus
         end
       end
 
+
       def self.apply_camera_config(page, camera_type)
         model = Sketchup.active_model
         camera = model.active_view.camera
@@ -515,6 +553,46 @@ module ProjetaPlus
         
         camera.set(eye, target, up)
         model.active_view.camera = camera
+      end
+
+      # Métodos diretos para aplicar câmera (sem page)
+      def self.configure_iso_camera_direct
+        model = Sketchup.active_model
+        camera = model.active_view.camera
+        bounds = model.bounds
+        center = bounds.center
+        
+        eye = Geom::Point3d.new(center.x - 1000, center.y - 1000, center.z + 1000)
+        target = center
+        up = Geom::Vector3d.new(0, 0, 1)
+        
+        camera.set(eye, target, up)
+      end
+
+      def self.configure_inverted_camera_direct
+        model = Sketchup.active_model
+        camera = model.active_view.camera
+        bounds = model.bounds
+        center = bounds.center
+        
+        eye = Geom::Point3d.new(center.x + 1000, center.y + 1000, center.z + 1000)
+        target = center
+        up = Geom::Vector3d.new(0, 0, 1)
+        
+        camera.set(eye, target, up)
+      end
+
+      def self.configure_top_camera_direct
+        model = Sketchup.active_model
+        camera = model.active_view.camera
+        bounds = model.bounds
+        center = bounds.center
+        
+        eye = Geom::Point3d.new(center.x, center.y, center.z + 1000)
+        target = center
+        up = Geom::Vector3d.new(0, 1, 0)
+        
+        camera.set(eye, target, up)
       end
 
       def self.detect_camera_type(page)
