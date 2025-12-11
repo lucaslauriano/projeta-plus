@@ -9,7 +9,6 @@
 *.bak
 *.swp
 *.DS_Store
-*.style
 
 /mad_floor_design
 /habitat_site_context

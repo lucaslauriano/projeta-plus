@@ -12,9 +12,10 @@ module ProjetaPlus
 
       SETTINGS_KEY = "scenes_settings"
 
-      # Paths para arquivos JSON
+      # Paths para arquivos JSON e estilos
       PLUGIN_PATH = File.dirname(__FILE__)
       JSON_DATA_PATH = File.join(PLUGIN_PATH, 'json_data')
+      STYLES_PATH = File.join(PLUGIN_PATH, 'styles')
       DEFAULT_DATA_FILE = File.join(JSON_DATA_PATH, 'scenes_data.json')
       USER_DATA_FILE = File.join(JSON_DATA_PATH, 'user_scenes_data.json')
 
@@ -193,7 +194,25 @@ module ProjetaPlus
       def self.apply_scene_config(name, config)
         begin
           model = Sketchup.active_model
+          page = model.pages.find { |p| p.name.downcase == name.downcase }
           
+          model.start_operation('Aplicar Configuração de Cena', true)
+          
+          # PRIMEIRO: Reexibir todos os elementos ocultos antes de qualquer configuração
+          unhide_all_elements
+          
+          # Criar página se não existir ou selecionar se já existe
+          if page
+            # Cena já existe - apenas selecionar (não atualizar ainda)
+            model.pages.selected_page = page
+            message = "Cena '#{name}' atualizada com sucesso"
+          else
+            # Cena não existe - criar nova
+            page = model.pages.add(name)
+            message = "Cena '#{name}' criada com sucesso"
+          end
+          
+          # Agora aplicar todas as configurações
           # Aplicar estilo
           style = config['style'] || config[:style]
           apply_style(style) if style && !style.empty?
@@ -235,11 +254,17 @@ module ProjetaPlus
           # Zoom extents
           model.active_view.zoom_extents
           
+          # Por último, atualizar a página com as novas configurações
+          page.update
+          
+          model.commit_operation
+          
           {
             success: true,
-            message: "Configuração aplicada com sucesso"
+            message: message
           }
         rescue => e
+          model.abort_operation if model
           {
             success: false,
             message: "Erro ao aplicar configuração: #{e.message}"
@@ -247,13 +272,24 @@ module ProjetaPlus
         end
       end
 
-      # Retorna estilos disponíveis no modelo
+      # Retorna estilos disponíveis na pasta styles
       def self.get_available_styles
         begin
-          model = Sketchup.active_model
           styles = []
           
-          model.styles.each { |style| styles << style.name }
+          # Ler arquivos .style da pasta
+          if Dir.exist?(STYLES_PATH)
+            Dir.glob(File.join(STYLES_PATH, '*.style')).each do |file_path|
+              style_name = File.basename(file_path, '.style')
+              styles << style_name
+            end
+          end
+          
+          # Se não encontrar nenhum estilo na pasta, usar os do modelo como fallback
+          if styles.empty?
+            model = Sketchup.active_model
+            model.styles.each { |style| styles << style.name }
+          end
           
           {
             success: true,
@@ -455,6 +491,15 @@ module ProjetaPlus
 
       private
 
+      def self.unhide_all_elements
+        model = Sketchup.active_model
+        entidades = model.entities
+        
+        entidades.each do |entidade|
+          entidade.hidden = false if entidade.hidden?
+        end
+      end
+
       def self.validate_scene_params(name, style, camera_type)
         return [false, "Nome da cena é obrigatório"] if name.nil? || name.strip.empty?
         [true, nil]
@@ -462,6 +507,24 @@ module ProjetaPlus
 
       def self.apply_style(style_name)
         model = Sketchup.active_model
+        
+        # Primeiro tentar carregar da pasta styles
+        style_file_path = File.join(STYLES_PATH, "#{style_name}.style")
+        
+        if File.exist?(style_file_path)
+          # Importar o estilo do arquivo
+          begin
+            model.styles.add_style(style_file_path, true)
+            # Após importar, selecionar o estilo
+            imported_style = model.styles.find { |s| s.name == style_name }
+            model.styles.selected_style = imported_style if imported_style
+            return
+          rescue => e
+            puts "Erro ao importar estilo #{style_name}: #{e.message}"
+          end
+        end
+        
+        # Fallback: buscar estilo já existente no modelo
         style = model.styles.find { |s| s.name == style_name }
         model.styles.selected_style = style if style
       end
