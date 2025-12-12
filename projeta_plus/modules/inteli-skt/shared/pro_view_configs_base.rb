@@ -371,7 +371,7 @@ module ProjetaPlus
           
           {
             success: true,
-            message: "Configurações salvas com sucesso",
+            message: "Sucesso ao salvar configurações",
             path: self::USER_DATA_FILE
           }
         rescue => e
@@ -402,7 +402,7 @@ module ProjetaPlus
           {
             success: true,
             data: data,
-            message: "Configurações carregadas com sucesso"
+            message: "Sucesso ao carregar configurações"
           }
         rescue => e
           {
@@ -435,7 +435,7 @@ module ProjetaPlus
           {
             success: true,
             data: data,
-            message: "Dados padrão carregados com sucesso"
+            message: "Sucesso ao carregar dados padrão"
           }
         rescue => e
           {

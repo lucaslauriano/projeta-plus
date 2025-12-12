@@ -12,17 +12,7 @@ module ProjetaPlus
       end
       cmd.tooltip = ProjetaPlus::Localization.t("toolbar.main_dashboard_tooltip")
       cmd.status_bar_text = ProjetaPlus::Localization.t("toolbar.main_dashboard_status")
-      cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'button1.png')
-      cmd
-    end
-
-    def self.logout_command
-      cmd = ::UI::Command.new(ProjetaPlus::Localization.t("toolbar.logout")) do
-        ::UI.messagebox(ProjetaPlus::Localization.t("messages.logout_info"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
-      end
-      cmd.tooltip = ProjetaPlus::Localization.t("toolbar.logout_tooltip")
-      cmd.status_bar_text = ProjetaPlus::Localization.t("toolbar.logout_status")
-      cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'button2.png')
+      cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'logo.png')
       cmd
     end
 

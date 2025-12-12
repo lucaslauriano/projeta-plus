@@ -180,6 +180,78 @@ module ProjetaPlus
           nil
         end
 
+        # ========================================
+        # LEVELS MANAGEMENT
+        # ========================================
+
+        # GET LEVELS
+        @dialog.add_action_callback("getLevels") do |action_context|
+          begin
+            result = ProjetaPlus::Modules::ProPlans.get_levels
+            send_json_response("handleGetLevelsResult", result)
+          rescue => e
+            error_result = handle_error(e, "get levels")
+            send_json_response("handleGetLevelsResult", error_result)
+          end
+          nil
+        end
+
+        # ADD LEVEL
+        @dialog.add_action_callback("addLevel") do |action_context, json_payload|
+          begin
+            params = JSON.parse(json_payload)
+            height_str = params['height']
+            result = ProjetaPlus::Modules::ProPlans.add_level(height_str)
+            send_json_response("handleAddLevelResult", result)
+          rescue => e
+            error_result = handle_error(e, "add level")
+            send_json_response("handleAddLevelResult", error_result)
+          end
+          nil
+        end
+
+        # REMOVE LEVEL
+        @dialog.add_action_callback("removeLevel") do |action_context, json_payload|
+          begin
+            params = JSON.parse(json_payload)
+            number = params['number']
+            result = ProjetaPlus::Modules::ProPlans.remove_level(number)
+            send_json_response("handleRemoveLevelResult", result)
+          rescue => e
+            error_result = handle_error(e, "remove level")
+            send_json_response("handleRemoveLevelResult", error_result)
+          end
+          nil
+        end
+
+        # CREATE BASE SCENE
+        @dialog.add_action_callback("createBaseScene") do |action_context, json_payload|
+          begin
+            params = JSON.parse(json_payload)
+            number = params['number']
+            result = ProjetaPlus::Modules::ProPlans.create_base_scene(number)
+            send_json_response("handleCreateBaseSceneResult", result)
+          rescue => e
+            error_result = handle_error(e, "create base scene")
+            send_json_response("handleCreateBaseSceneResult", error_result)
+          end
+          nil
+        end
+
+        # CREATE CEILING SCENE
+        @dialog.add_action_callback("createCeilingScene") do |action_context, json_payload|
+          begin
+            params = JSON.parse(json_payload)
+            number = params['number']
+            result = ProjetaPlus::Modules::ProPlans.create_ceiling_scene(number)
+            send_json_response("handleCreateCeilingSceneResult", result)
+          rescue => e
+            error_result = handle_error(e, "create ceiling scene")
+            send_json_response("handleCreateCeilingSceneResult", error_result)
+          end
+          nil
+        end
+
       end
 
     end

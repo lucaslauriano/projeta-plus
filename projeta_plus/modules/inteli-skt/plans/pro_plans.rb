@@ -2,6 +2,7 @@
 require 'sketchup.rb'
 require 'json'
 require_relative '../shared/pro_view_configs_base.rb'
+require_relative 'pro_levels.rb'
 
 module ProjetaPlus
   module Modules
@@ -49,6 +50,30 @@ module ProjetaPlus
       # Wrapper para apply_config com nome específico
       def self.apply_plan_config(name, config)
         apply_config(name, config)
+      end
+
+      # ========================================
+      # MÉTODOS DE NÍVEIS (LEVELS)
+      # ========================================
+
+      def self.get_levels
+        ProjetaPlus::Modules::ProLevels.get_levels
+      end
+
+      def self.add_level(height_str)
+        ProjetaPlus::Modules::ProLevels.add_level(height_str)
+      end
+
+      def self.remove_level(number)
+        ProjetaPlus::Modules::ProLevels.remove_level(number)
+      end
+
+      def self.create_base_scene(number)
+        ProjetaPlus::Modules::ProLevels.create_base_scene(number)
+      end
+
+      def self.create_ceiling_scene(number)
+        ProjetaPlus::Modules::ProLevels.create_ceiling_scene(number)
       end
 
     end

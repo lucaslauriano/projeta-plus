@@ -10,7 +10,6 @@ module ProjetaPlus
       toolbar = ::UI::Toolbar.new(TOOLBAR_NAME)
       
       toolbar.add_item(ProjetaPlus::Commands.open_main_dashboard_command)
-      toolbar.add_item(ProjetaPlus::Commands.logout_command)
 
       toolbar.show
     end
