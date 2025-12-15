@@ -233,46 +233,28 @@ module ProjetaPlus
 
       def self.save_to_json(json_data)
         begin
-          puts "[ProLayers] Iniciando save_to_json..."
-          puts "[ProLayers] Tipo de dado recebido: #{json_data.class}"
-          
           data = json_data.is_a?(String) ? JSON.parse(json_data) : json_data
-          puts "[ProLayers] Dados parseados com sucesso"
-          
           json_path = get_user_json_path
-          puts "[ProLayers] Caminho do arquivo: #{json_path}"
-          
           dir = File.dirname(json_path)
-          puts "[ProLayers] Diretório: #{dir}"
           
           # Cria o diretório se não existir (compatível Windows/Mac)
           unless Dir.exist?(dir)
-            puts "[ProLayers] Criando diretório..."
             require 'fileutils'
             FileUtils.mkdir_p(dir)
-          else
-            puts "[ProLayers] Diretório já existe"
           end
           
           # Escreve com encoding UTF-8 explícito
-          puts "[ProLayers] Escrevendo arquivo..."
           File.open(json_path, 'w:UTF-8') do |f|
             f.write(JSON.pretty_generate(data))
           end
-          puts "[ProLayers] Arquivo salvo com sucesso!"
           
           # Verifica se o arquivo foi realmente escrito
           if File.exist?(json_path)
-            file_size = File.size(json_path)
-            puts "[ProLayers] Arquivo verificado - Tamanho: #{file_size} bytes"
             return { success: true, message: "Tags salvas com sucesso", path: json_path }
           else
-            puts "[ProLayers] ERRO: Arquivo não foi criado!"
             return { success: false, message: "Arquivo não foi criado" }
           end
         rescue => e
-          puts "[ProLayers] ERRO ao salvar: #{e.message}"
-          puts e.backtrace.join("\n") if e.respond_to?(:backtrace)
           return { success: false, message: "Erro ao salvar: #{e.message}" }
         end
       end
