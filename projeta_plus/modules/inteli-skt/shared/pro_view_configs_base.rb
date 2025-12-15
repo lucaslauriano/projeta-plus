@@ -110,7 +110,6 @@ module ProjetaPlus
             return { success: false, message: "#{entity_name_singular.capitalize} '#{name}' não encontrada" }
           end
 
-          new_name = params['name'] || params[:name]
           style = params['style'] || params[:style]
           camera_type = params['cameraType'] || params[:cameraType]
           active_layers = params['activeLayers'] || params[:activeLayers]
@@ -129,12 +128,7 @@ module ProjetaPlus
           # Aplicar configuração de câmera
           apply_camera_config(page, camera_type) if camera_type
 
-          # Renomear se necessário
-          if new_name && new_name != name
-            page.name = new_name
-          end
-
-          # Atualizar a página
+          # Atualizar a página (sem renomear - usuário cria nova cena se quiser nome diferente)
           model.active_view.zoom_extents
           page.update
 
@@ -186,7 +180,14 @@ module ProjetaPlus
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         begin
           model = Sketchup.active_model
-          page = model.pages.find { |p| p.name.downcase == name.downcase }
+          
+          # Detectar número do nível da cena atual
+          level_number = detect_level_number_from_current_scene(model)
+          
+          # Adicionar número ao nome se estiver em uma cena de nível específico
+          final_name = level_number > 1 ? "#{name}#{level_number}" : name
+          
+          page = model.pages.find { |p| p.name.downcase == final_name.downcase }
           
           model.start_operation("Aplicar Configuração de #{entity_name_singular.capitalize}", true)
           
@@ -196,10 +197,10 @@ module ProjetaPlus
           # Criar página se não existir ou selecionar se já existe
           if page
             model.pages.selected_page = page
-            message = "#{entity_name_singular.capitalize} '#{name}' atualizada com sucesso"
+            message = "#{entity_name_singular.capitalize} '#{final_name}' atualizada com sucesso"
           else
-            page = model.pages.add(name)
-            message = "#{entity_name_singular.capitalize} '#{name}' criada com sucesso"
+            page = model.pages.add(final_name)
+            message = "#{entity_name_singular.capitalize} '#{final_name}' criada com sucesso"
           end
           
           # Aplicar configurações
@@ -687,6 +688,24 @@ module ProjetaPlus
 
       def remove_bom(content)
         content.sub("\xEF\xBB\xBF".force_encoding("UTF-8"), '')
+      end
+
+      # Detecta o número do nível da cena atual
+      # Exemplos: base2 -> 2, forro3 -> 3, base -> 1
+      def detect_level_number_from_current_scene(model)
+        current_page = model.pages.selected_page
+        return 1 unless current_page
+        
+        scene_name = current_page.name
+        
+        # Padrões de cenas de nível: base, base2, base3, forro, forro2, forro3
+        if scene_name =~ /^(base|forro)(\d+)?$/i
+          number = $2
+          return number ? number.to_i : 1
+        end
+        
+        # Se não for uma cena de nível, retorna 1 (térreo)
+        return 1
       end
 
     end

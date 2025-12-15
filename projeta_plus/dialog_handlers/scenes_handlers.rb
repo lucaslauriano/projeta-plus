@@ -2,6 +2,7 @@
 require 'sketchup.rb'
 require_relative 'base_handler.rb'
 require_relative '../modules/inteli-skt/scenes/pro_scenes.rb'
+require_relative '../modules/inteli-skt/plans/pro_base_plans.rb'
 
 module ProjetaPlus
   module DialogHandlers
@@ -9,6 +10,7 @@ module ProjetaPlus
 
       def register_callbacks
         register_scenes_callbacks
+        register_base_plans_callbacks
       end
 
       private
@@ -176,6 +178,59 @@ module ProjetaPlus
           rescue => e
             error_result = handle_error(e, "load scenes from file")
             send_json_response("handleLoadScenesFromFileResult", error_result)
+          end
+          nil
+        end
+
+      end
+
+      def register_base_plans_callbacks
+
+        # GET BASE PLANS - Carregar configurações das plantas base
+        @dialog.add_action_callback("getBasePlans") do |action_context|
+          begin
+            result = ProjetaPlus::Modules::ProBasePlans.get_base_plans
+            send_json_response("handleGetBasePlansResult", result)
+          rescue => e
+            error_result = handle_error(e, "get base plans")
+            send_json_response("handleGetBasePlansResult", error_result)
+          end
+          nil
+        end
+
+        # SAVE BASE PLANS - Salvar configurações das plantas base
+        @dialog.add_action_callback("saveBasePlans") do |action_context, json_payload|
+          begin
+            params = JSON.parse(json_payload)
+            result = ProjetaPlus::Modules::ProBasePlans.save_base_plans(params)
+            send_json_response("handleSaveBasePlansResult", result)
+          rescue => e
+            error_result = handle_error(e, "save base plans")
+            send_json_response("handleSaveBasePlansResult", error_result)
+          end
+          nil
+        end
+
+        # GET AVAILABLE STYLES FOR BASE PLANS
+        @dialog.add_action_callback("getAvailableStylesForBasePlans") do |action_context|
+          begin
+            result = ProjetaPlus::Modules::ProBasePlans.get_available_styles_for_base_plans
+            send_json_response("handleGetAvailableStylesForBasePlansResult", result)
+          rescue => e
+            error_result = handle_error(e, "get available styles for base plans")
+            send_json_response("handleGetAvailableStylesForBasePlansResult", error_result)
+          end
+          nil
+        end
+
+        # GET AVAILABLE LAYERS FOR BASE PLANS
+        @dialog.add_action_callback("getAvailableLayersForBasePlans") do |action_context|
+          begin
+            result = ProjetaPlus::Modules::ProBasePlans.get_available_layers_for_base_plans
+            send_json_response("handleGetAvailableLayersForBasePlansResult", result)
+          rescue => e
+            error_result = handle_error(e, "get available layers for base plans")
+            send_json_response("handleGetAvailableLayersForBasePlansResult", error_result)
           end
           nil
         end
