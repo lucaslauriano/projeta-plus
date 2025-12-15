@@ -122,6 +122,8 @@ module ProjetaPlus
         
         model = Sketchup.active_model
         
+        model.start_operation("Remover Nível", true)
+        
         # Remover cenas e section planes
         ['base', 'forro'].each do |type|
           scene_name = generate_scene_name(type, number)
@@ -138,11 +140,14 @@ module ProjetaPlus
         levels.delete(level)
         save_levels(levels)
         
+        model.commit_operation
+        
         {
           success: true,
           message: "Nível '#{level.name}' removido com sucesso"
         }
       rescue => e
+        model.abort_operation if model
         { success: false, message: "Erro ao remover nível: #{e.message}" }
       end
       
@@ -159,6 +164,8 @@ module ProjetaPlus
         scene_existed = !scene.nil?
         
         unless scene
+          model.start_operation("Criar Cena Base", true)
+          
           # Calcular altura do corte
           cut_height_meters = level.base_cut_height
           cut_height = cut_height_meters.m
@@ -181,6 +188,8 @@ module ProjetaPlus
           
           level.has_base = true
           save_levels(levels)
+          
+          model.commit_operation
         end
         
         # Aplicar configurações se disponível (do JSON configurado)
@@ -201,6 +210,7 @@ module ProjetaPlus
           message: scene_existed ? "Cena '#{scene_name}' atualizada!" : "Cena '#{scene_name}' criada com sucesso!"
         }
       rescue => e
+        model.abort_operation if model
         { success: false, message: "Erro ao criar cena base: #{e.message}" }
       end
       
@@ -217,6 +227,8 @@ module ProjetaPlus
         scene_existed = !scene.nil?
         
         unless scene
+          model.start_operation("Criar Cena Forro", true)
+          
           # Calcular altura do corte
           cut_height_meters = level.ceiling_cut_height
           cut_height = cut_height_meters.m
@@ -239,6 +251,8 @@ module ProjetaPlus
           
           level.has_ceiling = true
           save_levels(levels)
+          
+          model.commit_operation
         end
         
         # Aplicar configurações se disponível (do JSON configurado)
@@ -259,6 +273,7 @@ module ProjetaPlus
           message: scene_existed ? "Cena '#{scene_name}' atualizada!" : "Cena '#{scene_name}' criada com sucesso!"
         }
       rescue => e
+        model.abort_operation if model
         { success: false, message: "Erro ao criar cena de forro: #{e.message}" }
       end
       
