@@ -4,7 +4,7 @@ require 'json'
 require 'sketchup.rb'
 require_relative 'base_handler.rb'
 require_relative '../modules/furniture/pro_furniture_attributes.rb'
-require_relative '../modules/report/pro_furniture_reports.rb'
+require_relative '../modules/reports/pro_furniture_reports.rb'
 
 module ProjetaPlus
   module DialogHandlers

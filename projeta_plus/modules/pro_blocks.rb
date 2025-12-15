@@ -142,6 +142,176 @@ module ProjetaPlus
         end
       end
 
+      # ========================================
+      # MÉTODOS PARA COMPONENTES CUSTOMIZADOS
+      # ========================================
+
+      # Retorna o caminho para componentes customizados
+      def self.get_custom_components_path
+        home = ENV['HOME'] || ENV['USERPROFILE']
+        File.join(home, '.projeta_plus', 'custom_components')
+      end
+
+      # Valida e sanitiza um caminho para prevenir path traversal
+      # Retorna nil se o caminho for inválido
+      def self.sanitize_path(path)
+        return nil if path.nil? || path.empty?
+        
+        # Rejeita caminhos absolutos
+        return nil if path.start_with?('/', '\\') || path.match?(/^[a-zA-Z]:/)
+        
+        # Rejeita sequências de path traversal
+        return nil if path.include?('..') || path.include?('~')
+        
+        # Remove barras duplicadas e normaliza
+        path.gsub(/[\/\\]+/, File::SEPARATOR)
+      end
+
+      # Carrega blocos customizados do usuário
+      def self.load_custom_blocks
+        custom_path = get_custom_components_path
+        return [] unless File.directory?(custom_path)
+        
+        groups = []
+        
+        # Obter subpastas customizadas
+        subfolders = Dir.entries(custom_path)
+                        .select { |entry| File.directory?(File.join(custom_path, entry)) && !(entry == '.' || entry == '..') }
+                        .sort
+
+        subfolders.each do |subfolder|
+          subfolder_path = File.join(custom_path, subfolder)
+          skp_files = Dir.entries(subfolder_path)
+                         .select { |file| File.extname(file).downcase == ".skp" }
+                         .sort
+
+          items = skp_files.map do |file|
+            {
+              id: "custom_#{File.basename(file, '.skp')}",
+              name: File.basename(file, ".skp"),
+              path: File.join(subfolder, file),
+              source: 'custom'
+            }
+          end
+
+          next if items.empty?
+
+          groups << {
+            id: "custom-#{subfolder.downcase.gsub(/[^a-z0-9]+/, '-')}",
+            title: "#{subfolder} (Customizado)",
+            items: items,
+            source: 'custom'
+          }
+        end
+
+        groups
+      end
+
+      # Upload de componente customizado
+      def self.upload_custom_component(file_path, category = 'Geral')
+        begin
+          unless File.exist?(file_path)
+            return {
+              success: false,
+              message: "Arquivo não encontrado: #{file_path}"
+            }
+          end
+
+          # Valida e sanitiza o nome da categoria
+          sanitized_category = sanitize_path(category)
+          unless sanitized_category
+            return {
+              success: false,
+              message: "Nome de categoria inválido: #{category}"
+            }
+          end
+
+          custom_path = get_custom_components_path
+          category_path = File.join(custom_path, sanitized_category)
+          
+          # Verifica se o caminho final está dentro do diretório permitido
+          unless category_path.start_with?(custom_path)
+            return {
+              success: false,
+              message: "Caminho de categoria inválido"
+            }
+          end
+          
+          # Criar diretório se não existir
+          require 'fileutils'
+          FileUtils.mkdir_p(category_path)
+
+          # Copiar arquivo (usa basename para garantir que não há path traversal)
+          filename = File.basename(file_path)
+          dest_path = File.join(category_path, filename)
+          
+          # Validação adicional: verifica se dest_path está dentro de category_path
+          unless dest_path.start_with?(category_path)
+            return {
+              success: false,
+              message: "Caminho de destino inválido"
+            }
+          end
+          
+          FileUtils.cp(file_path, dest_path)
+
+          {
+            success: true,
+            message: "Componente adicionado com sucesso",
+            filename: File.basename(filename, '.skp')
+          }
+        rescue => e
+          {
+            success: false,
+            message: "Erro ao adicionar componente: #{e.message}"
+          }
+        end
+      end
+
+      # Remover componente customizado
+      def self.delete_custom_component(block_path)
+        begin
+          # Valida e sanitiza o caminho do bloco
+          sanitized_path = sanitize_path(block_path)
+          unless sanitized_path
+            return {
+              success: false,
+              message: "Caminho de componente inválido: #{block_path}"
+            }
+          end
+
+          custom_path = get_custom_components_path
+          full_path = File.join(custom_path, sanitized_path)
+
+          # Verifica se o caminho final está dentro do diretório permitido
+          unless full_path.start_with?(custom_path)
+            return {
+              success: false,
+              message: "Caminho de componente inválido"
+            }
+          end
+
+          unless File.exist?(full_path)
+            return {
+              success: false,
+              message: "Componente não encontrado: #{block_path}"
+            }
+          end
+
+          File.delete(full_path)
+
+          {
+            success: true,
+            message: "Componente removido com sucesso"
+          }
+        rescue => e
+          {
+            success: false,
+            message: "Erro ao remover componente: #{e.message}"
+          }
+        end
+      end
+
     end
   end
 end

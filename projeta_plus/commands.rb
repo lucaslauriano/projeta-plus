@@ -12,17 +12,7 @@ module ProjetaPlus
       end
       cmd.tooltip = ProjetaPlus::Localization.t("toolbar.main_dashboard_tooltip")
       cmd.status_bar_text = ProjetaPlus::Localization.t("toolbar.main_dashboard_status")
-      cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'button1.png')
-      cmd
-    end
-
-    def self.logout_command
-      cmd = ::UI::Command.new(ProjetaPlus::Localization.t("toolbar.logout")) do
-        ::UI.messagebox(ProjetaPlus::Localization.t("messages.logout_info"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
-      end
-      cmd.tooltip = ProjetaPlus::Localization.t("toolbar.logout_tooltip")
-      cmd.status_bar_text = ProjetaPlus::Localization.t("toolbar.logout_status")
-      cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'button2.png')
+      cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'logo.png')
       cmd
     end
 
@@ -83,6 +73,8 @@ module ProjetaPlus
       lightning_handler = ProjetaPlus::DialogHandlers::LightningHandler.new(@@main_dashboard_dialog)
       baseboards_handler = ProjetaPlus::DialogHandlers::BaseboardsHandler.new(@@main_dashboard_dialog)
       custom_components_handler = ProjetaPlus::DialogHandlers::CustomComponentsHandler.new(@@main_dashboard_dialog)
+      scenes_handler = ProjetaPlus::DialogHandlers::ScenesHandler.new(@@main_dashboard_dialog)
+      plans_handler = ProjetaPlus::DialogHandlers::PlansHandler.new(@@main_dashboard_dialog)
       
       # Register all callbacks
       settings_handler.register_callbacks
@@ -95,6 +87,8 @@ module ProjetaPlus
       lightning_handler.register_callbacks
       baseboards_handler.register_callbacks
       custom_components_handler.register_callbacks
+      scenes_handler.register_callbacks
+      plans_handler.register_callbacks
       
       puts "[ProjetaPlus Commands] All dialog handlers registered successfully."
 

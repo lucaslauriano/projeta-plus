@@ -21,6 +21,12 @@ end
 # Load generic blocks module (used by electrical, lightning, baseboards)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'pro_blocks.rb')
 
+# Inteli-Skt Modules
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 'shared', 'pro_view_configs_base.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 'layers', 'pro_layers.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 'scenes', 'pro_scenes.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 'plans', 'pro_plans.rb')
+
 # Dialog Handlers (load before commands as commands depend on them)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'base_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'settings_handler.rb')
@@ -33,6 +39,8 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'eletric
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'lightning_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'baseboards_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'custom_components_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'scenes_handlers.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'plans_handlers.rb')
 
 # Commands (now uses the handlers)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'commands.rb')

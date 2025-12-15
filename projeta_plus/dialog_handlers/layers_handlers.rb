@@ -1,7 +1,7 @@
 # encoding: UTF-8
 require 'sketchup.rb'
 require_relative 'base_handler.rb'
-require_relative '../modules/inteli-skt/pro_layers.rb'
+require_relative '../modules/inteli-skt/layers/pro_layers.rb'
 
 module ProjetaPlus
   module DialogHandlers
@@ -135,6 +135,17 @@ module ProjetaPlus
           rescue => e
             error_result = handle_error(e, "load default tags")
             send_json_response("handleLoadDefaultTagsResult", error_result)
+          end
+          nil
+        end
+
+        @dialog.add_action_callback("loadMyTags") do |action_context|
+          begin
+            result = ProjetaPlus::Modules::ProLayers.load_my_tags
+            send_json_response("handleLoadMyTagsResult", result)
+          rescue => e
+            error_result = handle_error(e, "load my tags")
+            send_json_response("handleLoadMyTagsResult", error_result)
           end
           nil
         end

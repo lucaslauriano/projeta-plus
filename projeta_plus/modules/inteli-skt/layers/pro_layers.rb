@@ -248,9 +248,14 @@ module ProjetaPlus
             f.write(JSON.pretty_generate(data))
           end
           
-          return { success: true, message: "Saved to user JSON", path: json_path }
+          # Verifica se o arquivo foi realmente escrito
+          if File.exist?(json_path)
+            return { success: true, message: "Tags salvas com sucesso", path: json_path }
+          else
+            return { success: false, message: "Arquivo não foi criado" }
+          end
         rescue => e
-          return { success: false, message: e.message }
+          return { success: false, message: "Erro ao salvar: #{e.message}" }
         end
       end
 
@@ -289,8 +294,28 @@ module ProjetaPlus
         end
       end
 
+      def self.load_my_tags
+        # Carrega apenas do arquivo do usuário (sem fallback para o padrão)
+        user_path = get_user_json_path
+        
+        unless File.exist?(user_path)
+          return { folders: [], tags: [], success: false, message: "Arquivo de usuário não encontrado. Salve suas tags primeiro." }
+        end
+        
+        begin
+          # Lê com encoding UTF-8 explícito e BOM handling
+          content = File.read(user_path, encoding: 'UTF-8')
+          content = content.force_encoding('UTF-8').sub(/^\xEF\xBB\xBF/, '')
+          data = JSON.parse(content)
+          return data.merge({ success: true, message: "Minhas tags carregadas" })
+        rescue => e
+          return { folders: [], tags: [], success: false, message: "Erro ao ler arquivo: #{e.message}" }
+        end
+      end
+
       def self.load_default_tags
         # Sempre carrega do arquivo padrão (redefinir)
+        # NOTA: Não salva automaticamente - usuário deve clicar em "Salvar JSON" se quiser persistir
         default_path = get_default_json_path
         
         return { folders: [], tags: [], success: false, message: "Default file not found" } unless File.exist?(default_path)
@@ -301,10 +326,7 @@ module ProjetaPlus
           content = content.force_encoding('UTF-8').sub(/^\xEF\xBB\xBF/, '')
           data = JSON.parse(content)
           
-          # Salva no arquivo do usuário
-          save_to_json(data)
-          
-          return data.merge({ success: true, message: "Default tags loaded" })
+          return data.merge({ success: true, message: "Tags padrão carregadas (clique em Salvar para persistir)" })
         rescue => e
           return { folders: [], tags: [], success: false, message: e.message }
         end
