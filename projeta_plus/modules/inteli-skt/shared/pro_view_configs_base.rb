@@ -50,22 +50,22 @@ module ProjetaPlus
           name = params['name'] || params[:name]
           style = params['style'] || params[:style]
           camera_type = params['cameraType'] || params[:cameraType]
-          active_layers = params['activeLayers'] || params[:activeLayers] || []
+          active_layers = params['activeLayers'] || params[:activeLayers]
 
-          # Validar parâmetros
-          valid, error_msg = validate_params(name, style, camera_type)
-          return { success: false, message: error_msg } unless valid
+        # Validar parâmetros
+        valid, error_msg = validate_params(name, style, camera_type)
+        return { success: false, message: error_msg } unless valid
 
-          # Verificar se já existe
-          if model.pages.find { |p| p.name.downcase == name.downcase }
-            return { success: false, message: "#{entity_name_singular.capitalize} '#{name}' já existe" }
-          end
+        # Verificar se já existe
+        if model.pages.find { |p| p.name.downcase == name.downcase }
+          return { success: false, message: "#{entity_name_singular.capitalize} '#{name}' já existe" }
+        end
 
-          model.start_operation("Adicionar #{entity_name_singular.capitalize}", true)
+        model.start_operation("Adicionar #{entity_name_singular.capitalize}", true)
 
-          # Aplicar configurações antes de criar
-          apply_style(style) if style && !style.empty?
-          apply_layers_visibility(active_layers)
+        # Aplicar configurações antes de criar
+        apply_style(style) if style && !style.empty?
+        apply_layers_visibility(active_layers) if active_layers
 
           # Criar a página
           page = model.pages.add(name)
@@ -691,15 +691,15 @@ module ProjetaPlus
       end
 
       # Detecta o número do nível da cena atual
-      # Exemplos: base2 -> 2, forro3 -> 3, base -> 1
+      # Exemplos: base -> 1, base_2 -> 2, forro_3 -> 3
       def detect_level_number_from_current_scene(model)
         current_page = model.pages.selected_page
         return 1 unless current_page
         
         scene_name = current_page.name
         
-        # Padrões de cenas de nível: base, base2, base3, forro, forro2, forro3
-        if scene_name =~ /^(base|forro)(\d+)?$/i
+        # Padrões de cenas de nível: base, base_2, base_3, forro, forro_2, forro_3
+        if scene_name =~ /^(base|forro)(?:_(\d+))?$/i
           number = $2
           return number ? number.to_i : 1
         end

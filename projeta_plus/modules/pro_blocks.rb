@@ -152,6 +152,21 @@ module ProjetaPlus
         File.join(home, '.projeta_plus', 'custom_components')
       end
 
+      # Valida e sanitiza um caminho para prevenir path traversal
+      # Retorna nil se o caminho for inválido
+      def self.sanitize_path(path)
+        return nil if path.nil? || path.empty?
+        
+        # Rejeita caminhos absolutos
+        return nil if path.start_with?('/', '\\') || path.match?(/^[a-zA-Z]:/)
+        
+        # Rejeita sequências de path traversal
+        return nil if path.include?('..') || path.include?('~')
+        
+        # Remove barras duplicadas e normaliza
+        path.gsub(/[\/\\]+/, File::SEPARATOR)
+      end
+
       # Carrega blocos customizados do usuário
       def self.load_custom_blocks
         custom_path = get_custom_components_path
@@ -202,16 +217,42 @@ module ProjetaPlus
             }
           end
 
+          # Valida e sanitiza o nome da categoria
+          sanitized_category = sanitize_path(category)
+          unless sanitized_category
+            return {
+              success: false,
+              message: "Nome de categoria inválido: #{category}"
+            }
+          end
+
           custom_path = get_custom_components_path
-          category_path = File.join(custom_path, category)
+          category_path = File.join(custom_path, sanitized_category)
+          
+          # Verifica se o caminho final está dentro do diretório permitido
+          unless category_path.start_with?(custom_path)
+            return {
+              success: false,
+              message: "Caminho de categoria inválido"
+            }
+          end
           
           # Criar diretório se não existir
           require 'fileutils'
           FileUtils.mkdir_p(category_path)
 
-          # Copiar arquivo
+          # Copiar arquivo (usa basename para garantir que não há path traversal)
           filename = File.basename(file_path)
           dest_path = File.join(category_path, filename)
+          
+          # Validação adicional: verifica se dest_path está dentro de category_path
+          unless dest_path.start_with?(category_path)
+            return {
+              success: false,
+              message: "Caminho de destino inválido"
+            }
+          end
+          
           FileUtils.cp(file_path, dest_path)
 
           {
@@ -230,8 +271,25 @@ module ProjetaPlus
       # Remover componente customizado
       def self.delete_custom_component(block_path)
         begin
+          # Valida e sanitiza o caminho do bloco
+          sanitized_path = sanitize_path(block_path)
+          unless sanitized_path
+            return {
+              success: false,
+              message: "Caminho de componente inválido: #{block_path}"
+            }
+          end
+
           custom_path = get_custom_components_path
-          full_path = File.join(custom_path, block_path)
+          full_path = File.join(custom_path, sanitized_path)
+
+          # Verifica se o caminho final está dentro do diretório permitido
+          unless full_path.start_with?(custom_path)
+            return {
+              success: false,
+              message: "Caminho de componente inválido"
+            }
+          end
 
           unless File.exist?(full_path)
             return {
