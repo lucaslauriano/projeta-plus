@@ -163,9 +163,9 @@ module ProjetaPlus
         
         scene_existed = !scene.nil?
         
+        model.start_operation("Criar Cena Base", true)
+        
         unless scene
-          model.start_operation("Criar Cena Base", true)
-          
           # Calcular altura do corte
           cut_height_meters = level.base_cut_height
           cut_height = cut_height_meters.m
@@ -188,8 +188,6 @@ module ProjetaPlus
           
           level.has_base = true
           save_levels(levels)
-          
-          model.commit_operation
         end
         
         # Aplicar configurações se disponível (do JSON configurado)
@@ -204,6 +202,8 @@ module ProjetaPlus
           sp.activate
           puts "Section plane '#{scene_name}' ativado"
         end
+        
+        model.commit_operation
         
         {
           success: true,
@@ -226,9 +226,9 @@ module ProjetaPlus
         
         scene_existed = !scene.nil?
         
+        model.start_operation("Criar Cena Forro", true)
+        
         unless scene
-          model.start_operation("Criar Cena Forro", true)
-          
           # Calcular altura do corte
           cut_height_meters = level.ceiling_cut_height
           cut_height = cut_height_meters.m
@@ -240,7 +240,7 @@ module ProjetaPlus
           
           # Configurar vista de baixo para cima
           camera = model.active_view.camera
-          camera.set([0, 0, -1000], [0, 0, 0], [0, 1, 0])
+          camera.set([0, 0, -100.m], [0, 0, 0], [0, 1, 0])
           model.active_view.camera = camera
           model.active_view.camera.perspective = false
           model.active_view.zoom_extents
@@ -251,8 +251,6 @@ module ProjetaPlus
           
           level.has_ceiling = true
           save_levels(levels)
-          
-          model.commit_operation
         end
         
         # Aplicar configurações se disponível (do JSON configurado)
@@ -267,6 +265,8 @@ module ProjetaPlus
           sp.activate
           puts "Section plane '#{scene_name}' ativado"
         end
+        
+        model.commit_operation
         
         {
           success: true,
