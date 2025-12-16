@@ -31,10 +31,16 @@ module ProjetaPlus
 
           model.entities.grep(Sketchup::SectionPlane).each do |sp|
             plane = sp.get_plane
+            # plane é um array [a, b, c, d] onde [a,b,c] é a normal e d é a distância
+            # Para obter a posição, usamos a normal e a distância
+            normal = Geom::Vector3d.new(plane[0], plane[1], plane[2])
+            distance = plane[3]
+            position = Geom::Point3d.new(0, 0, 0).offset(normal, distance)
+            
             section_config = {
               id: sp.name.empty? ? sp.entityID.to_s : sp.name,
               name: sp.name.empty? ? "Section_#{sp.entityID}" : sp.name,
-              position: [plane[3].x, plane[3].y, plane[3].z],
+              position: [position.x, position.y, position.z],
               direction: [plane[0], plane[1], plane[2]],
               active: sp.active?
             }
@@ -81,6 +87,10 @@ module ProjetaPlus
           
           sp = model.entities.add_section_plane(pos_point, dir_vector)
           sp.name = name
+          
+          # Criar cena correspondente
+          page = model.pages.add(name)
+          page.use_section_planes = true
           sp.activate
 
           model.commit_operation
@@ -202,6 +212,10 @@ module ProjetaPlus
             # Remover se já existir
             existing = model.entities.grep(Sketchup::SectionPlane).find { |sp| sp.name == name }
             model.entities.erase_entities(existing) if existing
+            
+            # Remover cena se já existir
+            existing_page = model.pages.find { |p| p.name == name }
+            model.pages.erase(existing_page) if existing_page
 
             # Criar novo
             pos_point = Geom::Point3d.new(config[:position][0], config[:position][1], config[:position][2])
@@ -214,6 +228,12 @@ module ProjetaPlus
             layer_name = "-CORTES-#{name}"
             layer = model.layers[layer_name] || model.layers.add(layer_name)
             sp.layer = layer
+            
+            # Criar cena correspondente
+            page = model.pages.add(name)
+            page.use_section_planes = true
+            model.pages.selected_page = page
+            sp.activate
             
             created << name
           end
@@ -279,6 +299,10 @@ module ProjetaPlus
             # Remover se já existir
             existing = model.entities.grep(Sketchup::SectionPlane).find { |sp| sp.name == nome_final }
             model.entities.erase_entities(existing) if existing
+            
+            # Remover cena se já existir
+            existing_page = model.pages.find { |p| p.name == nome_final }
+            model.pages.erase(existing_page) if existing_page
 
             # Criar novo
             pos_point = Geom::Point3d.new(config[:pos][0], config[:pos][1], config[:pos][2])
@@ -287,6 +311,11 @@ module ProjetaPlus
             sp = model.entities.add_section_plane(pos_point, dir_vector)
             sp.name = nome_final
             sp.layer = layer
+            
+            # Criar cena correspondente
+            page = model.pages.add(nome_final)
+            page.use_section_planes = true
+            model.pages.selected_page = page
             sp.activate
             
             created << nome_final
@@ -340,6 +369,10 @@ module ProjetaPlus
           # Remover se já existir
           existing = model.entities.grep(Sketchup::SectionPlane).find { |sp| sp.name == name }
           model.entities.erase_entities(existing) if existing
+          
+          # Remover cena se já existir
+          existing_page = model.pages.find { |p| p.name == name }
+          model.pages.erase(existing_page) if existing_page
 
           # Criar novo
           pos_point = Geom::Point3d.new(config[:position][0], config[:position][1], config[:position][2])
@@ -347,6 +380,11 @@ module ProjetaPlus
           
           sp = model.entities.add_section_plane(pos_point, dir_vector)
           sp.name = name
+          
+          # Criar cena correspondente
+          page = model.pages.add(name)
+          page.use_section_planes = true
+          model.pages.selected_page = page
           sp.activate
 
           model.commit_operation
@@ -501,6 +539,10 @@ module ProjetaPlus
             # Remover se já existir
             existing = model.entities.grep(Sketchup::SectionPlane).find { |sp| sp.name == name }
             model.entities.erase_entities(existing) if existing
+            
+            # Remover cena se já existir
+            existing_page = model.pages.find { |p| p.name == name }
+            model.pages.erase(existing_page) if existing_page
 
             # Criar novo
             pos_point = Geom::Point3d.new(position[0], position[1], position[2])
@@ -508,6 +550,11 @@ module ProjetaPlus
             
             sp = model.entities.add_section_plane(pos_point, dir_vector)
             sp.name = name
+            
+            # Criar cena correspondente
+            page = model.pages.add(name)
+            page.use_section_planes = true
+            sp.activate
             
             count += 1
           end
