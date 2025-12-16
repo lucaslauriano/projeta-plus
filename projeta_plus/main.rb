@@ -26,6 +26,7 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 's
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 'layers', 'pro_layers.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 'scenes', 'pro_scenes.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 'plans', 'pro_plans.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 'sections', 'pro_sections.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'inteli-skt', 'details', 'pro_details.rb')
 
 # Dialog Handlers (load before commands as commands depend on them)
@@ -42,6 +43,7 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'baseboa
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'custom_components_handler.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'scenes_handlers.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'plans_handlers.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'sections_handlers.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'details_handler.rb')
 
 # Commands (now uses the handlers)
