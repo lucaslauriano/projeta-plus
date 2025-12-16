@@ -75,6 +75,7 @@ module ProjetaPlus
       custom_components_handler = ProjetaPlus::DialogHandlers::CustomComponentsHandler.new(@@main_dashboard_dialog)
       scenes_handler = ProjetaPlus::DialogHandlers::ScenesHandler.new(@@main_dashboard_dialog)
       plans_handler = ProjetaPlus::DialogHandlers::PlansHandler.new(@@main_dashboard_dialog)
+      details_handler = ProjetaPlus::DialogHandlers::DetailsHandler.new(@@main_dashboard_dialog)
       
       # Register all callbacks
       settings_handler.register_callbacks
@@ -89,6 +90,7 @@ module ProjetaPlus
       custom_components_handler.register_callbacks
       scenes_handler.register_callbacks
       plans_handler.register_callbacks
+      details_handler.register_callbacks
       
       puts "[ProjetaPlus Commands] All dialog handlers registered successfully."
 
