@@ -12,6 +12,7 @@ module ProjetaPlus
   # ===============================
   # FUNÇÃO DE NORMALIZAÇÃO
   # ===============================
+  
   def self.normalizar(texto)
     texto.to_s
       .tr('ÁÀÃÂÄáàãâäÉÈÊËéèêëÍÌÎÏíìîïÓÒÕÔÖóòõôöÚÙÛÜúùûüÇç', 'AAAAAaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuCc')

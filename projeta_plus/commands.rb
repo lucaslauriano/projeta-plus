@@ -1,17 +1,18 @@
 # encoding: UTF-8
-require "sketchup.rb"
 require 'json'
+require "sketchup.rb"
+require_relative 'localization.rb'
 
 module ProjetaPlus
   module Commands
     @@main_dashboard_dialog = nil
     
     def self.open_main_dashboard_command
-      cmd = ::UI::Command.new(ProjetaPlus::Localization.t("toolbar.main_dashboard")) do
+      cmd = ::UI::Command.new(ProjetaPlus::Localization.t("plugin_name")) do
         open_main_dashboard
       end
-      cmd.tooltip = ProjetaPlus::Localization.t("toolbar.main_dashboard_tooltip")
-      cmd.status_bar_text = ProjetaPlus::Localization.t("toolbar.main_dashboard_status")
+      cmd.tooltip = ProjetaPlus::Localization.t("plugin_name")
+      #cmd.status_bar_text = ProjetaPlus::Localization.t("plugin_name")
       cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'logo.png')
       cmd
     end
@@ -27,8 +28,10 @@ module ProjetaPlus
         preferences_key: "projeta_plus_main_dialog",
         scrollable: true,
         resizable: true,
-        width: 380,
+        width: 400,
+        min_width: 400,
         height: 800,
+        min_height: 800,
         left: 200,
         top: 200
       )

@@ -39,7 +39,7 @@ module ProjetaPlus
           when "false", "não", "no", "0", "off", ""
             false
           else
-            !!value # Default: truthy values become true, falsy become false
+            !!value 
           end
         when Numeric
           value != 0

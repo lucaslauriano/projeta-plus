@@ -30,16 +30,56 @@ O arquivo será criado em: `dist/projeta_plus_obfuscated_v2.0.0.rbz`
 
 ---
 
-## 🔒 Build Criptografado (Não funciona no SketchUp 2025)
+## 🔒 Build Criptografado (.rbe verdadeiros)
 
-SketchUp 2025 **removeu** a API `Sketchup.scramble_script`.
+SketchUp 2025 **removeu** a API `Sketchup.scramble_script`, mas você pode usar o SketchUp 2023 para gerar arquivos `.rbe` criptografados.
 
-**Não é possível** gerar arquivos `.rbs` criptografados.
+### ✅ Como gerar:
 
-**Alternativas:**
+**Passo 1: Criptografar no SketchUp 2023**
 
-- Use SketchUp 2023 (última versão com suporte)
-- Use build ofuscado (atual)
+1. Abra o **SketchUp 2023** (não o 2025!)
+2. Vá em **Window > Ruby Console**
+3. Cole e execute este comando:
+
+```ruby
+load '/Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/build/encrypt_with_sketchup2023.rb'
+```
+
+4. Aguarde a mensagem: `✅ CRIPTOGRAFIA CONCLUÍDA!`
+
+**Passo 2: Gerar o .rbz**
+
+No terminal:
+
+```bash
+cd '/Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/build'
+./build_encrypted.sh
+```
+
+No Windows (PowerShell):
+
+```powershell
+cd "C:\Users\<YOU>\AppData\Roaming\SketchUp\SketchUp 2025\SketchUp\Plugins\projeta_plus\build"
+./build_encrypted.ps1
+```
+
+O arquivo será criado em: `dist/projeta_plus_encrypted_v2.0.X.rbz`
+
+### O que faz:
+
+- ✅ Criptografa completamente (arquivos `.rbe`)
+- ✅ Código **ilegível** e protegido
+- ✅ Usa API oficial `Sketchup.scramble_script`
+- ✅ Frontend funciona normalmente
+- ⚠️ Requer SketchUp 2023 instalado
+
+### Diferença entre builds:
+
+| Build | Formato | Proteção | Legível? |
+|-------|---------|----------|----------|
+| **build_obfuscated.sh** | `.rb` minificados | Baixa (remove comentários) | Sim |
+| **build_encrypted.sh** | `.rbe` criptografados | Alta (criptografia) | Não |
 
 ---
 

@@ -63,10 +63,10 @@ projeta_plus/
 │   │   ├── pro_room_annotation.rb
 │   │   ├── pro_section_annotation.rb
 │   │   ├── pro_ceiling_annotation.rb
-│   │   ├── pro_height_annotation.rb
+│   │   ├── pro_eletrical_annotation.rb
 │   │   ├── pro_lighting_annotation.rb
 │   │   ├── pro_circuit_connection.rb
-│   │   ├── pro_view_indication.rb
+│   │   ├── pro_view_annotation.rb
 │   │   └── pro_component_updater.rb
 │   ├── settings/
 │   │   ├── pro_settings.rb

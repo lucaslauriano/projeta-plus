@@ -1,15 +1,18 @@
-# projeta_plus/core.rb
 require "sketchup.rb"
-require File.join(ProjetaPlus::PATH, 'projeta_plus', 'localization.rb') # Certifique-se que Localization está carregado
+require_relative 'localization.rb'
 
 module ProjetaPlus
   module UI
-    TOOLBAR_NAME = ProjetaPlus::Localization.t("plugin_name") + " Toolbar" # Traduzindo o nome da Toolbar
+    TOOLBAR_NAME = ProjetaPlus::Localization.t("plugin_name")
 
     def self.create_toolbar
       toolbar = ::UI::Toolbar.new(TOOLBAR_NAME)
-      
-      toolbar.add_item(ProjetaPlus::Commands.open_main_dashboard_command)
+      menu    = ::UI.menu("Plugins")
+
+      command = ProjetaPlus::Commands.open_main_dashboard_command
+
+      toolbar.add_item(command)
+      menu.add_item(command)
 
       toolbar.show
     end
