@@ -48,7 +48,8 @@ module ProjetaPlus
       path = candidates.find { |p| File.exist?(p) }
       return nil unless path
       
-      definitions.load(path)
+      definition = definitions.load(path, allow_newer: true)
+
     end
     
     def self.axes_from_normal(normal)

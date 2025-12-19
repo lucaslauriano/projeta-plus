@@ -28,10 +28,10 @@ module ProjetaPlus
         preferences_key: "projeta_plus_main_dialog",
         scrollable: true,
         resizable: true,
-        width: 400,
-        min_width: 400,
-        height: 800,
-        min_height: 800,
+        width: 350,
+        min_width: 350,
+        height: 700,
+        min_height: 700,
         left: 200,
         top: 200
       )
