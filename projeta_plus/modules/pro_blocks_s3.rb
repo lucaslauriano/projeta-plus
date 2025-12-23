@@ -276,12 +276,12 @@ module ProjetaPlus
           if Sketchup.platform == :platform_win
             # Windows - usa explorer com caminho nativo
             win_path = components_path.tr('/', '\\')
-            # Usa UI.openURL com file:/// protocol para Windows
-            UI.openURL("file:///#{win_path}")
+            # Usa ::UI.openURL com file:/// protocol para Windows
+            ::UI.openURL("file:///#{win_path}")
           else
-            # macOS/Linux - usa UI.openURL com file:// protocol
+            # macOS/Linux - usa ::UI.openURL com file:// protocol
             # No macOS, o Finder abre automaticamente
-            UI.openURL("file://#{components_path}")
+            ::UI.openURL("file://#{components_path}")
           end
 
           {

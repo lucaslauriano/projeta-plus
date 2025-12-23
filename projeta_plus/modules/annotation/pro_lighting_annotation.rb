@@ -123,9 +123,23 @@ module ProjetaPlus
       class InteractiveCircuitAnnotationTool
         include ProjetaPlus::Modules::ProHoverFaceUtil
 
-        VK_LEFT = 37;   VK_UP = 38;     VK_RIGHT = 39;   VK_DOWN = 40
-        VK_ENTER = 13;  VK_ESC = 27
-        VK_LEFT_MAC = 123; VK_UP_MAC = 126; VK_RIGHT_MAC = 124; VK_DOWN_MAC = 125
+        VK_LEFT = 37;   
+        VK_UP = 38;     
+        VK_RIGHT = 39;   
+        VK_DOWN = 40
+       
+        VK_ENTER = 13;  
+        VK_ESC = 27
+        
+        VK_ADD = 107;
+        VK_SUBTRACT = 109;
+        VK_PLUS = 187;
+        VK_MINUS = 189
+       
+        VK_LEFT_MAC = 123; 
+        VK_UP_MAC = 126; 
+        VK_RIGHT_MAC = 124; 
+        VK_DOWN_MAC = 125
 
         def initialize(args)
           @args = args
@@ -283,14 +297,14 @@ module ProjetaPlus
 
           return unless @phase == :adjusting
 
-          if key == ?+.ord || key == 187
+          if key == VK_ADD || key == VK_PLUS || key == 187
             @margin += @margin_base * 0.2
             calculate_preview
             view.invalidate
             return
           end
 
-          if key == ?-.ord || key == 189
+          if key == VK_SUBTRACT || key == VK_MINUS || key == 189
             @margin = [@margin - @margin_base * 0.2, @margin_base * 0.2].max
             calculate_preview
             view.invalidate
