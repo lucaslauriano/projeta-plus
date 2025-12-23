@@ -15,12 +15,6 @@ module ProjetaPlus
       TEXT_OFFSET_FROM_CEILING = -5.0.cm
       PREFERENCE_KEY = "AnotacaoForro"
 
-      def self.get_defaults
-        {
-          floor_level: Sketchup.read_default(PREFERENCE_KEY, "floor_level", ProjetaPlus::Modules::ProSettingsUtils.get_floor_level)
-        }
-      end
-
       # Cria texto 3D invertido no eixo Z para ser legível de baixo para cima
       def self.create_inverted_text(text, position, scale, font, alignment = TextAlignCenter)
         model = Sketchup.active_model
@@ -68,7 +62,7 @@ module ProjetaPlus
         
         scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
         font = ProjetaPlus::Modules::ProSettingsUtils.get_font
-        floor_level = parse_and_save_floor_level(args['floor_level'])
+        floor_level = parse_floor_level(args['floor_level'])
         
         transformation = calculate_accumulated_transformation(path, face)
         area_text = calculate_area_text(face)
@@ -95,10 +89,9 @@ module ProjetaPlus
         layer
       end
 
-      # Converte string de nível do piso para float e salva nas preferências
-      def self.parse_and_save_floor_level(floor_level_str)
+      # Converte string de nível do piso para float
+      def self.parse_floor_level(floor_level_str)
         normalized_str = floor_level_str.to_s.tr(',', '.')
-        Sketchup.write_default(PREFERENCE_KEY, "floor_level", normalized_str)
         normalized_str.to_f
       end
 

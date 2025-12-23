@@ -53,12 +53,6 @@ module ProjetaPlus
       end
       
       def register_ceiling_annotation_callbacks
-        @dialog.add_action_callback("loadCeilingAnnotationDefaults") do |action_context|
-          defaults = ProjetaPlus::Modules::ProCeilingAnnotation.get_defaults
-          send_json_response("handleCeilingDefaults", defaults)
-          nil
-        end
-        
         @dialog.add_action_callback("startCeilingAnnotation") do |action_context, json_payload|
           begin
             args = JSON.parse(json_payload)
