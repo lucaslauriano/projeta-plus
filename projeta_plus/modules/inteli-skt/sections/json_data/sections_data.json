@@ -1,32 +1,18 @@
 {
   "sections": [
     {
-      "id": "A",
-      "name": "A",
-      "position": [0, 40, 0],
-      "direction": [0, 1, 0],
-      "active": false
+      "id": "humanized",
+      "name": "Humanizado",
+      "style": "FM_VISTAS",
+      "cameraType": "top_perspectiva",
+      "activeLayers": []
     },
     {
-      "id": "B",
-      "name": "B",
-      "position": [40, 0, 0],
-      "direction": [1, 0, 0],
-      "active": false
-    },
-    {
-      "id": "C",
-      "name": "C",
-      "position": [0, 80, 0],
-      "direction": [0, -1, 0],
-      "active": false
-    },
-    {
-      "id": "D",
-      "name": "D",
-      "position": [80, 0, 0],
-      "direction": [-1, 0, 0],
-      "active": false
+      "id": "tecnico",
+      "name": "Corte técnico",
+      "style": "FM_VISTAS",
+      "cameraType": ["top", "bottom", "left", "right", "front", "back"],
+      "activeLayers": []
     }
   ]
 }

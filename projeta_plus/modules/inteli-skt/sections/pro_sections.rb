@@ -1,11 +1,12 @@
 # encoding: UTF-8
 require 'sketchup.rb'
 require 'json'
+require_relative '../shared/pro_view_configs_base.rb'
 
 module ProjetaPlus
   module Modules
     module ProSections
-
+      extend ProjetaPlus::Modules::ProViewConfigsBase
       # ========================================
       # CONFIGURAÇÕES E CONSTANTES
       # ========================================
@@ -25,6 +26,7 @@ module ProjetaPlus
       # Paths para arquivos JSON
       PLUGIN_PATH = File.dirname(__FILE__)
       JSON_DATA_PATH = File.join(PLUGIN_PATH, 'json_data')
+      STYLES_PATH = File.join(File.dirname(PLUGIN_PATH), 'styles')  #TODO
       DEFAULT_DATA_FILE = File.join(JSON_DATA_PATH, 'sections_data.json')
       USER_DATA_FILE = File.join(JSON_DATA_PATH, 'user_sections_data.json')
 
@@ -32,15 +34,14 @@ module ProjetaPlus
       # MÉTODOS PÚBLICOS
       # ========================================
 
-      # Retorna todas as section planes do modelo
+      # Retorna as configurações de seções do JSON
       def self.get_sections
-        model = Sketchup.active_model
-        
-        sections = model.entities.grep(Sketchup::SectionPlane).map do |sp|
-          build_section_config(sp)
+        result = load_from_json
+        if result[:success]
+          { success: true, sections: result[:data]['sections'] || [], message: "Seções carregadas" }
+        else
+          { success: false, message: result[:message], sections: [] }
         end
-        
-        { success: true, sections: sections, message: "#{sections.length} seções carregadas" }
       rescue StandardError => e
         log_error("get_sections", e)
         { success: false, message: "Erro ao carregar seções: #{e.message}", sections: [] }
@@ -298,20 +299,42 @@ module ProjetaPlus
         file_to_load = File.exist?(USER_DATA_FILE) ? USER_DATA_FILE : DEFAULT_DATA_FILE
         
         unless File.exist?(file_to_load)
-          return { success: false, message: "Arquivo não encontrado", data: { sections: [] } }
+          return { success: false, message: "Arquivo não encontrado", data: { 'sections' => [] } }
         end
         
         content = File.read(file_to_load)
         content = remove_bom(content)
+        
+        # Se o arquivo estiver vazio, usar arquivo padrão
+        if content.strip.empty?
+          if file_to_load == USER_DATA_FILE && File.exist?(DEFAULT_DATA_FILE)
+            content = File.read(DEFAULT_DATA_FILE)
+            content = remove_bom(content)
+          else
+            return { success: true, data: { 'sections' => [] }, message: "Arquivo vazio" }
+          end
+        end
+        
         data = JSON.parse(content)
         
         { success: true, data: data, message: "Configurações carregadas" }
       rescue JSON::ParserError => e
+        # Se erro no user file, tentar o default
+        if file_to_load == USER_DATA_FILE && File.exist?(DEFAULT_DATA_FILE)
+          begin
+            content = File.read(DEFAULT_DATA_FILE)
+            content = remove_bom(content)
+            data = JSON.parse(content)
+            return { success: true, data: data, message: "Carregado do arquivo padrão" }
+          rescue
+            # Se default também falhar, retornar vazio
+          end
+        end
         log_error("load_from_json - JSON inválido", e)
-        { success: false, message: "JSON inválido: #{e.message}", data: { sections: [] } }
+        { success: false, message: "JSON inválido: #{e.message}", data: { 'sections' => [] } }
       rescue StandardError => e
         log_error("load_from_json", e)
-        { success: false, message: "Erro ao carregar: #{e.message}", data: { sections: [] } }
+        { success: false, message: "Erro ao carregar: #{e.message}", data: { 'sections' => [] } }
       end
 
       def self.load_default_data

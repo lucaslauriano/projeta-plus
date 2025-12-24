@@ -1,19 +1,4 @@
 {
-  "groups": [
-    {
-      "id": "1765649167229",
-      "name": "Modelagem",
-      "scenes": [
-        {
-          "id": "1765649223396",
-          "title": "Geral",
-          "segments": [
-
-          ]
-        }
-      ]
-    }
-  ],
   "scenes": [
     {
       "id": "geral",
