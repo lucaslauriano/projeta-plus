@@ -8,17 +8,17 @@ module ProjetaPlus
     module ProSections
       extend ProjetaPlus::Modules::ProViewConfigsBase
       # ========================================
-      # CONFIGURAÇÕES E CONSTANTES
+      # SETTINGS AND CONSTANTS
       # ========================================
 
       ENTITY_NAME = "sections"
       SETTINGS_KEY = "sections_settings"
       
-      # Distâncias e offsets
+      # Distances and offsets
       EXTEND_DISTANCE = -70.cm
       CAMERA_DISTANCE = 500.cm
       
-      # Prefixos e nomenclaturas
+      # Prefixes and nomenclature
       LAYER_PREFIX = "-CORTES-"
       AUTO_VIEW_LETTERS = %w[a b c d]
       STANDARD_SECTIONS = %w[a b c d]
@@ -70,8 +70,7 @@ module ProjetaPlus
         new_section = {
           'id' => params[:id],
           'name' => params[:name],
-          'style' => params[:style] || 'FM_VISTAS',
-          'cameraType' => params[:cameraType] || 'top',
+          'style' => params[:style] || '',
           'activeLayers' => params[:activeLayers] || []
         }
 
@@ -110,7 +109,6 @@ module ProjetaPlus
         # Atualizar campos
         section['name'] = params[:name] if params[:name]
         section['style'] = params[:style] if params[:style]
-        section['cameraType'] = params[:cameraType] if params[:cameraType]
         section['activeLayers'] = params[:activeLayers] if params[:activeLayers]
 
         # Salvar
@@ -207,8 +205,9 @@ module ProjetaPlus
 
         prefixo = ambiente.upcase  # Maiúsculo apenas para a layer
         bb = sel.bounds
+        center = bb.center
 
-        sections_config = auto_views_config(bb)
+        sections_config = standard_sections_config(bb, center)
 
         model.start_operation("Criar Vistas Automáticas", true)
 
@@ -216,17 +215,17 @@ module ProjetaPlus
         layer = create_or_get_layer(model, "#{LAYER_PREFIX}#{prefixo}")
 
         created = []
-        sections_config.each do |config|
+        sections_config.each do |letter, config|
           # Nome da cena em minúsculo
-          nome_final = "#{ambiente}_#{config[:letra]}"
+          nome_final = "#{ambiente}_#{letter}"
           
           remove_section_and_page(model, nome_final)
 
-          sp = create_section_plane(model, nome_final, config[:pos], config[:dir])
+          sp = create_section_plane(model, nome_final, config[:position], config[:direction])
           sp.layer = layer
           
           # Criar cena alinhada ao corte
-          create_aligned_scene(model, sp, config[:pos], config[:dir])
+          create_aligned_scene(model, sp, config[:position], config[:direction])
           
           created << nome_final
         end
@@ -481,7 +480,6 @@ module ProjetaPlus
           id: params['id'] || params[:id],
           name: params['name'] || params[:name],
           style: params['style'] || params[:style],
-          cameraType: params['cameraType'] || params[:cameraType],
           activeLayers: params['activeLayers'] || params[:activeLayers] || [],
           direction_type: params['directionType'] || params[:directionType] || params['direction_type'] || params[:direction_type]
         }
@@ -531,7 +529,7 @@ module ProjetaPlus
         model.layers[name] || model.layers.add(name)
       end
 
-      # Configurações de cortes padrões
+      # Standard sections configuration
       def self.standard_sections_config(bounds, center)
         {
           'a' => { 
@@ -553,49 +551,22 @@ module ProjetaPlus
         }
       end
 
-      # Configurações de vistas automáticas
-      def self.auto_views_config(bounds)
-        center = bounds.center
-        [
-          { 
-            letra: 'a', 
-            pos: [center.x, bounds.max.y + EXTEND_DISTANCE, center.z], 
-            dir: [0, 1, 0] 
-          },
-          { 
-            letra: 'b', 
-            pos: [bounds.min.x - EXTEND_DISTANCE, center.y, center.z], 
-            dir: [1, 0, 0] 
-          },
-          { 
-            letra: 'c', 
-            pos: [center.x, bounds.min.y - EXTEND_DISTANCE, center.z], 
-            dir: [0, -1, 0] 
-          },
-          { 
-            letra: 'd', 
-            pos: [bounds.max.x + EXTEND_DISTANCE, center.y, center.z], 
-            dir: [-1, 0, 0] 
-          }
-        ]
-      end
-
-      # Configurações de direções
+      # Direction configurations (same as standard sections but with descriptive names)
       def self.direction_configs(bounds, center)
         {
-          'frente' => { 
+          'front' => { 
             position: [center.x, bounds.max.y + EXTEND_DISTANCE, center.z], 
             direction: [0, 1, 0] 
           },
-          'esquerda' => { 
+          'right' => { 
             position: [bounds.max.x + EXTEND_DISTANCE, center.y, center.z], 
             direction: [1, 0, 0] 
           },
-          'voltar' => { 
+          'back' => { 
             position: [center.x, bounds.min.y - EXTEND_DISTANCE, center.z], 
             direction: [0, -1, 0] 
           },
-          'direita' => { 
+          'left' => { 
             position: [bounds.min.x - EXTEND_DISTANCE, center.y, center.z], 
             direction: [-1, 0, 0] 
           }
