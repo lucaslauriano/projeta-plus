@@ -558,7 +558,15 @@ module ProjetaPlus
             position: [center.x, bounds.max.y + EXTEND_DISTANCE, center.z], 
             direction: [0, 1, 0] 
           },
+          'frente' => { 
+            position: [center.x, bounds.max.y + EXTEND_DISTANCE, center.z], 
+            direction: [0, 1, 0] 
+          },
           'right' => { 
+            position: [bounds.max.x + EXTEND_DISTANCE, center.y, center.z], 
+            direction: [1, 0, 0] 
+          },
+          'direita' => { 
             position: [bounds.max.x + EXTEND_DISTANCE, center.y, center.z], 
             direction: [1, 0, 0] 
           },
@@ -566,7 +574,15 @@ module ProjetaPlus
             position: [center.x, bounds.min.y - EXTEND_DISTANCE, center.z], 
             direction: [0, -1, 0] 
           },
+          'voltar' => { 
+            position: [center.x, bounds.min.y - EXTEND_DISTANCE, center.z], 
+            direction: [0, -1, 0] 
+          },
           'left' => { 
+            position: [bounds.min.x - EXTEND_DISTANCE, center.y, center.z], 
+            direction: [-1, 0, 0] 
+          },
+          'esquerda' => { 
             position: [bounds.min.x - EXTEND_DISTANCE, center.y, center.z], 
             direction: [-1, 0, 0] 
           }
