@@ -482,7 +482,8 @@ module ProjetaPlus
           name: params['name'] || params[:name],
           style: params['style'] || params[:style],
           cameraType: params['cameraType'] || params[:cameraType],
-          activeLayers: params['activeLayers'] || params[:activeLayers] || []
+          activeLayers: params['activeLayers'] || params[:activeLayers] || [],
+          direction_type: params['directionType'] || params[:directionType] || params['direction_type'] || params[:direction_type]
         }
       end
 
