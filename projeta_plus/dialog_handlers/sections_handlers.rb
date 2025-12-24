@@ -81,9 +81,10 @@ module ProjetaPlus
         end
 
         # CREATE AUTO VIEWS - Criar vistas automáticas
-        @dialog.add_action_callback("createAutoViews") do |action_context|
+        @dialog.add_action_callback("createAutoViews") do |action_context, json_payload|
           begin
-            result = ProjetaPlus::Modules::ProSections.create_auto_views
+            params = JSON.parse(json_payload)
+            result = ProjetaPlus::Modules::ProSections.create_auto_views(params)
             send_json_response("handleCreateAutoViewsResult", result)
           rescue => e
             error_result = handle_error(e, "create auto views")

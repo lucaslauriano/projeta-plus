@@ -195,20 +195,14 @@ module ProjetaPlus
       end
 
       # Cria vistas automáticas para objeto selecionado
-      def self.create_auto_views
+      def self.create_auto_views(params = {})
         model = Sketchup.active_model
         sel = model.selection.first
 
         return { success: false, message: "Selecione um objeto para criar os cortes" } unless sel
 
-        # Solicitar nome do ambiente usando ::UI (global)
-        prompts = ['Nome do ambiente (prefixo):']
-        defaults = ['']
-        results = ::UI.inputbox(prompts, defaults, 'Criar Vistas Automáticas')
-        
-        return cancelled_operation unless results
-        
-        ambiente = results[0].to_s.strip.downcase  # Forçar minúsculo
+        # Pegar nome do ambiente dos parâmetros vindos do frontend
+        ambiente = (params['environmentName'] || params[:environmentName]).to_s.strip.downcase
         return invalid_input("Nome do ambiente é obrigatório") if ambiente.empty?
 
         prefixo = ambiente.upcase  # Maiúsculo apenas para a layer
