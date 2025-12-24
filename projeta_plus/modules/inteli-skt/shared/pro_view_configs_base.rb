@@ -400,6 +400,17 @@ module ProjetaPlus
           content = remove_bom(content)
           data = JSON.parse(content)
           
+          # Convert old format to new format (backward compatibility)
+          if data[self::ENTITY_NAME] && !data['groups']
+            data = {
+              'groups' => [{
+                'id' => Time.now.to_i.to_s,
+                'name' => 'Default',
+                'segments' => data[self::ENTITY_NAME]
+              }]
+            }
+          end
+          
           {
             success: true,
             data: data,
@@ -429,6 +440,17 @@ module ProjetaPlus
           content = remove_bom(content)
           data = JSON.parse(content)
           
+          # Convert old format to new format (backward compatibility)
+          if data[self::ENTITY_NAME] && !data['groups']
+            data = {
+              'groups' => [{
+                'id' => Time.now.to_i.to_s,
+                'name' => 'Default',
+                'segments' => data[self::ENTITY_NAME]
+              }]
+            }
+          end
+          
           # Salvar como arquivo do usuário
           ensure_json_directory
           File.write(self::USER_DATA_FILE, JSON.pretty_generate(data))
@@ -457,6 +479,17 @@ module ProjetaPlus
           content = File.read(file_path)
           content = remove_bom(content)
           data = JSON.parse(content)
+          
+          # Convert old format to new format (backward compatibility)
+          if data[self::ENTITY_NAME] && !data['groups']
+            data = {
+              'groups' => [{
+                'id' => Time.now.to_i.to_s,
+                'name' => 'Default',
+                'segments' => data[self::ENTITY_NAME]
+              }]
+            }
+          end
           
           {
             success: true,
