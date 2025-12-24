@@ -1,0 +1,18 @@
+{
+  "sections": [
+    {
+      "id": "humanized",
+      "name": "Humanizado",
+      "style": "FM_VISTAS",
+      "cameraType": ["top", "bottom", "left", "right", "front", "back"],
+      "activeLayers": []
+    },
+    {
+      "id": "tecnico",
+      "name": "Corte técnico",
+      "style": "FM_VISTAS",
+      "cameraType": ["top", "bottom", "left", "right", "front", "back"],
+      "activeLayers": []
+    }
+  ]
+}

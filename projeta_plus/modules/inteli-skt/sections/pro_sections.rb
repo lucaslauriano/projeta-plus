@@ -47,97 +47,104 @@ module ProjetaPlus
         { success: false, message: "Erro ao carregar seções: #{e.message}", sections: [] }
       end
 
-      # Adiciona nova section plane ao modelo
+      # Adiciona nova seção ao JSON
       def self.add_section(params)
-        model = Sketchup.active_model
         params = normalize_params(params)
 
         # Validar parâmetros
-        valid, error_msg = validate_section(params[:name], params[:position], params[:direction])
-        return { success: false, message: error_msg } unless valid
+        return { success: false, message: "ID e nome são obrigatórios" } unless params[:id] && params[:name]
+
+        # Carregar dados atuais
+        result = load_from_json
+        return result unless result[:success]
+
+        data = result[:data]
+        sections = data['sections'] || []
 
         # Verificar se já existe
-        if section_exists?(model, params[:name])
-          return { success: false, message: "Seção '#{params[:name]}' já existe" }
+        if sections.any? { |s| s['id'] == params[:id] }
+          return { success: false, message: "Seção '#{params[:id]}' já existe" }
         end
 
-        model.start_operation("Adicionar Seção", true)
+        # Adicionar nova seção
+        new_section = {
+          'id' => params[:id],
+          'name' => params[:name],
+          'style' => params[:style] || 'FM_VISTAS',
+          'cameraType' => params[:cameraType] || 'top',
+          'activeLayers' => params[:activeLayers] || []
+        }
 
-        # Criar section plane
-        sp = create_section_plane(model, params[:name], params[:position], params[:direction])
-        
-        # Criar e configurar cena alinhada ao corte
-        page = create_aligned_scene(model, sp, params[:position], params[:direction])
-        
-        model.commit_operation
+        sections << new_section
+        data['sections'] = sections
+
+        # Salvar
+        save_result = save_to_json(data)
+        return save_result unless save_result[:success]
 
         {
           success: true,
-          message: "Seção '#{params[:name]}' criada com sucesso",
-          section: build_section_config(sp)
+          message: "Seção '#{params[:name]}' adicionada com sucesso",
+          section: new_section
         }
       rescue StandardError => e
-        model.abort_operation if model
         log_error("add_section", e)
-        { success: false, message: "Erro ao criar seção: #{e.message}" }
+        { success: false, message: "Erro ao adicionar seção: #{e.message}" }
       end
 
-      # Atualiza section plane existente
-      def self.update_section(name, params)
-        model = Sketchup.active_model
+      # Atualiza seção existente no JSON
+      def self.update_section(id, params)
         params = normalize_params(params)
         
-        sp = find_section_by_name(model, name)
-        return { success: false, message: "Seção '#{name}' não encontrada" } unless sp
+        # Carregar dados atuais
+        result = load_from_json
+        return result unless result[:success]
 
-        model.start_operation("Atualizar Seção", true)
+        data = result[:data]
+        sections = data['sections'] || []
 
-        # Atualizar posição e direção se fornecidos
-        if params[:position] && params[:direction]
-          old_name = sp.name
-          model.entities.erase_entities(sp)
-          
-          sp = create_section_plane(model, old_name, params[:position], params[:direction])
-          
-          # Atualizar cena existente
-          page = model.pages.find { |p| p.name == old_name }
-          if page
-            model.pages.selected_page = page
-            align_camera_to_section(model, sp, params[:position], params[:direction])
-          end
-        end
+        # Encontrar seção
+        section = sections.find { |s| s['id'] == id }
+        return { success: false, message: "Seção '#{id}' não encontrada" } unless section
 
-        sp.activate
-        model.commit_operation
+        # Atualizar campos
+        section['name'] = params[:name] if params[:name]
+        section['style'] = params[:style] if params[:style]
+        section['cameraType'] = params[:cameraType] if params[:cameraType]
+        section['activeLayers'] = params[:activeLayers] if params[:activeLayers]
 
-        { success: true, message: "Seção '#{name}' atualizada com sucesso" }
+        # Salvar
+        save_result = save_to_json(data)
+        return save_result unless save_result[:success]
+
+        { success: true, message: "Seção '#{section['name']}' atualizada com sucesso" }
       rescue StandardError => e
-        model.abort_operation if model
         log_error("update_section", e)
         { success: false, message: "Erro ao atualizar seção: #{e.message}" }
       end
 
-      # Remove section plane do modelo
-      def self.delete_section(name)
-        model = Sketchup.active_model
-        sp = find_section_by_name(model, name)
-        
-        return { success: false, message: "Seção '#{name}' não encontrada" } unless sp
+      # Remove seção do JSON
+      def self.delete_section(id)
+        # Carregar dados atuais
+        result = load_from_json
+        return result unless result[:success]
 
-        model.start_operation("Remover Seção", true)
-        
-        # Remover página associada
-        page = model.pages.find { |p| p.name == name }
-        model.pages.erase(page) if page
-        
-        # Remover section plane
-        model.entities.erase_entities(sp)
-        
-        model.commit_operation
+        data = result[:data]
+        sections = data['sections'] || []
 
-        { success: true, message: "Seção '#{name}' removida com sucesso" }
+        # Encontrar e remover seção
+        section = sections.find { |s| s['id'] == id }
+        return { success: false, message: "Seção '#{id}' não encontrada" } unless section
+
+        sections.delete(section)
+        data['sections'] = sections
+
+        # Salvar
+        save_result = save_to_json(data)
+        return save_result unless save_result[:success]
+
+        { success: true, message: "Seção '#{section['name']}' removida com sucesso" }
       rescue StandardError => e
-        model.abort_operation if model
         log_error("delete_section", e)
         { success: false, message: "Erro ao remover seção: #{e.message}" }
       end
@@ -477,10 +484,11 @@ module ProjetaPlus
       # Normaliza parâmetros (aceita strings e símbolos)
       def self.normalize_params(params)
         {
+          id: params['id'] || params[:id],
           name: params['name'] || params[:name],
-          position: params['position'] || params[:position],
-          direction: params['direction'] || params[:direction],
-          direction_type: params['directionType'] || params[:directionType]
+          style: params['style'] || params[:style],
+          cameraType: params['cameraType'] || params[:cameraType],
+          activeLayers: params['activeLayers'] || params[:activeLayers] || []
         }
       end
 
