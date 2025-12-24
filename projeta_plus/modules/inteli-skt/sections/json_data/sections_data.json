@@ -1,18 +1,26 @@
 {
-  "sections": [
+  "groups": [
     {
-      "id": "humanized",
-      "name": "Humanizado",
-      "style": "FM_VISTAS",
-      "cameraType": "top_perspectiva",
-      "activeLayers": []
-    },
-    {
-      "id": "tecnico",
-      "name": "Corte técnico",
-      "style": "FM_VISTAS",
-      "cameraType": ["top", "bottom", "left", "right", "front", "back"],
-      "activeLayers": []
+      "id": "1766601212132",
+      "name": "Geral",
+      "segments": [
+        {
+          "id": "1766601229716",
+          "name": "Humanizado",
+          "code": "hmzd",
+          "style": "FM_VISTAS",
+          "cameraType": [],
+          "activeLayers": []
+        },
+        {
+          "id": "1766601229716",
+          "name": "Corte técnico",
+          "code": "c_tec",
+          "style": "FM_VISTAS",
+          "cameraType": [],
+          "activeLayers": []
+        }
+      ]
     }
   ]
 }
