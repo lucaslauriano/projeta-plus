@@ -298,6 +298,61 @@ module ProjetaPlus
         end
       end
 
+      # Retorna as camadas atualmente ativas
+      def self.get_current_active_layers
+        begin
+          model = Sketchup.active_model
+          return { success: false, message: "Nenhum modelo ativo", layers: [] } unless model
+          
+          active_layers = []
+          model.layers.each do |layer|
+            active_layers << layer.name if layer.visible?
+          end
+          
+          {
+            success: true,
+            layers: active_layers,
+            message: "Camadas ativas capturadas"
+          }
+        rescue => e
+          puts "Erro ao capturar camadas: #{e.message}"
+          {
+            success: false,
+            message: "Erro ao capturar camadas: #{e.message}",
+            layers: []
+          }
+        end
+      end
+
+      # Retorna as camadas ativas que existem na lista disponível
+      def self.get_current_active_layers_filtered(available_layers)
+        begin
+          model = Sketchup.active_model
+          return { success: false, message: "Nenhum modelo ativo", layers: [] } unless model
+          
+          active_layers = []
+          model.layers.each do |layer|
+            # Incluir apenas se estiver ativa E estiver na lista de camadas disponíveis
+            if layer.visible? && available_layers.include?(layer.name)
+              active_layers << layer.name
+            end
+          end
+          
+          {
+            success: true,
+            layers: active_layers,
+            message: "Camadas ativas capturadas e filtradas"
+          }
+        rescue => e
+          puts "Erro ao capturar camadas: #{e.message}"
+          {
+            success: false,
+            message: "Erro ao capturar camadas: #{e.message}",
+            layers: []
+          }
+        end
+      end
+
       # ========================================
       # MÉTODOS PRIVADOS (auxiliares)
       # ========================================

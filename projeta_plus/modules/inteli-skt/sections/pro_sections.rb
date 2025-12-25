@@ -2,11 +2,15 @@
 require 'sketchup.rb'
 require 'json'
 require_relative '../shared/pro_view_configs_base.rb'
+require_relative 'pro_sections_persistence.rb'
+require_relative 'pro_sections_settings.rb'
+require_relative 'pro_sections_groups.rb'
 
 module ProjetaPlus
   module Modules
     module ProSections
       extend ProjetaPlus::Modules::ProViewConfigsBase
+      
       # ========================================
       # SETTINGS AND CONSTANTS
       # ========================================
@@ -15,7 +19,7 @@ module ProjetaPlus
       SETTINGS_KEY = "sections_settings"
       
       # Distances and offsets
-      EXTEND_DISTANCE = -70.cm
+      EXTEND_DISTANCE = -100.cm
       CAMERA_DISTANCE = 500.cm
       
       # Prefixes and nomenclature
@@ -26,129 +30,109 @@ module ProjetaPlus
       # Paths para arquivos JSON
       PLUGIN_PATH = File.dirname(__FILE__)
       JSON_DATA_PATH = File.join(PLUGIN_PATH, 'json_data')
-      STYLES_PATH = File.join(File.dirname(PLUGIN_PATH), 'styles')  #TODO
+      STYLES_PATH = File.join(File.dirname(PLUGIN_PATH), 'styles')
       DEFAULT_DATA_FILE = File.join(JSON_DATA_PATH, 'sections_data.json')
       USER_DATA_FILE = File.join(JSON_DATA_PATH, 'user_sections_data.json')
+      SETTINGS_FILE = File.join(JSON_DATA_PATH, 'sections_settings.json')
 
       # ========================================
-      # MÉTODOS PÚBLICOS
+      # MÉTODOS PÚBLICOS - DELEGAÇÃO
       # ========================================
 
-      # Retorna as configurações de seções do JSON
+      # Retorna as configurações de seções do JSON (com grupos e segmentos)
       def self.get_sections
-        result = load_from_json
+        result = ProSectionsPersistence.load_from_json
         if result[:success]
-          { success: true, sections: result[:data]['sections'] || [], message: "Seções carregadas" }
+          { success: true, data: result[:data], message: "Seções carregadas" }
         else
-          { success: false, message: result[:message], sections: [] }
+          { success: false, message: result[:message], data: { 'groups' => [] } }
         end
       rescue StandardError => e
         log_error("get_sections", e)
-        { success: false, message: "Erro ao carregar seções: #{e.message}", sections: [] }
+        { success: false, message: "Erro ao carregar seções: #{e.message}", data: { 'groups' => [] } }
       end
 
-      # Adiciona nova seção ao JSON
-      def self.add_section(params)
-        params = normalize_params(params)
-
-        # Validar parâmetros
-        return { success: false, message: "ID e nome são obrigatórios" } unless params[:id] && params[:name]
-
-        # Carregar dados atuais
-        result = load_from_json
-        return result unless result[:success]
-
-        data = result[:data]
-        sections = data['sections'] || []
-
-        # Verificar se já existe
-        if sections.any? { |s| s['id'] == params[:id] }
-          return { success: false, message: "Seção '#{params[:id]}' já existe" }
-        end
-
-        # Adicionar nova seção
-        new_section = {
-          'id' => params[:id],
-          'name' => params[:name],
-          'style' => params[:style] || '',
-          'activeLayers' => params[:activeLayers] || []
-        }
-
-        sections << new_section
-        data['sections'] = sections
-
-        # Salvar
-        save_result = save_to_json(data)
-        return save_result unless save_result[:success]
-
-        {
-          success: true,
-          message: "Seção '#{params[:name]}' adicionada com sucesso",
-          section: new_section
-        }
-      rescue StandardError => e
-        log_error("add_section", e)
-        { success: false, message: "Erro ao adicionar seção: #{e.message}" }
+      # Delegação para persistência
+      def self.save_to_json(json_data)
+        ProSectionsPersistence.save_to_json(json_data)
       end
 
-      # Atualiza seção existente no JSON
-      def self.update_section(id, params)
-        params = normalize_params(params)
-        
-        # Carregar dados atuais
-        result = load_from_json
-        return result unless result[:success]
-
-        data = result[:data]
-        sections = data['sections'] || []
-
-        # Encontrar seção
-        section = sections.find { |s| s['id'] == id }
-        return { success: false, message: "Seção '#{id}' não encontrada" } unless section
-
-        # Atualizar campos
-        section['name'] = params[:name] if params[:name]
-        section['style'] = params[:style] if params[:style]
-        section['activeLayers'] = params[:activeLayers] if params[:activeLayers]
-
-        # Salvar
-        save_result = save_to_json(data)
-        return save_result unless save_result[:success]
-
-        { success: true, message: "Seção '#{section['name']}' atualizada com sucesso" }
-      rescue StandardError => e
-        log_error("update_section", e)
-        { success: false, message: "Erro ao atualizar seção: #{e.message}" }
+      def self.load_from_json
+        ProSectionsPersistence.load_from_json
       end
 
-      # Remove seção do JSON
-      def self.delete_section(id)
-        # Carregar dados atuais
-        result = load_from_json
-        return result unless result[:success]
+      def self.load_default_data
+        ProSectionsPersistence.load_default_data
+      end
 
-        data = result[:data]
-        sections = data['sections'] || []
+      def self.load_from_file
+        ProSectionsPersistence.load_from_file
+      end
 
-        # Encontrar e remover seção
-        section = sections.find { |s| s['id'] == id }
-        return { success: false, message: "Seção '#{id}' não encontrada" } unless section
+      # Delegação para settings
+      def self.get_sections_settings
+        ProSectionsSettings.get_sections_settings
+      end
 
-        sections.delete(section)
-        data['sections'] = sections
+      def self.save_sections_settings(params)
+        ProSectionsSettings.save_sections_settings(params)
+      end
 
-        # Salvar
-        save_result = save_to_json(data)
-        return save_result unless save_result[:success]
+      def self.get_available_styles_for_sections
+        ProSectionsSettings.get_available_styles_for_sections
+      end
 
-        { success: true, message: "Seção '#{section['name']}' removida com sucesso" }
-      rescue StandardError => e
-        log_error("delete_section", e)
-        { success: false, message: "Erro ao remover seção: #{e.message}" }
+      def self.get_available_layers_for_sections
+        ProSectionsSettings.get_available_layers_for_sections
+      end
+
+      def self.apply_current_style_to_sections
+        ProSectionsSettings.apply_current_style_to_sections
+      end
+
+      def self.get_current_active_layers
+        ProSectionsSettings.get_current_active_layers
+      end
+
+      def self.get_current_active_layers_filtered(available_layers)
+        ProSectionsSettings.get_current_active_layers_filtered(available_layers)
+      end
+
+      # Delegação para grupos
+      def self.add_group(params)
+        ProSectionsGroups.add_group(params)
+      end
+
+      def self.update_group(id, params)
+        ProSectionsGroups.update_group(id, params)
+      end
+
+      def self.delete_group(id)
+        ProSectionsGroups.delete_group(id)
+      end
+
+      def self.add_segment(group_id, params)
+        ProSectionsGroups.add_segment(group_id, params)
+      end
+
+      def self.update_segment(group_id, segment_id, params)
+        ProSectionsGroups.update_segment(group_id, segment_id, params)
+      end
+
+      def self.delete_segment(group_id, segment_id)
+        ProSectionsGroups.delete_segment(group_id, segment_id)
+      end
+
+      def self.duplicate_scenes_with_segment(params)
+        ProSectionsGroups.duplicate_scenes_with_segment(params)
+      end
+
+      def self.get_model_scenes
+        ProSectionsGroups.get_model_scenes
       end
 
       # ========================================
-      # MÉTODOS ESPECÍFICOS DE SEÇÕES
+      # MÉTODOS DE CRIAÇÃO DE CORTES (Botões Iniciais)
       # ========================================
 
       # Cria cortes padrões (A, B, C, D)
@@ -282,126 +266,6 @@ module ProjetaPlus
       end
 
       # ========================================
-      # MÉTODOS DE PERSISTÊNCIA JSON
-      # ========================================
-
-      def self.save_to_json(json_data)
-        ensure_json_directory
-        File.write(USER_DATA_FILE, JSON.pretty_generate(json_data))
-        
-        { success: true, message: "Configurações salvas com sucesso", path: USER_DATA_FILE }
-      rescue StandardError => e
-        log_error("save_to_json", e)
-        { success: false, message: "Erro ao salvar configurações: #{e.message}" }
-      end
-
-      def self.load_from_json
-        file_to_load = File.exist?(USER_DATA_FILE) ? USER_DATA_FILE : DEFAULT_DATA_FILE
-        
-        unless File.exist?(file_to_load)
-          return { success: false, message: "Arquivo não encontrado", data: { 'sections' => [] } }
-        end
-        
-        content = File.read(file_to_load)
-        content = remove_bom(content)
-        
-        # Se o arquivo estiver vazio, usar arquivo padrão
-        if content.strip.empty?
-          if file_to_load == USER_DATA_FILE && File.exist?(DEFAULT_DATA_FILE)
-            content = File.read(DEFAULT_DATA_FILE)
-            content = remove_bom(content)
-          else
-            return { success: true, data: { 'sections' => [] }, message: "Arquivo vazio" }
-          end
-        end
-        
-        data = JSON.parse(content)
-        
-        { success: true, data: data, message: "Configurações carregadas" }
-      rescue JSON::ParserError => e
-        # Se erro no user file, tentar o default
-        if file_to_load == USER_DATA_FILE && File.exist?(DEFAULT_DATA_FILE)
-          begin
-            content = File.read(DEFAULT_DATA_FILE)
-            content = remove_bom(content)
-            data = JSON.parse(content)
-            return { success: true, data: data, message: "Carregado do arquivo padrão" }
-          rescue
-            # Se default também falhar, retornar vazio
-          end
-        end
-        log_error("load_from_json - JSON inválido", e)
-        { success: false, message: "JSON inválido: #{e.message}", data: { 'sections' => [] } }
-      rescue StandardError => e
-        log_error("load_from_json", e)
-        { success: false, message: "Erro ao carregar: #{e.message}", data: { 'sections' => [] } }
-      end
-
-      def self.load_default_data
-        unless File.exist?(DEFAULT_DATA_FILE)
-          return { success: false, message: "Arquivo padrão não encontrado", data: { sections: [] } }
-        end
-        
-        content = File.read(DEFAULT_DATA_FILE)
-        content = remove_bom(content)
-        data = JSON.parse(content)
-        
-        # Salvar como arquivo do usuário
-        ensure_json_directory
-        File.write(USER_DATA_FILE, JSON.pretty_generate(data))
-        
-        { success: true, data: data, message: "Dados padrão carregados" }
-      rescue StandardError => e
-        log_error("load_default_data", e)
-        { success: false, message: "Erro: #{e.message}", data: { sections: [] } }
-      end
-
-      def self.load_from_file
-        file_path = ::UI.openpanel("Selecionar arquivo JSON", "", "JSON|*.json||")
-        return cancelled_operation unless file_path
-        
-        content = File.read(file_path)
-        content = remove_bom(content)
-        data = JSON.parse(content)
-        
-        { success: true, data: data, message: "Arquivo carregado com sucesso" }
-      rescue StandardError => e
-        log_error("load_from_file", e)
-        { success: false, message: "Erro ao carregar: #{e.message}", data: { sections: [] } }
-      end
-
-      # Importa seções do JSON para o modelo
-      def self.import_to_model(json_data)
-        model = Sketchup.active_model
-        sections = json_data['sections'] || json_data[:sections] || []
-
-        return invalid_input("Nenhuma seção para importar") if sections.empty?
-
-        model.start_operation("Importar Seções", true)
-
-        count = 0
-        sections.each do |section|
-          section = normalize_params(section)
-          next unless section[:name] && section[:position] && section[:direction]
-
-          remove_section_and_page(model, section[:name])
-
-          sp = create_section_plane(model, section[:name], section[:position], section[:direction])
-          create_aligned_scene(model, sp, section[:position], section[:direction])
-          
-          count += 1
-        end
-
-        model.commit_operation
-
-        { success: true, message: "#{count} seções importadas com sucesso", count: count }
-      rescue StandardError => e
-        model.abort_operation if model
-        log_error("import_to_model", e)
-        { success: false, message: "Erro ao importar: #{e.message}" }
-      end
-
-      # ========================================
       # MÉTODOS PRIVADOS (core)
       # ========================================
 
@@ -428,10 +292,34 @@ module ProjetaPlus
         # Alinhar câmera ao plano de corte
         align_camera_to_section(model, direction)
         
+        # Aplicar configurações salvas (estilo e camadas)
+        apply_saved_settings_to_scene(model)
+        
         # CRÍTICO: Atualizar a página para salvar o estado da câmera
         page.update
         
         page
+      end
+
+      # Aplica as configurações salvas (estilo e camadas) à cena atual
+      def self.apply_saved_settings_to_scene(model)
+        settings_result = ProSectionsSettings.get_sections_settings
+        return unless settings_result[:success]
+        
+        settings = settings_result[:settings]
+        
+        # Aplicar estilo se definido (usando método do ProViewConfigsBase)
+        if settings['style'] && !settings['style'].empty?
+          apply_style(settings['style'])
+        end
+        
+        # Aplicar camadas ativas se definidas (usando método do ProViewConfigsBase)
+        if settings['activeLayers'] && settings['activeLayers'].any?
+          apply_layers_visibility(settings['activeLayers'])
+        end
+      rescue StandardError => e
+        log_error("apply_saved_settings_to_scene", e)
+        # Não falhar a criação da cena se houver erro ao aplicar configurações
       end
 
       # Alinha a câmera para olhar diretamente para o plano de corte
@@ -485,34 +373,6 @@ module ProjetaPlus
         }
       end
 
-      # Valida parâmetros de seção
-      def self.validate_section(name, position, direction)
-        errors = []
-        
-        errors << "Nome é obrigatório" if name.to_s.strip.empty?
-        errors << "Posição inválida" unless valid_coordinates?(position)
-        errors << "Direção inválida" unless valid_coordinates?(direction)
-        errors << "Direção não pode ser nula" if direction && direction.all?(&:zero?)
-        
-        [errors.empty?, errors.join("; ")]
-      end
-
-      # Valida se coordenadas são válidas
-      def self.valid_coordinates?(coords)
-        coords.is_a?(Array) && coords.length == 3 && coords.all? { |c| c.is_a?(Numeric) }
-      end
-
-      # Verifica se seção existe
-      def self.section_exists?(model, name)
-        !find_section_by_name(model, name).nil?
-      end
-
-      # Busca seção por nome (case insensitive)
-      def self.find_section_by_name(model, name)
-        model.entities.grep(Sketchup::SectionPlane)
-          .find { |sp| sp.name.casecmp(name.to_s).zero? }
-      end
-
       # Remove seção e página associada
       def self.remove_section_and_page(model, name)
         # Remove section plane
@@ -522,6 +382,12 @@ module ProjetaPlus
         # Remove página
         page = model.pages.find { |p| p.name == name }
         model.pages.erase(page) if page
+      end
+
+      # Busca seção por nome (case insensitive)
+      def self.find_section_by_name(model, name)
+        model.entities.grep(Sketchup::SectionPlane)
+          .find { |sp| sp.name.casecmp(name.to_s).zero? }
       end
 
       # Cria ou obtém layer existente
@@ -587,21 +453,6 @@ module ProjetaPlus
             direction: [-1, 0, 0] 
           }
         }
-      end
-
-      # Garante que diretório JSON existe
-      def self.ensure_json_directory
-        Dir.mkdir(JSON_DATA_PATH) unless Dir.exist?(JSON_DATA_PATH)
-      end
-
-      # Remove BOM de UTF-8
-      def self.remove_bom(content)
-        content.sub("\xEF\xBB\xBF".force_encoding("UTF-8"), '')
-      end
-
-      # Retorno para operação cancelada
-      def self.cancelled_operation
-        { success: false, message: "Operação cancelada pelo usuário" }
       end
 
       # Retorno para input inválido

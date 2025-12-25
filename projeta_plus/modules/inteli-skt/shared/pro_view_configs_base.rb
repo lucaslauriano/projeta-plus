@@ -332,6 +332,33 @@ module ProjetaPlus
         end
       end
 
+      # Retorna camadas visíveis que existem na lista disponível
+      def get_visible_layers_filtered(available_layers)
+        begin
+          model = Sketchup.active_model
+          visible_layers = []
+          
+          model.layers.each do |layer|
+            # Incluir apenas se estiver visível E estiver na lista de camadas disponíveis
+            if layer.visible? && available_layers.include?(layer.name)
+              visible_layers << layer.name
+            end
+          end
+          
+          {
+            success: true,
+            layers: visible_layers.sort,
+            message: "Camadas visíveis capturadas e filtradas"
+          }
+        rescue => e
+          {
+            success: false,
+            message: "Erro ao carregar camadas visíveis: #{e.message}",
+            layers: []
+          }
+        end
+      end
+
       # Retorna estado atual do modelo
       def get_current_state
         begin
