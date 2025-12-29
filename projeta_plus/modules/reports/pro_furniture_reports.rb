@@ -153,6 +153,24 @@ module ProjetaPlus
 
       private
 
+      # Normaliza o tipo para corresponder entre diferentes idiomas
+      def self.normalize_type(type)
+        type_map = {
+          'Mobiliário' => 'Furniture',
+          'Furniture' => 'Furniture',
+          'Eletrodomésticos' => 'Appliances',
+          'Appliances' => 'Appliances',
+          'Louças e Metais' => 'Fixtures & Fittings',
+          'Fixtures & Fittings' => 'Fixtures & Fittings',
+          'Fixtures' => 'Fixtures & Fittings',
+          'Acessórios' => 'Accessories',
+          'Accessories' => 'Accessories',
+          'Decoração' => 'Decoration',
+          'Decoration' => 'Decoration'
+        }
+        type_map[type] || type
+      end
+
       # Processa dados brutos de uma categoria e retorna items formatados com totais
       def self.process_category_items(data, category)
         items = []
@@ -200,27 +218,29 @@ module ProjetaPlus
 
       # Carrega preferências de exibição de colunas
       def self.load_column_preferences
-        settings = ProjetaPlus::ProSettings.get_value(SETTINGS_KEY, COLUMN_PREFS_KEY)
-        if settings && !settings.empty?
-          JSON.parse(settings)
-        else
-          # Valores padrão - todas as colunas visíveis (em português)
-          {
-            'Código' => true,
-            'Nome' => true,
-            'Cor' => true,
-            'Marca' => true,
-            'Dimensão' => true,
-            'Ambiente' => true,
-            'Observações' => true,
-            'Link' => true,
-            'Valor' => true,
-            'Quantidade' => true
-          }
+        begin
+          raw = Sketchup.read_default('projeta_plus_furniture', COLUMN_PREFS_KEY, nil)
+          if raw && !raw.empty?
+            JSON.parse(raw)
+          else
+            # Valores padrão - todas as colunas visíveis (em português)
+            {
+              'Código' => true,
+              'Nome' => true,
+              'Cor' => true,
+              'Marca' => true,
+              'Dimensão' => true,
+              'Ambiente' => true,
+              'Observações' => true,
+              'Link' => true,
+              'Valor' => true,
+              'Quantidade' => true
+            }
+          end
+        rescue => e
+          puts "Erro ao carregar preferências de colunas: #{e.message}"
+          {}
         end
-      rescue => e
-        puts "Erro ao carregar preferências de colunas: #{e.message}"
-        {}
       end
 
       # ========================================
@@ -232,10 +252,27 @@ module ProjetaPlus
         instances = []
         ProFurnitureAttributes.collect_all_furniture_instances(model.entities, instances)
 
+        puts "[ProFurnitureReports] Total furniture instances found: #{instances.size}"
+        
+        # Normalizar a categoria esperada para comparação
+        normalized_category = normalize_type(category)
+        
         prefix = ProFurnitureAttributes::ATTR_PREFIX
         instances.each do |inst|
           type = ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}type", '').to_s.strip
-          next if type.empty? || type != category
+          normalized_type = normalize_type(type)
+          
+          # Debug: mostrar os primeiros 3 items para verificar
+          if instances.index(inst) < 3
+            puts "[DEBUG] Instance #{instances.index(inst) + 1}:"
+            puts "  - Type (original): '#{type}'"
+            puts "  - Type (normalized): '#{normalized_type}'"
+            puts "  - Expected category: '#{category}' (normalized: '#{normalized_category}')"
+            puts "  - Match: #{normalized_type == normalized_category}"
+            puts "  - Entity ID: #{inst.entityID}"
+          end
+          
+          next if type.empty? || normalized_type != normalized_category
 
           key = [
             ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}name", ''),
@@ -253,16 +290,20 @@ module ProjetaPlus
           data[key][:ids] << inst.entityID
         end
 
+        puts "[ProFurnitureReports] Items matched for category '#{category}': #{data.size}"
         data
       end
 
       def self.generate_code(type, index)
-        prefix = case type
-                when ProjetaPlus::Localization.t('furniture_types.furniture') then "FUR"
-                when ProjetaPlus::Localization.t('furniture_types.appliances') then "APP"
-                when ProjetaPlus::Localization.t('furniture_types.fixtures') then "FIX"
-                when ProjetaPlus::Localization.t('furniture_types.accessories') then "ACC"
-                when ProjetaPlus::Localization.t('furniture_types.decoration') then "DEC"
+        # Normalizar o tipo para garantir consistência
+        normalized_type = normalize_type(type)
+        
+        prefix = case normalized_type
+                when 'Furniture' then "FUR"
+                when 'Appliances' then "APP"
+                when 'Fixtures & Fittings' then "FIX"
+                when 'Accessories' then "ACC"
+                when 'Decoration' then "DEC"
                 else "OTH"
                 end
         "#{prefix}#{index.to_s.rjust(3, '0')}"
@@ -501,13 +542,16 @@ module ProjetaPlus
 
       def self.load_category_preferences(types)
         begin
-          raw = Sketchup.read_default('projeta_plus_furniture', 'category_prefs', '{}')
-          raw = '{}' if raw.nil? || raw.empty?
-          prefs = JSON.parse(raw)
+          raw = Sketchup.read_default('projeta_plus_furniture', CATEGORY_PREFS_KEY, nil)
+          if raw && !raw.empty?
+            prefs = JSON.parse(raw)
+          else
+            prefs = {}
+          end
         rescue JSON::ParserError, StandardError => e
           puts "ERROR loading preferences (#{e.message}), using defaults"
           prefs = {}
-          Sketchup.write_default('projeta_plus_furniture', 'category_prefs', '{}')
+          Sketchup.write_default('projeta_plus_furniture', CATEGORY_PREFS_KEY, '{}')
         end
 
         prefs = {} unless prefs.is_a?(Hash)
