@@ -358,22 +358,64 @@ module ProjetaPlus
           model = Sketchup.active_model
           return { success: false, message: "Nenhum modelo ativo" } unless model
 
-          # Verificar se está no Windows (WIN32OLE só funciona no Windows)
-          unless Sketchup.platform == :platform_win
-            return { 
-              success: false, 
-              message: "Exportação XLSX está disponível apenas no Windows. Use exportação CSV no macOS." 
-            }
+          # Determinar se é realmente XLSX ou CSV baseado na extensão do arquivo
+          is_csv = path.end_with?('.csv')
+          
+          # Só verificar Excel se for XLSX de verdade
+          if !is_csv
+            # Verificar disponibilidade do Excel (funciona em Windows e Mac com Office instalado)
+            if Sketchup.platform == :platform_win
+              unless defined?(WIN32OLE)
+                return { 
+                  success: false, 
+                  message: "Microsoft Excel não encontrado. Instale o Microsoft Office ou use exportação CSV." 
+                }
+              end
+            else
+              # Mac: Usar AppleScript para controlar Excel se disponível
+              begin
+                test_script = "tell application \"System Events\" to (name of processes) contains \"Microsoft Excel\""
+                has_excel = `osascript -e '#{test_script}'`.strip == "true" || 
+                           `osascript -e 'tell application \"Finder\" to exists application file id \"com.microsoft.Excel\"'`.strip == "true"
+                
+                unless has_excel
+                  return { 
+                    success: false, 
+                    message: "Microsoft Excel não encontrado. Instale o Microsoft Office para Mac ou use exportação CSV." 
+                  }
+                end
+              rescue => e
+                return { 
+                  success: false, 
+                  message: "Erro ao verificar Microsoft Excel: #{e.message}. Use exportação CSV." 
+                }
+              end
+            end
           end
 
-          unless defined?(WIN32OLE)
-            return { success: false, message: ProjetaPlus::Localization.t('messages.excel_not_available') }
+          # Se for CSV, usar implementação CSV diretamente
+          if is_csv
+            return export_csv_consolidated(model, categories, path)
           end
 
           # Garantir que o path tem a extensão .xlsx
           path = path.end_with?('.xlsx') ? path : "#{path}.xlsx"
 
-          excel = WIN32OLE.new('Excel.Application')
+          # Usar implementação específica da plataforma para XLSX
+          if Sketchup.platform == :platform_win
+            export_xlsx_windows(model, categories, path)
+          else
+            export_xlsx_mac(model, categories, path)
+          end
+
+        rescue => e
+          { success: false, message: "#{ProjetaPlus::Localization.t('messages.export_failed')}: #{e.message}" }
+        end
+      end
+
+      # Exportação XLSX no Windows usando WIN32OLE
+      def self.export_xlsx_windows(model, categories, path)
+        excel = WIN32OLE.new('Excel.Application')
           excel.Visible = false
           workbook = excel.Workbooks.Add
           worksheet = workbook.Worksheets(1)
@@ -531,6 +573,77 @@ module ProjetaPlus
           excel.Quit
 
           { success: true, message: "#{ProjetaPlus::Localization.t('messages.export_success')}: #{path}", path: path }
+      end
+
+      # Exportação XLSX no Mac usando AppleScript
+      def self.export_xlsx_mac(model, categories, path)
+        # Por enquanto, vamos usar CSV como fallback no Mac
+        # A implementação completa com AppleScript seria muito complexa
+        # Vamos sugerir ao usuário usar Excel manualmente ou CSV
+        
+        # Gerar CSV temporário como alternativa
+        csv_path = path.gsub('.xlsx', '.csv')
+        result = export_csv_consolidated(model, categories, csv_path)
+        
+        if result[:success]
+          result[:message] = "#{ProjetaPlus::Localization.t('messages.export_success')} (CSV): #{csv_path}. Nota: Exportação XLSX direta não está disponível no macOS. Você pode abrir este CSV no Excel e salvar como XLSX."
+        end
+        
+        result
+      end
+
+      # Exportação CSV consolidada (funciona em todas as plataformas)
+      def self.export_csv_consolidated(model, categories, path)
+        # Se houver apenas uma categoria, usar export_category_csv
+        if categories.length == 1
+          return export_category_csv(categories.first, path)
+        end
+        
+        # Para múltiplas categorias, criar CSV consolidado
+        begin
+          CSV.open(path, "w") do |csv|
+            categories.each_with_index do |category, cat_index|
+              data = collect_data_for_category(model, category)
+              next if data.empty?
+              
+              # Adicionar título da categoria
+              csv << [category.upcase]
+              csv << []
+              
+              # Headers
+              csv << [
+                ProjetaPlus::Localization.t('table_headers.code'),
+                ProjetaPlus::Localization.t('table_headers.name'),
+                ProjetaPlus::Localization.t('table_headers.color'),
+                ProjetaPlus::Localization.t('table_headers.brand'),
+                ProjetaPlus::Localization.t('table_headers.type'),
+                ProjetaPlus::Localization.t('table_headers.dimension'),
+                ProjetaPlus::Localization.t('table_headers.environment'),
+                ProjetaPlus::Localization.t('table_headers.observations'),
+                ProjetaPlus::Localization.t('table_headers.link'),
+                ProjetaPlus::Localization.t('table_headers.value'),
+                ProjetaPlus::Localization.t('table_headers.quantity')
+              ]
+              
+              # Data rows
+              sorted_data = data.sort_by { |key, info| key[0].to_s.downcase }
+              sorted_data.each_with_index do |(key, info), i|
+                name, color, brand, type, dimension, environment, obs, link, value = key
+                code = generate_code(type, i + 1)
+                csv << [code, name, color, brand, type, dimension, environment, obs, link, value, info[:quantity]]
+              end
+              
+              # Separador entre categorias
+              csv << []
+              csv << [] if cat_index < categories.length - 1
+            end
+          end
+          
+          { 
+            success: true, 
+            message: "#{ProjetaPlus::Localization.t('messages.export_success')}: #{path}", 
+            path: path 
+          }
         rescue => e
           { success: false, message: "#{ProjetaPlus::Localization.t('messages.export_failed')}: #{e.message}" }
         end

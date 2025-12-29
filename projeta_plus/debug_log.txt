@@ -434,3 +434,6 @@
 [2025-12-29 09:45:17 -0300] JS callback executed.
 [2025-12-29 09:54:13 -0300] ElectricalReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/debug_log.txt
 [2025-12-29 10:02:50 -0300] ElectricalReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2025-12-29 10:25:23 -0300] ElectricalReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2025-12-29 10:37:33 -0300] ElectricalReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2025-12-29 10:42:32 -0300] ElectricalReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/debug_log.txt
