@@ -2,6 +2,7 @@
 
 require 'sketchup.rb'
 require 'csv'
+require 'json'
 require_relative '../furniture/pro_furniture_attributes.rb'
 require_relative '../settings/pro_settings.rb'
 require_relative '../../localization.rb'
@@ -12,7 +13,219 @@ module ProjetaPlus
 
       include ProFurnitureAttributes
 
-      # ========== Data Collection ==========
+      # ========================================
+      # CONFIGURAÇÕES E CONSTANTES
+      # ========================================
+
+      SETTINGS_KEY = "furniture_reports_settings"
+      CATEGORY_PREFS_KEY = 'category_prefs'
+      COLUMN_PREFS_KEY = 'column_prefs'
+
+      # ========================================
+      # MÉTODOS PÚBLICOS - Get Data (NOVOS - para frontend React)
+      # ========================================
+
+      def self.get_furniture_types
+        begin
+          types = ProFurnitureAttributes.get_available_types
+          puts "[ProFurnitureReports] Available types: #{types.inspect}"
+          { success: true, types: types }
+        rescue => e
+          puts "[ProFurnitureReports] ERROR in get_furniture_types: #{e.message}"
+          puts e.backtrace if e.backtrace
+          { success: false, message: "Erro ao buscar tipos: #{e.message}" }
+        end
+      end
+
+      def self.get_category_data(category)
+        begin
+          puts "[ProFurnitureReports] Getting data for category: #{category}"
+          model = Sketchup.active_model
+          return { success: false, message: "Nenhum modelo ativo" } unless model
+
+          data = collect_data_for_category(model, category)
+          puts "[ProFurnitureReports] Collected #{data.size} unique items"
+          result = process_category_items(data, category)
+          puts "[ProFurnitureReports] Processed #{result[:items].size} items, total: #{result[:totalValue]}"
+
+          {
+            success: true,
+            category: category,
+            data: {
+              category: category,
+              items: result[:items],
+              total: result[:totalValue],
+              itemCount: result[:totalQuantity]
+            }
+          }
+        rescue => e
+          puts "ERROR in get_category_data: #{e.message}"
+          puts e.backtrace if e.backtrace
+          { success: false, message: "Erro ao buscar dados da categoria: #{e.message}" }
+        end
+      end
+
+      def self.get_category_preferences
+        begin
+          types = ProFurnitureAttributes.get_available_types
+          prefs = load_category_preferences(types)
+          { success: true, preferences: prefs }
+        rescue => e
+          { success: false, message: "Erro ao carregar preferências: #{e.message}" }
+        end
+      end
+
+      def self.get_column_preferences
+        begin
+          prefs = load_column_preferences
+          { success: true, preferences: prefs }
+        rescue => e
+          { success: false, message: "Erro ao carregar preferências de colunas: #{e.message}" }
+        end
+      end
+
+      # ========================================
+      # MÉTODOS PÚBLICOS - Save Data (NOVOS)
+      # ========================================
+
+      def self.save_category_preferences(preferences)
+        begin
+          Sketchup.write_default('projeta_plus_furniture', CATEGORY_PREFS_KEY, JSON.generate(preferences))
+          { success: true, message: "Preferências salvas com sucesso" }
+        rescue => e
+          { success: false, message: "Erro ao salvar preferências: #{e.message}" }
+        end
+      end
+
+      def self.save_column_preferences(preferences)
+        begin
+          Sketchup.write_default('projeta_plus_furniture', COLUMN_PREFS_KEY, JSON.generate(preferences))
+          { success: true, message: "Preferências de colunas salvas com sucesso" }
+        rescue => e
+          { success: false, message: "Erro ao salvar preferências de colunas: #{e.message}" }
+        end
+      end
+
+      # ========================================
+      # MÉTODOS PÚBLICOS - Item Operations (NOVOS)
+      # ========================================
+
+      def self.isolate_furniture_item(entity_id)
+        begin
+          model = Sketchup.active_model
+          return { success: false, message: "Nenhum modelo ativo" } unless model
+
+          entity = model.entities.find { |e| e.entityID == entity_id }
+          return { success: false, message: "Item não encontrado" } unless entity
+
+          model.selection.clear
+          model.selection.add(entity)
+          model.active_view.zoom_selection
+
+          { success: true, message: "Item isolado com sucesso" }
+        rescue => e
+          { success: false, message: "Erro ao isolar item: #{e.message}" }
+        end
+      end
+
+      def self.delete_furniture_item(entity_id)
+        begin
+          model = Sketchup.active_model
+          return { success: false, message: "Nenhum modelo ativo" } unless model
+
+          entity = model.entities.find { |e| e.entityID == entity_id }
+          return { success: false, message: "Item não encontrado" } unless entity
+
+          model.start_operation('Delete Furniture Item', true)
+          entity.erase!
+          model.commit_operation
+
+          { success: true, message: "Item removido com sucesso" }
+        rescue => e
+          model.abort_operation if model
+          { success: false, message: "Erro ao remover item: #{e.message}" }
+        end
+      end
+
+      # ========================================
+      # MÉTODOS PRIVADOS - Helpers
+      # ========================================
+
+      private
+
+      # Processa dados brutos de uma categoria e retorna items formatados com totais
+      def self.process_category_items(data, category)
+        items = []
+        total_value = 0.0
+        total_quantity = 0
+
+        sorted_data = data.sort_by { |key, info| key[0].to_s.downcase }
+        sorted_data.each_with_index do |(key, info), index|
+          name, color, brand, type, dimension, environment, obs, link, value = key
+          code = generate_code(type, index + 1)
+          quantity = info[:quantity]
+          entity_ids = info[:ids] || []
+
+          # Converter valor para float
+          item_value = value.to_s.gsub(/[^\d,.]/, '').gsub(',', '.').to_f
+          line_total = item_value * quantity
+
+          total_value += line_total
+          total_quantity += quantity
+
+          items << {
+            id: entity_ids.first.to_s, # Usar o primeiro entity_id como identificador
+            entity_ids: entity_ids.map(&:to_s),
+            code: code,
+            name: name.to_s,
+            color: color.to_s,
+            brand: brand.to_s,
+            type: type.to_s,
+            dimension: dimension.to_s,
+            environment: environment.to_s,
+            observations: obs.to_s,
+            link: link.to_s,
+            value: item_value,
+            quantity: quantity,
+            lineTotal: line_total
+          }
+        end
+
+        {
+          items: items,
+          totalValue: total_value,
+          totalQuantity: total_quantity
+        }
+      end
+
+      # Carrega preferências de exibição de colunas
+      def self.load_column_preferences
+        settings = ProjetaPlus::ProSettings.get_value(SETTINGS_KEY, COLUMN_PREFS_KEY)
+        if settings && !settings.empty?
+          JSON.parse(settings)
+        else
+          # Valores padrão - todas as colunas visíveis (em português)
+          {
+            'Código' => true,
+            'Nome' => true,
+            'Cor' => true,
+            'Marca' => true,
+            'Dimensão' => true,
+            'Ambiente' => true,
+            'Observações' => true,
+            'Link' => true,
+            'Valor' => true,
+            'Quantidade' => true
+          }
+        end
+      rescue => e
+        puts "Erro ao carregar preferências de colunas: #{e.message}"
+        {}
+      end
+
+      # ========================================
+      # MÉTODOS PRIVADOS - Data Collection
+      # ========================================
 
       def self.collect_data_for_category(model, category)
         data = Hash.new { |h, k| h[k] = { quantity: 0, ids: [] } }
@@ -43,107 +256,6 @@ module ProjetaPlus
         data
       end
 
-      # ========== HTML Table Generation ==========
-
-      def self.generate_category_table_html(model, category, selected_id: nil, selected_key: nil)
-        begin
-          instances_by_type = ProFurnitureAttributes.get_cached_instances(model)
-          instances = instances_by_type[category] || []
-
-          data = Hash.new { |h, k| h[k] = { quantity: 0, ids: [] } }
-
-          prefix = ProFurnitureAttributes::ATTR_PREFIX
-          instances.each do |inst|
-            next unless inst && inst.valid?
-
-            begin
-              key = [
-                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}name", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}color", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}brand", ""),
-                category,
-                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}dimension", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}environment", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}observations", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}link", ""),
-                ProFurnitureAttributes.get_attribute_safe(inst, "#{prefix}value", "")
-              ]
-
-              data[key][:quantity] += 1
-              data[key][:ids] << inst.entityID
-            rescue => e
-              puts "ERROR processing instance: #{e.message}"
-              next
-            end
-          end
-
-          return "<tr><td colspan='12' style='color:red;'>#{ProjetaPlus::Localization.t('messages.no_data_found')}</td></tr>" if data.empty?
-
-          index = 1
-          sorted_data = data.sort_by { |key, info| key[0].to_s.downcase }
-          
-          sorted_data.map do |key, info|
-            name, color, brand, type, dimension, environment, obs, link, value = key
-            id = (selected_key && selected_id && key == selected_key) ? selected_id : info[:ids].first
-            highlight = (selected_key && key == selected_key)
-
-            entity = Sketchup.active_model.entities.find { |e| e.entityID == id }
-            prefix = ProFurnitureAttributes::ATTR_PREFIX
-            code = if entity && ProFurnitureAttributes.get_attribute_safe(entity, "#{prefix}code")
-                     ProFurnitureAttributes.get_attribute_safe(entity, "#{prefix}code")
-                   else
-                     generate_code(type, index)
-                   end
-
-            type_color = ProFurnitureAttributes.get_type_color(type)
-            color_hex = ProFurnitureAttributes.color_to_hex(type_color)
-
-            value_num = value.to_s.gsub(/[^0-9.,]/, '').gsub(',', '.').to_f
-            total_item = value_num * info[:quantity]
-
-            html = "<tr id='row-#{id}'#{highlight ? " style='background-color:#fff3cd'" : ''}>
-              <td class='code-cell' style='background-color:#{color_hex}; color:white;'>#{code}</td>
-              <td>#{name}</td>
-              <td>#{color}</td>
-              <td>#{brand}</td>
-              <td>#{type}</td>
-              <td>#{dimension}</td>
-              <td>#{environment}</td>
-              <td>#{format_clickable_link(link)}</td>
-              <td>#{obs}</td>
-              <td>#{value}</td>
-              <td>#{info[:quantity]}</td>
-              <td style='font-weight:bold;'>#{sprintf('%.2f', total_item)}</td>
-              <td><button onclick='isolateItem(#{id})'>#{ProjetaPlus::Localization.t('buttons.isolate')}</button></td>
-              <td><button onclick='deleteItem(#{id})'>#{ProjetaPlus::Localization.t('buttons.delete')}</button></td>
-            </tr>"
-            index += 1
-            html
-          end.join
-        rescue => e
-          puts "ERROR in generate_category_table_html: #{e.message}"
-          puts e.backtrace.first(3) if e.backtrace
-          "<tr><td colspan='12' style='color:red;'>#{ProjetaPlus::Localization.t('messages.error_loading_data')}: #{e.message}</td></tr>"
-        end
-      end
-
-      # ========== Helper Methods ==========
-
-      def self.format_clickable_link(link)
-        return "" if link.nil? || link.to_s.strip.empty?
-
-        link_str = link.to_s.strip
-
-        if link_str.match(/^https?:\/\//i)
-          "<a href='#{link_str}' target='_blank' style='color: #007bff; text-decoration: underline;'>#{link_str}</a>"
-        elsif link_str.match(/^www\./i) || link_str.include?('.')
-          full_link = "http://#{link_str}"
-          "<a href='#{full_link}' target='_blank' style='color: #007bff; text-decoration: underline;'>#{link_str}</a>"
-        else
-          link_str
-        end
-      end
-
       def self.generate_code(type, index)
         prefix = case type
                 when ProjetaPlus::Localization.t('furniture_types.furniture') then "FUR"
@@ -156,17 +268,22 @@ module ProjetaPlus
         "#{prefix}#{index.to_s.rjust(3, '0')}"
       end
 
-      # ========== CSV Export ==========
+      # ========================================
+      # MÉTODOS PÚBLICOS - Export
+      # ========================================
 
-      def self.export_category_to_csv(model, category)
-        data = collect_data_for_category(model, category)
-
-        return { success: false, message: ProjetaPlus::Localization.t('messages.no_data_to_export') } if data.empty?
-
-        file_path = File.join(File.dirname(model.path), "#{category}.csv")
-        
+      def self.export_category_csv(category, path)
         begin
-          CSV.open(file_path, "w") do |csv|
+          model = Sketchup.active_model
+          return { success: false, message: "Nenhum modelo ativo" } unless model
+
+          data = collect_data_for_category(model, category)
+          return { success: false, message: ProjetaPlus::Localization.t('messages.no_data_to_export') } if data.empty?
+
+          # Garantir que o path tem a extensão .csv
+          path = path.end_with?('.csv') ? path : "#{path}.csv"
+          
+          CSV.open(path, "w") do |csv|
             csv << [
               ProjetaPlus::Localization.t('table_headers.code'),
               ProjetaPlus::Localization.t('table_headers.name'),
@@ -189,18 +306,32 @@ module ProjetaPlus
             end
           end
 
-          { success: true, message: "#{ProjetaPlus::Localization.t('messages.export_success')}: #{file_path}" }
+          { success: true, message: "#{ProjetaPlus::Localization.t('messages.export_success')}: #{path}", path: path }
         rescue => e
           { success: false, message: "#{ProjetaPlus::Localization.t('messages.export_failed')}: #{e.message}" }
         end
       end
 
-      # ========== XLSX Export ==========
-
-      def self.export_to_xlsx(model, categories, path)
-        return { success: false, message: ProjetaPlus::Localization.t('messages.excel_not_available') } unless defined?(WIN32OLE)
-
+      def self.export_xlsx(categories, path)
         begin
+          model = Sketchup.active_model
+          return { success: false, message: "Nenhum modelo ativo" } unless model
+
+          # Verificar se está no Windows (WIN32OLE só funciona no Windows)
+          unless Sketchup.platform == :platform_win
+            return { 
+              success: false, 
+              message: "Exportação XLSX está disponível apenas no Windows. Use exportação CSV no macOS." 
+            }
+          end
+
+          unless defined?(WIN32OLE)
+            return { success: false, message: ProjetaPlus::Localization.t('messages.excel_not_available') }
+          end
+
+          # Garantir que o path tem a extensão .xlsx
+          path = path.end_with?('.xlsx') ? path : "#{path}.xlsx"
+
           excel = WIN32OLE.new('Excel.Application')
           excel.Visible = false
           workbook = excel.Workbooks.Add
@@ -358,13 +489,15 @@ module ProjetaPlus
           workbook.Close(false)
           excel.Quit
 
-          { success: true, message: "#{ProjetaPlus::Localization.t('messages.export_success')}: #{path}" }
+          { success: true, message: "#{ProjetaPlus::Localization.t('messages.export_success')}: #{path}", path: path }
         rescue => e
           { success: false, message: "#{ProjetaPlus::Localization.t('messages.export_failed')}: #{e.message}" }
         end
       end
 
-      # ========== Preferences ==========
+      # ========================================
+      # MÉTODOS PRIVADOS - Preferences
+      # ========================================
 
       def self.load_category_preferences(types)
         begin
