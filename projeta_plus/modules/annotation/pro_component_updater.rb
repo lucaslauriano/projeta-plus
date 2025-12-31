@@ -16,10 +16,6 @@ module ProjetaPlus
   def self.normalizar(texto)
     texto.to_s
       .tr('ÁÀÃÂÄáàãâäÉÈÊËéèêëÍÌÎÏíìîïÓÒÕÔÖóòõôöÚÙÛÜúùûüÇç', 'AAAAAaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuCc')
-      .gsub(/[^\w\s]/, '')
-      .strip
-      .gsub(/\s+/, "")
-      .upcase
   end
 
   # ===============================
