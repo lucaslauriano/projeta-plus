@@ -36,9 +36,9 @@ module ProjetaPlus
       def self.get_cut_height_cm
         if defined?(ProjetaPlus::Modules::ProSettings)
           cut_height_m = ProjetaPlus::Modules::ProSettings.read("cut_height", ProjetaPlus::Modules::ProSettings::DEFAULT_CUT_HEIGHT).to_f
-          (cut_height_m * 100).to_s 
+          cut_height_m * 100
         else
-          "145"
+          145.0
         end
       end
 
