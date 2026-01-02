@@ -17,7 +17,6 @@ module ProjetaPlus
       lang_file = File.join(ProjetaPlus::PATH, 'projeta_plus', 'lang', "#{lang_code}.yml")
 
       unless File.exist?(lang_file)
-        puts "[ProjetaPlus Localization] Warning: Language file not found for '#{lang_code}'. Falling back to 'en'."
         lang_code = ProjetaPlus::Modules::ProSettings::DEFAULT_LANGUAGE # Fallback
         lang_file = File.join(ProjetaPlus::PATH, 'projeta_plus', 'lang', "#{lang_code}.yml")
         unless File.exist?(lang_file)

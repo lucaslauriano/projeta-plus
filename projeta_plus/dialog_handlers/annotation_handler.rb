@@ -29,7 +29,7 @@ module ProjetaPlus
         @dialog.add_action_callback("startRoomAnnotation") do |action_context, json_payload|
           begin
             args = JSON.parse(json_payload)
-            result = ProjetaPlus::Modules::ProRoomAnnotation.start_interactive_annotation(args)
+            result = ProjetaPlus::Modules::ProRoomAnnotation.start_interactive_annotation(args, @dialog)
             send_json_response("handleRoomAnnotationResult", result)
           rescue => e
             error_result = handle_error(e, "room annotation")

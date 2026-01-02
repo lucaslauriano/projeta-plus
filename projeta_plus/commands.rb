@@ -45,7 +45,6 @@ module ProjetaPlus
       @@main_dashboard_dialog.set_on_closed do
         furniture_handler&.detach_selection_observer
         @@main_dashboard_dialog = nil
-        puts "[ProjetaPlus Dialog] Main dialog closed."
       end
       @@main_dashboard_dialog.show
     end
@@ -63,7 +62,6 @@ module ProjetaPlus
     private
     
     def self.register_dialog_handlers
-      puts "[ProjetaPlus Commands] Registering dialog handlers..."
       
       # Initialize all handlers
       settings_handler = ProjetaPlus::DialogHandlers::SettingsHandler.new(@@main_dashboard_dialog)
@@ -99,8 +97,6 @@ module ProjetaPlus
       details_handler.register_callbacks
       electrical_reports_handler.register_callbacks
       
-      puts "[ProjetaPlus Commands] All dialog handlers registered successfully."
-
       furniture_handler
     end
 

@@ -212,8 +212,9 @@ module ProjetaPlus
       class InteractiveRoomAnnotationTool
         include ProjetaPlus::Modules::ProHoverFaceUtil 
         
-        def initialize(args)
+        def initialize(args, dialog = nil)
           @args = args 
+          @dialog = dialog
           @valid_pick = false
         end
 
@@ -252,15 +253,22 @@ module ProjetaPlus
 
           if result[:success]
             model.commit_operation
-            ::UI.messagebox(ProjetaPlus::Localization.t("messages.room_annotation_success"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            if @dialog
+              @dialog.execute_script("window.handleRoomAnnotationResult && window.handleRoomAnnotationResult(#{result.to_json})")
+            end
           else
             model.abort_operation
-            ::UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            if @dialog
+              @dialog.execute_script("window.handleRoomAnnotationResult && window.handleRoomAnnotationResult(#{result.to_json})")
+            end
           end
-          Sketchup.active_model.select_tool(nil) # Desativa a ferramenta após o clique
+          Sketchup.active_model.select_tool(nil) 
         rescue StandardError => e
           model.abort_operation
-          ::UI.messagebox("#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}", MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+          error_result = { success: false, message: "#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}" }
+          if @dialog
+            @dialog.execute_script("window.handleRoomAnnotationResult && window.handleRoomAnnotationResult(#{error_result.to_json})")
+          end
           Sketchup.active_model.select_tool(nil)
         end
 
@@ -269,11 +277,11 @@ module ProjetaPlus
         end
       end
 
-      def self.start_interactive_annotation(args)
+      def self.start_interactive_annotation(args, dialog = nil)
         if Sketchup.active_model.nil?
           return { success: false, message: ProjetaPlus::Localization.t("messages.no_model_open") }
         end
-        Sketchup.active_model.select_tool(InteractiveRoomAnnotationTool.new(args))
+        Sketchup.active_model.select_tool(InteractiveRoomAnnotationTool.new(args, dialog))
         { success: true, message: ProjetaPlus::Localization.t("messages.room_tool_activated") }
       rescue StandardError => e
         { success: false, message: ProjetaPlus::Localization.t("messages.error_activating_tool") + ": #{e.message}" }
