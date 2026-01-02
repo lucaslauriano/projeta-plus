@@ -45,6 +45,7 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'scenes_
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'plans_handlers.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'sections_handlers.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'details_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'electrical_reports_handler.rb')
 
 # Commands (now uses the handlers)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'commands.rb')

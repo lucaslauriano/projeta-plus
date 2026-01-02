@@ -28,8 +28,8 @@ module ProjetaPlus
         preferences_key: "projeta_plus_main_dialog",
         scrollable: true,
         resizable: true,
-        width: 350,
-        min_width: 350,
+        width: 356,
+        min_width: 356,
         height: 700,
         min_height: 700,
         left: 200,
@@ -80,6 +80,7 @@ module ProjetaPlus
       plans_handler = ProjetaPlus::DialogHandlers::PlansHandler.new(@@main_dashboard_dialog)
       sections_handler = ProjetaPlus::DialogHandlers::SectionsHandler.new(@@main_dashboard_dialog)
       details_handler = ProjetaPlus::DialogHandlers::DetailsHandler.new(@@main_dashboard_dialog)
+      electrical_reports_handler = ProjetaPlus::DialogHandlers::ElectricalReportsHandler.new(@@main_dashboard_dialog)
       
       # Register all callbacks
       settings_handler.register_callbacks
@@ -96,6 +97,7 @@ module ProjetaPlus
       plans_handler.register_callbacks
       sections_handler.register_callbacks
       details_handler.register_callbacks
+      electrical_reports_handler.register_callbacks
       
       puts "[ProjetaPlus Commands] All dialog handlers registered successfully."
 

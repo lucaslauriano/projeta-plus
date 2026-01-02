@@ -120,6 +120,30 @@ module ProjetaPlus
       end
 
       # ========================================
+      # MÉTODOS DE EXPORTAÇÃO (OBRIGATÓRIO PARA RELATÓRIOS)
+      # ========================================
+
+      def self.export_csv(report_type, file_path)
+        # IMPORTANTE: file_path é OBRIGATÓRIO (fornecido pelo usuário via UI.savepanel)
+        # Valida modelo ativo
+        # Valida path fornecido
+        # Garante extensão .csv
+        # Busca dados com get_report_data
+        # Valida se há dados para exportar
+        # Escreve CSV com encoding UTF-8
+        # Retorna: { success: true/false, message: "...", path: "..." }
+      end
+
+      def self.export_xlsx(report_type, file_path)
+        # IMPORTANTE: file_path é OBRIGATÓRIO
+        # Verifica plataforma (XLSX só funciona no Windows via WIN32OLE)
+        # No macOS: retorna erro orientando usar CSV
+        # No Windows: pode usar WIN32OLE ou converter CSV
+        # Garante extensão .xlsx
+        # Retorna: { success: true/false, message: "...", path: "..." }
+      end
+
+      # ========================================
       # MÉTODOS DE IMPORTAÇÃO
       # ========================================
 
@@ -254,6 +278,86 @@ module ProjetaPlus
             result = ProjetaPlus::Modules::[NomeDoModulo].load_from_json
             @dialog.execute_script("window.handleLoad[Nome]FromJsonResult(#{result.to_json})")
           rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleLoad[Nome]FromJsonResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        # PICK SAVE FILE PATH (OBRIGATÓRIO PARA MÓDULOS DE RELATÓRIO)
+        @dialog.add_action_callback('pickSaveFilePath') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            default_name = params['defaultName'] || 'export'
+            file_type = params['fileType'] || 'csv'
+            
+            extension = file_type == 'xlsx' ? '.xlsx' : '.csv'
+            filter = file_type == 'xlsx' ? 'Excel Files|*.xlsx||' : 'CSV Files|*.csv||'
+            
+            # IMPORTANTE: Usar ::UI para acessar módulo global do SketchUp
+            path = ::UI.savepanel("Salvar arquivo #{file_type.upcase}", nil, "#{default_name}#{extension}", filter)
+            
+            if path
+              result = { success: true, path: path }
+            else
+              result = { success: false, message: 'Salvar cancelado pelo usuário' }
+            end
+            
+            @dialog.execute_script("window.handlePickSaveFilePathResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handlePickSaveFilePathResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        # EXPORT CSV (OBRIGATÓRIO PARA MÓDULOS DE RELATÓRIO)
+        @dialog.add_action_callback('export[Nome]CSV') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            
+            unless params['path']
+              error_result = { success: false, message: 'Caminho do arquivo não fornecido' }
+              @dialog.execute_script("window.handleExport[Nome]CSVResult(#{error_result.to_json})")
+              return nil
+            end
+            
+            result = ProjetaPlus::Modules::[NomeDoModulo].export_csv(
+              params['reportType'],
+              params['path']
+            )
+            @dialog.execute_script("window.handleExport[Nome]CSVResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleExport[Nome]CSVResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        # EXPORT XLSX (OBRIGATÓRIO PARA MÓDULOS DE RELATÓRIO)
+        @dialog.add_action_callback('export[Nome]XLSX') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            
+            unless params['path']
+              error_result = { success: false, message: 'Caminho do arquivo não fornecido' }
+              @dialog.execute_script("window.handleExport[Nome]XLSXResult(#{error_result.to_json})")
+              return nil
+            end
+            
+            result = ProjetaPlus::Modules::[NomeDoModulo].export_xlsx(
+              params['reportType'],
+              params['path']
+            )
+            @dialog.execute_script("window.handleExport[Nome]XLSXResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleExport[Nome]XLSXResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+      end
             error_result = { success: false, message: e.message }
             @dialog.execute_script("window.handleLoad[Nome]FromJsonResult(#{error_result.to_json})")
           end
@@ -420,6 +524,29 @@ export function use[Nome]() {
       }
     };
 
+    // HANDLERS DE EXPORTAÇÃO (OBRIGATÓRIO PARA MÓDULOS DE RELATÓRIO)
+    window.handlePickSaveFilePathResult = (result: any) => {
+      // Este handler é resolvido via Promise, não precisa fazer nada aqui
+    };
+
+    window.handleExport[Nome]CSVResult = (result: any) => {
+      setIsBusy(false);
+      if (result.success) {
+        toast.success(`Arquivo salvo: ${result.path}`);
+      } else {
+        toast.error(result.message || 'Erro ao exportar CSV');
+      }
+    };
+
+    window.handleExport[Nome]XLSXResult = (result: any) => {
+      setIsBusy(false);
+      if (result.success) {
+        toast.success(`Arquivo salvo: ${result.path}`);
+      } else {
+        toast.error(result.message || 'Erro ao exportar XLSX');
+      }
+    };
+
     // Cleanup
     return () => {
       delete window.handleGet[Entidade]Result;
@@ -430,6 +557,9 @@ export function use[Nome]() {
       delete window.handleLoad[Nome]FromJsonResult;
       delete window.handleLoadDefault[Nome]Result;
       delete window.handleImport[Nome]ToModelResult;
+      delete window.handlePickSaveFilePathResult;
+      delete window.handleExport[Nome]CSVResult;
+      delete window.handleExport[Nome]XLSXResult;
     };
   }, []);
 
@@ -495,6 +625,67 @@ export function use[Nome]() {
     toast.info('Dados limpos');
   };
 
+  // MÉTODOS DE EXPORTAÇÃO (OBRIGATÓRIO PARA MÓDULOS DE RELATÓRIO)
+  const exportCSV = async (reportType: string) => {
+    try {
+      setIsBusy(true);
+      // Primeiro solicita ao usuário onde salvar o arquivo
+      const pathResult = await new Promise<{ success: boolean; path?: string; message?: string }>((resolve) => {
+        (window as any).handlePickSaveFilePathResult = (result: any) => resolve(result);
+        callSketchupMethod('pickSaveFilePath', { 
+          defaultName: reportType, 
+          fileType: 'csv' 
+        });
+      });
+
+      if (!pathResult.success || !pathResult.path) {
+        toast.info(pathResult.message || 'Exportação cancelada');
+        setIsBusy(false);
+        return;
+      }
+
+      // Agora exporta para o caminho escolhido
+      await callSketchupMethod('export[Nome]CSV', { 
+        reportType, 
+        path: pathResult.path 
+      });
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      toast.error('Erro ao exportar CSV');
+      setIsBusy(false);
+    }
+  };
+
+  const exportXLSX = async (reportType: string) => {
+    try {
+      setIsBusy(true);
+      // Primeiro solicita ao usuário onde salvar o arquivo
+      const pathResult = await new Promise<{ success: boolean; path?: string; message?: string }>((resolve) => {
+        (window as any).handlePickSaveFilePathResult = (result: any) => resolve(result);
+        callSketchupMethod('pickSaveFilePath', { 
+          defaultName: reportType, 
+          fileType: 'xlsx' 
+        });
+      });
+
+      if (!pathResult.success || !pathResult.path) {
+        toast.info(pathResult.message || 'Exportação cancelada');
+        setIsBusy(false);
+        return;
+      }
+
+      // Agora exporta para o caminho escolhido
+      await callSketchupMethod('export[Nome]XLSX', { 
+        reportType, 
+        path: pathResult.path 
+      });
+    } catch (error) {
+      console.error('Error exporting XLSX:', error);
+      toast.error('Erro ao exportar XLSX');
+      setIsBusy(false);
+    }
+  };
+
   // ========================================
   // LIFECYCLE
   // ========================================
@@ -518,6 +709,8 @@ export function use[Nome]() {
     loadFromJson,
     loadDefault,
     loadFromFile,
+    exportCSV,     // Para módulos de relatório
+    exportXLSX,    // Para módulos de relatório
     importToModel,
     clearAll,
   };

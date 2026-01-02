@@ -21,7 +21,6 @@ module ProjetaPlus
       # MÉTODOS DE GRUPOS
       # ========================================
 
-      # Adiciona novo grupo
       def add_group(params)
         require_relative 'pro_sections_persistence'
         result = ProjetaPlus::Modules::ProSectionsPersistence.load_from_json
@@ -47,7 +46,6 @@ module ProjetaPlus
         { success: false, message: "Erro ao adicionar grupo: #{e.message}" }
       end
 
-      # Atualiza grupo existente
       def update_group(id, params)
         require_relative 'pro_sections_persistence'
         result = ProjetaPlus::Modules::ProSectionsPersistence.load_from_json
@@ -70,7 +68,6 @@ module ProjetaPlus
         { success: false, message: "Erro ao atualizar grupo: #{e.message}" }
       end
 
-      # Remove grupo
       def delete_group(id)
         require_relative 'pro_sections_persistence'
         result = ProjetaPlus::Modules::ProSectionsPersistence.load_from_json
@@ -98,7 +95,6 @@ module ProjetaPlus
       # MÉTODOS DE SEGMENTOS
       # ========================================
 
-      # Adiciona segmento a um grupo
       def add_segment(group_id, params)
         require_relative 'pro_sections_persistence'
         result = ProjetaPlus::Modules::ProSectionsPersistence.load_from_json
@@ -114,7 +110,7 @@ module ProjetaPlus
 
         new_segment = {
           'id' => params['id'] || params[:id] || Time.now.to_i.to_s,
-          'name' => params['name'] || params[:name] || 'Novo Segmento',
+          'name' => params['name'] || params[:name] || 'Novo Corte',
           'code' => params['code'] || params[:code] || '',
           'style' => params['style'] || params[:style] || 'FM_VISTAS',
           'activeLayers' => params['activeLayers'] || params[:activeLayers] || []

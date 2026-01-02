@@ -114,8 +114,7 @@ module ProjetaPlus
 
       def self.process_room_annotation(grupo, args, hover_face = nil, hover_extents = nil)
         model = Sketchup.active_model
-        # Uses a layer '-ANOTAÇÃO-AMBIENTE (Environment Legend)
-        layer = model.layers.add('-ANOTAÇÃO-AMBIENTE')
+        layer = model.layers.add('-ANOTACAO-AMBIENTE')
 
         enviroment_name   = args['enviroment_name'].to_s
         scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
