@@ -93,23 +93,18 @@ module ProjetaPlus
         
         model = Sketchup.active_model
         
-        # Use the BoundingBox that was already calculated in ProHoverFaceUtil
         bounding_box = hover_extents
         
-        # Get the exact center of the face using the BoundingBox
         center_point = Geom::Point3d.new(
           bounding_box.center.x, 
           bounding_box.center.y, 
           bounding_box.min.z
         )
-        
-        # Calculate world normal
+
         world_normal = @hover_face.normal.transform(@world_transformation).normalize
-        
-        # Get axes from normal
+
         x_axis, y_axis, z_axis = ProjetaPlus::Modules::ProViewAnnotation.axes_from_normal(world_normal)
-        
-        # Load the block definition
+
         component_definition = ProjetaPlus::Modules::ProViewAnnotation.load_definition
         unless component_definition
           ::UI.messagebox(ProjetaPlus::Localization.t("messages.view_annotation_block_not_found"), 
@@ -118,20 +113,15 @@ module ProjetaPlus
         end
         
         model.start_operation(ProjetaPlus::Localization.t("commands.view_annotation_operation_name"), true)
-        
-        # Offset the center point by cut level
+
         center_point = center_point.offset(z_axis, CUT_LEVEL.to_f / CM_TO_INCHES_CONVERSION_FACTOR)
-        
-        # Create transformation
+
         transformation = Geom::Transformation.axes(center_point, x_axis, y_axis, z_axis)
-        
-        # Create instance
+
         instance = model.active_entities.add_instance(component_definition, transformation)
-        
-        # Scale the instance
+
         instance.transform!(Geom::Transformation.scaling(instance.bounds.center, ProjetaPlus::Modules::ProSettingsUtils.get_scale))
-        
-        # Select the instance
+
         model.selection.clear
         model.selection.add(instance)
         

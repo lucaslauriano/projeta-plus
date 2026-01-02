@@ -25,6 +25,7 @@ messages:
   room_annotation_error_no_group: 'Por favor, selecione pelo menos um grupo (mesmo que esteja dentro de outro grupo).'
   section_annotation_success: 'Anotações de Corte criadas com sucesso!'
   section_annotation_error_no_plane: 'Não há planos de corte no modelo. Por favor, crie um antes de usar esta função.'
+  section_annotation_error_no_vertical_plane: 'Não há planos de corte verticais no modelo. Por favor, crie um corte vertical antes de aplicar a anotação.'
   no_model_saved: 'Nenhum modelo salvo'
   app_message_title: 'Mensagem Projeta+'
   function_not_found: 'Função %{function} não encontrada no módulo %{module}'

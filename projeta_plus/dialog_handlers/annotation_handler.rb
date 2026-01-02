@@ -42,7 +42,7 @@ module ProjetaPlus
       def register_section_annotation_callbacks
         @dialog.add_action_callback("startSectionAnnotation") do |action_context, json_payload|
           begin
-            result = ProjetaPlus::Modules::ProSectionAnnotation.start_interactive_annotation
+            result = ProjetaPlus::Modules::ProSectionAnnotation.start_interactive_annotation(nil, @dialog)
             send_json_response("handleSectionAnnotationResult", result)
           rescue => e
             error_result = handle_error(e, "section annotation")

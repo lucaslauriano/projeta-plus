@@ -12,6 +12,7 @@ messages:
   room_annotation_error_no_group: "Please select at least one group (even if it's inside another group)."
   section_annotation_success: 'Section annotations created successfully!'
   section_annotation_error_no_plane: 'No section planes in the model. Please create one before using this function.'
+  section_annotation_error_no_vertical_plane: 'There are no vertical section planes in the model. Please create a vertical section before applying the annotation.'
   no_model_saved: 'No model saved'
   app_message_title: 'Projeta Plus Message'
   function_not_found: 'Function %{function} not found in module %{module}'
