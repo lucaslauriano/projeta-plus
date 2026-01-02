@@ -52,26 +52,28 @@ module ProjetaPlus
           camera_type = params['cameraType'] || params[:cameraType]
           active_layers = params['activeLayers'] || params[:activeLayers]
 
-        # Validar parâmetros
-        valid, error_msg = validate_params(name, style, camera_type)
-        return { success: false, message: error_msg } unless valid
+          # Validar parâmetros
+          valid, error_msg = validate_params(name, style, camera_type)
+          return { success: false, message: error_msg } unless valid
 
-        # Verificar se já existe
-        if model.pages.find { |p| p.name.downcase == name.downcase }
-          return { success: false, message: "#{entity_name_singular.capitalize} '#{name}' já existe" }
-        end
+          # Verificar se já existe
+          if model.pages.find { |p| p.name.downcase == name.downcase }
+            return { success: false, message: "#{entity_name_singular.capitalize} '#{name}' já existe" }
+          end
 
-        model.start_operation("Adicionar #{entity_name_singular.capitalize}", true)
+          model.start_operation("Adicionar #{entity_name_singular.capitalize}", true)
 
-        # Aplicar configurações antes de criar
-        apply_style(style) if style && !style.empty?
-        apply_layers_visibility(active_layers) if active_layers
+          # Aplicar configurações antes de criar
+          apply_style(style) if style && !style.empty?
+          apply_layers_visibility(active_layers) if active_layers
 
           # Criar a página
           page = model.pages.add(name)
 
           # Configurar câmera
           apply_camera_config(page, camera_type) if camera_type
+
+          unhide_all_elements
 
           # Zoom extents e atualizar
           model.active_view.zoom_extents
@@ -99,44 +101,51 @@ module ProjetaPlus
         end
       end
 
-      # Atualiza configuração existente
+      # Atualiza configuração existente (suporta scope: current / <n> / all)
       def update_item(name, params)
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         begin
           model = Sketchup.active_model
-          page = model.pages.find { |p| p.name.downcase == name.downcase }
-
-          unless page
-            return { success: false, message: "#{entity_name_singular.capitalize} '#{name}' não encontrada" }
-          end
-
           style = params['style'] || params[:style]
           camera_type = params['cameraType'] || params[:cameraType]
           active_layers = params['activeLayers'] || params[:activeLayers]
-
+      
+          # Determinar páginas alvo conforme o escopo passado (current / número / all)
+          target_names = parse_update_scope(name, params, model)
+      
           model.start_operation("Atualizar #{entity_name_singular.capitalize}", true)
+      
+          updated = []
+      
+          target_names.each do |target_name|
+            page = model.pages.find { |p| p.name.downcase == target_name.downcase }
+            if page
+              model.pages.selected_page = page
+            else
+              page = model.pages.add(target_name)
+            end
+            
+            # Aplicar estilo e camadas para cada página
+            apply_style(style) if style && !style.empty?
+            apply_layers_visibility(active_layers) if active_layers
+      
+            # Aplicar configuração de câmera (usa a página)
+            apply_camera_config(page, camera_type) if camera_type
 
-          # Selecionar a página
-          model.pages.selected_page = page
-
-          # Aplicar estilo
-          apply_style(style) if style && !style.empty?
-
-          # Aplicar visibilidade de camadas
-          apply_layers_visibility(active_layers) if active_layers
-
-          # Aplicar configuração de câmera
-          apply_camera_config(page, camera_type) if camera_type
-
-          # Atualizar a página (sem renomear - usuário cria nova cena se quiser nome diferente)
-          model.active_view.zoom_extents
-          page.update
-
+            unhide_all_elements
+      
+            # Atualizar a página
+            model.active_view.zoom_extents
+            page.update
+      
+            updated << target_name
+          end
+      
           model.commit_operation
-
+      
           {
             success: true,
-            message: "#{entity_name_singular.capitalize} '#{name}' atualizada com sucesso"
+            message: "#{entity_name_singular.capitalize} '#{name}' atualizada(s): #{updated.join(', ')}"
           }
         rescue => e
           model.abort_operation if model
@@ -175,77 +184,47 @@ module ProjetaPlus
         end
       end
 
-      # Aplica configuração (cria se não existir)
+      # Aplica configuração (cria se não existir) — suporta scope (current / <n> / all)
       def apply_config(name, config)
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         begin
           model = Sketchup.active_model
-          
-          # Detectar número do nível da cena atual
-          level_number = detect_level_number_from_current_scene(model)
-          
-          # Adicionar número ao nome se estiver em uma cena de nível específico
-          final_name = level_number > 1 ? "#{name}#{level_number}" : name
-          
-          page = model.pages.find { |p| p.name.downcase == final_name.downcase }
-          
+
+          # Determinar nomes finais conforme o escopo em config (mesma lógica de update)
+          target_names = parse_update_scope(name, config, model)
+
           model.start_operation("Aplicar Configuração de #{entity_name_singular.capitalize}", true)
-          
-          # Reexibir todos os elementos ocultos
-          unhide_all_elements
-          
-          # Criar página se não existir ou selecionar se já existe
-          if page
-            model.pages.selected_page = page
-            message = "#{entity_name_singular.capitalize} '#{final_name}' atualizada com sucesso"
-          else
-            page = model.pages.add(final_name)
-            message = "#{entity_name_singular.capitalize} '#{final_name}' criada com sucesso"
-          end
-          
-          # Aplicar configurações
-          style = config['style'] || config[:style]
-          apply_style(style) if style && !style.empty?
-          
-          active_layers = config['activeLayers'] || config[:activeLayers]
-          apply_layers_visibility(active_layers) if active_layers
-          
-          camera_type = config['cameraType'] || config[:cameraType]
-          if camera_type
-            camera = model.active_view.camera
-            camera_type_sym = camera_type.is_a?(String) ? camera_type.to_sym : camera_type
-            
-            case camera_type_sym
-            when :iso_perspectiva, :iso
-              configure_iso_camera_direct
-              camera.perspective = true
-            when :iso_ortogonal
-              configure_iso_camera_direct
-              camera.perspective = false
-            when :iso_invertida_perspectiva
-              configure_inverted_camera_direct
-              camera.perspective = true
-            when :iso_invertida_ortogonal
-              configure_inverted_camera_direct
-              camera.perspective = false
-            when :topo_perspectiva, :topo
-              configure_top_camera_direct
-              camera.perspective = true
-            when :topo_ortogonal
-              configure_top_camera_direct
-              camera.perspective = false
+
+          target_names.each do |final_name|
+            page = model.pages.find { |p| p.name.downcase == final_name.downcase }
+
+            if page
+              model.pages.selected_page = page
+            else
+              page = model.pages.add(final_name)
             end
-            
-            model.active_view.camera = camera
+
+            # Aplicar configurações
+            style = config['style'] || config[:style]
+            apply_style(style) if style && !style.empty?
+
+            active_layers = config['activeLayers'] || config[:activeLayers]
+            apply_layers_visibility(active_layers) if active_layers
+
+            camera_type = config['cameraType'] || config[:cameraType]
+            apply_camera_config(page, camera_type) if camera_type
+
+            unhide_all_elements
+
+            model.active_view.zoom_extents
+            page.update
           end
-          
-          model.active_view.zoom_extents
-          page.update
+
           model.commit_operation
-          
+
           {
             success: true,
-            message: message
+            message: "Configuração aplicada para: #{target_names.join(', ')}"
           }
         rescue => e
           model.abort_operation if model
@@ -551,6 +530,36 @@ module ProjetaPlus
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         return [false, "Nome da #{entity_name_singular} é obrigatório"] if name.nil? || name.strip.empty?
         [true, nil]
+      end
+
+      # Resolve lista de nomes de cenas alvo com base no escopo passado em params[:scope]
+      # scope pode ser: 'current'|'atual' (padrão), 'all'|'todos', um número '2' ou 'nivel_2'
+      def parse_update_scope(base_name, params, model)
+        scope = params && (params['scope'] || params[:scope]) || 'current'
+        scope_str = scope.to_s.downcase
+
+        case scope_str
+        when 'current', 'atual', 'apenas_atual', 'apenas atual'
+          level_number = detect_level_number_from_current_scene(model)
+          final_name = level_number > 1 ? "#{base_name}_#{level_number}" : base_name
+          [final_name]
+        when 'all', 'todos', 'todas', 'todos_niveis', 'todos níveis'
+          pattern = /^#{Regexp.escape(base_name)}(?:_(\d+))?$/i
+          matches = model.pages.map(&:name).select { |n| n =~ pattern }
+          matches.empty? ? [base_name] : matches
+        else
+          if scope_str =~ /^\d+$/
+            level = scope_str.to_i
+            final_name = level > 1 ? "#{base_name}_#{level}" : base_name
+            [final_name]
+          elsif scope_str =~ /^nivel[_-]?(\d+)$/i
+            level = $1.to_i
+            final_name = level > 1 ? "#{base_name}_#{level}" : base_name
+            [final_name]
+          else
+            [base_name]
+          end
+        end
       end
 
       def apply_style(style_name)
