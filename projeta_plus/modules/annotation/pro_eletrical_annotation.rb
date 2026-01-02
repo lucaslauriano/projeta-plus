@@ -48,9 +48,9 @@ module ProjetaPlus
           }
         end
 
-        def start_interactive_annotation(args)
+        def start_interactive_annotation(args, dialog = nil)
           return { success: false, message: ProjetaPlus::Localization.t('messages.no_model_open') } if Sketchup.active_model.nil?
-          Sketchup.active_model.select_tool(InteractiveEletricalAnnotationTool.new(args))
+          Sketchup.active_model.select_tool(InteractiveEletricalAnnotationTool.new(args, dialog))
           { success: true, message: ProjetaPlus::Localization.t('messages.height_tool_activated') }
         rescue => e
           { success: false, message: ProjetaPlus::Localization.t('messages.error_activating_tool') + ": #{e.message}" }
@@ -60,8 +60,9 @@ module ProjetaPlus
       class InteractiveEletricalAnnotationTool
         include ProjetaPlus::Modules::ProHoverFaceUtil
 
-        def initialize(args = {})
+        def initialize(args = {}, dialog = nil)
           @args = args || {}
+          @dialog = dialog
           @scale = (@args['scale'] || ProjetaPlus::Modules::ProSettingsUtils.get_scale).to_i
           @height_z = (@args['height_z_cm'] || ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm).to_f / CM_TO_INCHES_CONVERSION_FACTOR
           @font = (@args['font'] || ProjetaPlus::Modules::ProSettingsUtils.get_font).to_s
@@ -346,7 +347,10 @@ module ProjetaPlus
             colorize_safe(g)
 
           rescue => e
-            UI.messagebox("Erro ao criar anotação: #{e.class} - #{e.message}")
+            if @dialog
+              error_msg = "Erro ao criar anotação: #{e.class} - #{e.message}".gsub("'", "\\\\'")
+              @dialog.execute_script("showMessage('#{error_msg}', 'error');")
+            end
           ensure
             model.commit_operation
           end

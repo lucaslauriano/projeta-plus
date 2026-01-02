@@ -56,7 +56,7 @@ module ProjetaPlus
         @dialog.add_action_callback("startCeilingAnnotation") do |action_context, json_payload|
           begin
             args = JSON.parse(json_payload)
-            result = ProjetaPlus::Modules::ProCeilingAnnotation.start_interactive_annotation(args)
+            result = ProjetaPlus::Modules::ProCeilingAnnotation.start_interactive_annotation(args, @dialog)
             send_json_response("handleCeilingAnnotationResult", result)
           rescue => e
             error_result = handle_error(e, "ceiling annotation")
@@ -90,10 +90,10 @@ module ProjetaPlus
           end
           
           # Activate the view Annotation tool
-          tool = ProjetaPlus::Modules::ProViewAnnotation::ViewAnnotationTool.new
+          tool = ProjetaPlus::Modules::ProViewAnnotation::ViewAnnotationTool.new(@dialog)
           model.select_tool(tool)
           
-          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.view_annotation_tool_activated")}', 'success');")
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.view_annotation_ready")}', 'info');")
           
         rescue => e
           puts "[ProjetaPlus] Error activating view Annotation tool: #{e.message}"
@@ -181,7 +181,7 @@ module ProjetaPlus
       def register_circuit_connection_callbacks
         @dialog.add_action_callback("startCircuitConnection") do |action_context|
           begin
-            result = ProjetaPlus::Modules::ProCircuitConnection.start_interactive_connection
+            result = ProjetaPlus::Modules::ProCircuitConnection.start_interactive_connection(@dialog)
             log("Circuit connection tool started")
             send_json_response("handleCircuitConnectionResult", result)
           rescue => e
@@ -203,7 +203,7 @@ module ProjetaPlus
         @dialog.add_action_callback("startEletricalAnnotation") do |action_context, json_payload|
           begin
             args = JSON.parse(json_payload)
-            result = ProjetaPlus::Modules::ProEletricalAnnotation.start_interactive_annotation(args)
+            result = ProjetaPlus::Modules::ProEletricalAnnotation.start_interactive_annotation(args, @dialog)
             log("Height annotation started with args: #{args.inspect}")
             send_json_response("handleEletricalAnnotationResult", result)
           rescue => e

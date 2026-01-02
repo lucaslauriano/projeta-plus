@@ -158,7 +158,8 @@ module ProjetaPlus
           handle_escape(view)
         end
         
-        def initialize
+        def initialize(dialog = nil)
+          @dialog = dialog
           @last_esc_at = Time.at(0)
           @first_object = nil
           @second_object = nil
@@ -386,21 +387,30 @@ module ProjetaPlus
           
           if result[:success]
             model.commit_operation
+            if @dialog
+              @dialog.execute_script("showMessage('#{result[:message]}', 'success');")
+            end
           else
             model.abort_operation
-            ::UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            if @dialog
+              escaped_message = result[:message].gsub("'", "\\\\'")
+              @dialog.execute_script("showMessage('#{escaped_message}', 'error');")
+            end
           end
         rescue StandardError => e
           model.abort_operation
-          ::UI.messagebox("#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}", MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+          if @dialog
+            error_msg = "#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}".gsub("'", "\\\\'")
+            @dialog.execute_script("showMessage('#{error_msg}', 'error');")
+          end
         end
       end
 
-      def self.start_interactive_connection
+      def self.start_interactive_connection(dialog = nil)
         if Sketchup.active_model.nil?
           return { success: false, message: ProjetaPlus::Localization.t("messages.no_model_open") }
         end
-        Sketchup.active_model.select_tool(InteractiveCircuitConnectionTool.new)
+        Sketchup.active_model.select_tool(InteractiveCircuitConnectionTool.new(dialog))
         { success: true, message: ProjetaPlus::Localization.t("messages.circuit_connection_tool_activated") }
       rescue StandardError => e
         { success: false, message: ProjetaPlus::Localization.t("messages.error_activating_tool") + ": #{e.message}" }

@@ -17,7 +17,9 @@ module ProjetaPlus
         @dialog.add_action_callback("showMessageBox") do |action_context, message_from_js|
           model_name = get_current_model_name
           log("Received from JS: #{message_from_js} '#{model_name}'")
-          ::UI.messagebox(message_from_js, MB_OK, ProjetaPlus::Localization.t("messages.app_message_title"))
+          # Messages should be shown in the frontend using showMessage function
+          escaped_message = message_from_js.gsub("'", "\\\\'")
+          @dialog.execute_script("showMessage('#{escaped_message}', 'info');")
           nil
         end
       end

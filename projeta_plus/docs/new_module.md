@@ -37,7 +37,7 @@ projeta_plus/
 
 ### **Template Base:**
 
-```ruby
+````ruby
 # encoding: UTF-8
 require 'sketchup.rb'
 require 'json'
@@ -290,19 +290,19 @@ module ProjetaPlus
             params = JSON.parse(payload)
             default_name = params['defaultName'] || 'export'
             file_type = params['fileType'] || 'csv'
-            
+
             extension = file_type == 'xlsx' ? '.xlsx' : '.csv'
             filter = file_type == 'xlsx' ? 'Excel Files|*.xlsx||' : 'CSV Files|*.csv||'
-            
+
             # IMPORTANTE: Usar ::UI para acessar módulo global do SketchUp
             path = ::UI.savepanel("Salvar arquivo #{file_type.upcase}", nil, "#{default_name}#{extension}", filter)
-            
+
             if path
               result = { success: true, path: path }
             else
               result = { success: false, message: 'Salvar cancelado pelo usuário' }
             end
-            
+
             @dialog.execute_script("window.handlePickSaveFilePathResult(#{result.to_json})")
           rescue => e
             error_result = { success: false, message: e.message }
@@ -315,13 +315,13 @@ module ProjetaPlus
         @dialog.add_action_callback('export[Nome]CSV') do |_context, payload|
           begin
             params = JSON.parse(payload)
-            
+
             unless params['path']
               error_result = { success: false, message: 'Caminho do arquivo não fornecido' }
               @dialog.execute_script("window.handleExport[Nome]CSVResult(#{error_result.to_json})")
               return nil
             end
-            
+
             result = ProjetaPlus::Modules::[NomeDoModulo].export_csv(
               params['reportType'],
               params['path']
@@ -338,13 +338,13 @@ module ProjetaPlus
         @dialog.add_action_callback('export[Nome]XLSX') do |_context, payload|
           begin
             params = JSON.parse(payload)
-            
+
             unless params['path']
               error_result = { success: false, message: 'Caminho do arquivo não fornecido' }
               @dialog.execute_script("window.handleExport[Nome]XLSXResult(#{error_result.to_json})")
               return nil
             end
-            
+
             result = ProjetaPlus::Modules::[NomeDoModulo].export_xlsx(
               params['reportType'],
               params['path']
@@ -632,9 +632,9 @@ export function use[Nome]() {
       // Primeiro solicita ao usuário onde salvar o arquivo
       const pathResult = await new Promise<{ success: boolean; path?: string; message?: string }>((resolve) => {
         (window as any).handlePickSaveFilePathResult = (result: any) => resolve(result);
-        callSketchupMethod('pickSaveFilePath', { 
-          defaultName: reportType, 
-          fileType: 'csv' 
+        callSketchupMethod('pickSaveFilePath', {
+          defaultName: reportType,
+          fileType: 'csv'
         });
       });
 
@@ -645,9 +645,9 @@ export function use[Nome]() {
       }
 
       // Agora exporta para o caminho escolhido
-      await callSketchupMethod('export[Nome]CSV', { 
-        reportType, 
-        path: pathResult.path 
+      await callSketchupMethod('export[Nome]CSV', {
+        reportType,
+        path: pathResult.path
       });
     } catch (error) {
       console.error('Error exporting CSV:', error);
@@ -662,9 +662,9 @@ export function use[Nome]() {
       // Primeiro solicita ao usuário onde salvar o arquivo
       const pathResult = await new Promise<{ success: boolean; path?: string; message?: string }>((resolve) => {
         (window as any).handlePickSaveFilePathResult = (result: any) => resolve(result);
-        callSketchupMethod('pickSaveFilePath', { 
-          defaultName: reportType, 
-          fileType: 'xlsx' 
+        callSketchupMethod('pickSaveFilePath', {
+          defaultName: reportType,
+          fileType: 'xlsx'
         });
       });
 
@@ -675,9 +675,9 @@ export function use[Nome]() {
       }
 
       // Agora exporta para o caminho escolhido
-      await callSketchupMethod('export[Nome]XLSX', { 
-        reportType, 
-        path: pathResult.path 
+      await callSketchupMethod('export[Nome]XLSX', {
+        reportType,
+        path: pathResult.path
       });
     } catch (error) {
       console.error('Error exporting XLSX:', error);
@@ -802,26 +802,231 @@ JSON: Remover BOM UTF-8 ao carregar arquivos
 Paths: Usar File.join para compatibilidade cross-platform
 Constantes: UPPERCASE para constantes de módulo
 Privado: Métodos auxiliares devem ser private
-TypeScript:
-Tipos: Sempre definir interfaces para entidades
-Handlers: Prefixo handle + ação + Result
-Métodos: camelCase, verbos no infinitivo
-Estados: useState para dados mutáveis
-Cleanup: Sempre deletar handlers globais no cleanup
-Mock: Suporte a modo desenvolvimento sem SketchUp
-Validações: Validar no frontend antes de enviar ao backend
-Feedback: Toast para todas as ações do usuário
-Loading: Usar isBusy para estados de carregamento
-Async: Funções que chamam Ruby devem ser async
-Comunicação Ruby ↔ JavaScript:
-Ruby → JS: @dialog.execute_script("window.handler(#{json})")
-JS → Ruby: window.sketchup.callbackName(JSON.stringify(params))
-Formato: Sempre JSON
-Encoding: UTF-8
-Erro: Sempre incluir success: false e message
-📝 EXEMPLO DE USO DO PROMPT
+Mensagens: NUNCA usar UI.messagebox - sempre enviar ao frontend
+
+📬 PADRÃO DE MENSAGENS (IMPORTANTE!)
+
+**REGRA DE OURO: NUNCA USE UI.messagebox**
+
+Todas as mensagens devem ser enviadas ao frontend usando o padrão abaixo:
+
+### 1. Adicionar mensagens no arquivo de linguagens
+
+**Localização:** `projeta_plus/lang/pt-BR.yml`
+
+```yaml
+messages:
+  # Mensagens de ativação de ferramenta
+  [modulo]_tool_activated: 'Ferramenta de [nome] ativada.'
+  [modulo]_ready: 'Ferramenta de [nome] pronta. Clique para adicionar.'
+
+  # Mensagens de sucesso
+  [modulo]_success: '[Ação] realizada com sucesso!'
+
+  # Mensagens de erro
+  error_adding_[modulo]: 'Erro ao adicionar [nome]'
+  [modulo]_not_found: '[Nome] não encontrado.'
+````
+
+### 2. Enviar mensagens ao frontend via execute_script
+
+**No Ruby (Tool ou Handler):**
+
+```ruby
+# Mensagem de sucesso
+if @dialog
+  @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.[modulo]_success")}', 'success');")
+end
+
+# Mensagem de erro
+if @dialog
+  escaped_message = message.gsub("'", "\\\\'")
+  @dialog.execute_script("showMessage('#{escaped_message}', 'error');")
+end
+
+# Mensagem informativa
+if @dialog
+  @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.[modulo]_ready")}', 'info');")
+end
+```
+
+### 3. Tipos de mensagem disponíveis
+
+- `'success'` - Mensagem de sucesso (verde)
+- `'error'` - Mensagem de erro (vermelho)
+- `'info'` - Mensagem informativa (azul)
+- `'warning'` - Mensagem de aviso (amarelo)
+
+### 4. Padrão para Tools Interativas
+
+**Quando a ferramenta é ativada:**
+
+```ruby
+def activate_[modulo]_tool
+  begin
+    model = Sketchup.active_model
+
+    if model.nil?
+      @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.no_model_open")}', 'error');")
+      return
+    end
+
+    tool = ProjetaPlus::Modules::[Modulo]::InteractiveTool.new(@dialog)
+    model.select_tool(tool)
+
+    # Mensagem informativa quando ferramenta está pronta
+    @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.[modulo]_ready")}', 'info');")
+
+  rescue => e
+    puts "[ProjetaPlus] Error activating tool: #{e.message}"
+    @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.error_activating_tool")}', 'error');")
+  end
+end
+```
+
+**Quando a ação é completada:**
+
+```ruby
+def onLButtonDown(flags, x, y, view)
+  # ... lógica da ferramenta ...
+
+  model.commit_operation
+
+  # Mensagem de sucesso após completar
+  if @dialog
+    @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.[modulo]_success")}', 'success');")
+  end
+end
+```
+
+### 5. Escape de caracteres especiais
+
+Sempre escape aspas simples em mensagens dinâmicas:
+
+```ruby
+escaped_message = message.gsub("'", "\\\\'")
+@dialog.execute_script("showMessage('#{escaped_message}', 'error');")
+```
+
+### 6. Passar dialog para Tools
+
+**No initialize da Tool:**
+
+```ruby
+class InteractiveTool
+  def initialize(dialog = nil)
+    @dialog = dialog
+  end
+end
+```
+
+**No Handler ao criar a Tool:**
+
+```ruby
+tool = ProjetaPlus::Modules::[Modulo]::InteractiveTool.new(@dialog)
+model.select_tool(tool)
+```
+
+**No método start_interactive:**
+
+```ruby
+def self.start_interactive_annotation(args, dialog = nil)
+  return { success: false, message: '...' } if Sketchup.active_model.nil?
+
+  Sketchup.active_model.select_tool(InteractiveTool.new(args, dialog))
+  { success: true, message: '...' }
+end
+```
+
+### 7. Exemplo completo
+
+```ruby
+# No módulo
+class InteractiveTool
+  def initialize(args, dialog = nil)
+    @args = args
+    @dialog = dialog
+  end
+
+  def onLButtonDown(flags, x, y, view)
+    return unless @valid_pick
+
+    model = Sketchup.active_model
+    model.start_operation('Operação', true)
+
+    begin
+      # Lógica da operação
+      result = process_action
+
+      if result[:success]
+        model.commit_operation
+        if @dialog
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.success")}', 'success');")
+        end
+      else
+        model.abort_operation
+        if @dialog
+          escaped_msg = result[:message].gsub("'", "\\\\'")
+          @dialog.execute_script("showMessage('#{escaped_msg}', 'error');")
+        end
+      end
+    rescue => e
+      model.abort_operation
+      if @dialog
+        error_msg = "Erro: #{e.message}".gsub("'", "\\\\'")
+        @dialog.execute_script("showMessage('#{error_msg}', 'error');")
+      end
+    end
+  end
+end
+
+# No handler
+def register_callbacks
+  @dialog.add_action_callback("start[Modulo]Tool") do |action_context, json_payload|
+    begin
+      args = JSON.parse(json_payload)
+      result = ProjetaPlus::Modules::[Modulo].start_interactive_annotation(args, @dialog)
+      send_json_response("handle[Modulo]Result", result)
+    rescue => e
+      error_result = handle_error(e, "[modulo]")
+      send_json_response("handle[Modulo]Result", error_result)
+    end
+    nil
+  end
+end
+```
+
+### ✅ Checklist de Mensagens
+
+- [ ] Todas as mensagens estão em `lang/pt-BR.yml`
+- [ ] Nenhum `UI.messagebox` está sendo usado
+- [ ] Dialog é passado para Tools via `initialize`
+- [ ] Mensagens de "ready" quando ferramenta é ativada (tipo 'info')
+- [ ] Mensagens de sucesso após ações completadas (tipo 'success')
+- [ ] Mensagens de erro com escape de aspas (tipo 'error')
+- [ ] Todas as mensagens usam `ProjetaPlus::Localization.t()`
+- [ ] Mensagens dinâmicas têm escape: `.gsub("'", "\\\\'")`
+      TypeScript:
+      Tipos: Sempre definir interfaces para entidades
+      Handlers: Prefixo handle + ação + Result
+      Métodos: camelCase, verbos no infinitivo
+      Estados: useState para dados mutáveis
+      Cleanup: Sempre deletar handlers globais no cleanup
+      Mock: Suporte a modo desenvolvimento sem SketchUp
+      Validações: Validar no frontend antes de enviar ao backend
+      Feedback: Toast para todas as ações do usuário
+      Loading: Usar isBusy para estados de carregamento
+      Async: Funções que chamam Ruby devem ser async
+      Comunicação Ruby ↔ JavaScript:
+      Ruby → JS: @dialog.execute_script("window.handler(#{json})")
+      JS → Ruby: window.sketchup.callbackName(JSON.stringify(params))
+      Formato: Sempre JSON
+      Encoding: UTF-8
+      Erro: Sempre incluir success: false e message
+      📝 EXEMPLO DE USO DO PROMPT
 
 Crie um novo módulo chamado "Materials" que:
+
 - Gerencia materiais personalizados do SketchUp
 - Permite criar, editar, deletar e listar materiais
 - Cada material tem: nome, cor RGB, textura (path opcional)
@@ -834,25 +1039,27 @@ Siga o padrão estabelecido e crie toda a estrutura necessária.
 ✅ VALIDAÇÃO FINAL
 Após criar o módulo, verificar:
 
- Módulo Ruby funciona standalone (sem erros de sintaxe)
- Handler registra callbacks corretamente
- Frontend hook compila sem erros TypeScript
- Comunicação Ruby ↔ JS funciona (teste manual)
- Operações CRUD funcionam corretamente
- Persistência JSON salva e carrega dados
- Importação para modelo funciona
- Toast notifications aparecem
- Loading states funcionam
- Modo mock funciona para desenvolvimento
- Erros são tratados graciosamente
- Código segue padrões de formatação
- Documentação inline está presente
+Módulo Ruby funciona standalone (sem erros de sintaxe)
+Handler registra callbacks corretamente
+Frontend hook compila sem erros TypeScript
+Comunicação Ruby ↔ JS funciona (teste manual)
+Operações CRUD funcionam corretamente
+Persistência JSON salva e carrega dados
+Importação para modelo funciona
+Toast notifications aparecem
+Loading states funcionam
+Modo mock funciona para desenvolvimento
+Erros são tratados graciosamente
+Código segue padrões de formatação
+Documentação inline está presente
 🎉 Prompt Template Completo! Use este guia para criar novos módulos com consistência arquitetural.
-
 
 Arquivo criado em: `MODULE_CREATION_TEMPLATE.md`
 
 Este arquivo markdown contém todo o template e padrões para criar novos módulos no sistema ProjetaPlus. Você pode usá-lo como referência sempre que precisar criar um novo módulo! 📚Arquivo criado em: `MODULE_CREATION_TEMPLATE.md`
 
 Este arquivo markdown contém todo o template e padrões para criar novos módulos no sistema ProjetaPlus. Você pode usá-lo como referência sempre que precisar criar um novo módulo! 📚
+
+```
+
 ```

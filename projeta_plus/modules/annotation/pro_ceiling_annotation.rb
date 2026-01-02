@@ -135,8 +135,9 @@ module ProjetaPlus
       class InteractiveCeilingAnnotationTool
         include ProjetaPlus::Modules::ProHoverFaceUtil
         
-        def initialize(args)
+        def initialize(args, dialog = nil)
           @args = args
+          @dialog = dialog
           @valid_pick = false
         end
         
@@ -211,19 +212,16 @@ module ProjetaPlus
         end
 
         def show_success_message
-          ::UI.messagebox(
-            ProjetaPlus::Localization.t("messages.ceiling_annotation_success"),
-            MB_OK,
-            ProjetaPlus::Localization.t("plugin_name")
-          )
+          if @dialog
+            @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.ceiling_annotation_success")}', 'success');")
+          end
         end
 
         def show_error_message(message)
-          ::UI.messagebox(
-            message,
-            MB_OK,
-            ProjetaPlus::Localization.t("plugin_name")
-          )
+          if @dialog
+            escaped_message = message.gsub("'", "\\\\'")
+            @dialog.execute_script("showMessage('#{escaped_message}', 'error');")
+          end
         end
 
         def deactivate_tool
@@ -232,10 +230,10 @@ module ProjetaPlus
       end
 
       # Inicia a ferramenta interativa de anotação
-      def self.start_interactive_annotation(args)
+      def self.start_interactive_annotation(args, dialog = nil)
         return { success: false, message: ProjetaPlus::Localization.t("messages.no_model_open") } if Sketchup.active_model.nil?
         
-        Sketchup.active_model.select_tool(InteractiveCeilingAnnotationTool.new(args))
+        Sketchup.active_model.select_tool(InteractiveCeilingAnnotationTool.new(args, dialog))
         { success: true, message: ProjetaPlus::Localization.t("messages.ceiling_tool_activated") }
       rescue StandardError => e
         { success: false, message: ProjetaPlus::Localization.t("messages.error_activating_tool") + ": #{e.message}" }

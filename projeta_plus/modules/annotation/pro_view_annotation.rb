@@ -72,6 +72,10 @@ module ProjetaPlus
     class ViewAnnotationTool
       include ProjetaPlus::Modules::ProHoverFaceUtil
       
+      def initialize(dialog = nil)
+        @dialog = dialog
+      end
+      
       def activate
         @hover_face = nil
         @path = nil
@@ -107,8 +111,9 @@ module ProjetaPlus
 
         component_definition = ProjetaPlus::Modules::ProViewAnnotation.load_definition
         unless component_definition
-          ::UI.messagebox(ProjetaPlus::Localization.t("messages.view_annotation_block_not_found"), 
-                         MB_OK, ProjetaPlus::Localization.t("app_message_title"))
+          if @dialog
+            @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.view_annotation_block_not_found")}', 'error');")
+          end
           return
         end
         
@@ -128,8 +133,9 @@ module ProjetaPlus
         model.commit_operation
         view.invalidate
         
-        ::UI.messagebox(ProjetaPlus::Localization.t("messages.view_annotation_success"), 
-                       MB_OK, ProjetaPlus::Localization.t("app_message_title"))
+        if @dialog
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.view_annotation_success")}', 'success');")
+        end
       end
       
       def onKeyDown(key, repeat, flags, view)
