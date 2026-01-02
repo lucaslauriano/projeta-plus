@@ -7,7 +7,6 @@ require_relative '../../localization.rb'
 module ProjetaPlus
   module Modules
     module ProViewAnnotation
-    CUT_LEVEL = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
     CM_TO_INCHES_CONVERSION_FACTOR = 2.54
     BLOCK_NAME = 'ProViewAnnotation_abcd.skp'
     
@@ -118,8 +117,8 @@ module ProjetaPlus
         end
         
         model.start_operation(ProjetaPlus::Localization.t("commands.view_annotation_operation_name"), true)
-
-        center_point = center_point.offset(z_axis, CUT_LEVEL.to_f / CM_TO_INCHES_CONVERSION_FACTOR)
+        cut_height = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+        center_point = center_point.offset(z_axis, cut_height / CM_TO_INCHES_CONVERSION_FACTOR)
 
         transformation = Geom::Transformation.axes(center_point, x_axis, y_axis, z_axis)
 

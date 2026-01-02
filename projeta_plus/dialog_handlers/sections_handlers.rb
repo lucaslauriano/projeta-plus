@@ -68,7 +68,6 @@ module ProjetaPlus
           nil
         end
 
-        # CREATE STANDARD SECTIONS - Criar cortes padrões (A, B, C, D)
         @dialog.add_action_callback("createStandardSections") do |action_context|
           begin
             result = ProjetaPlus::Modules::ProSections.create_standard_sections
@@ -80,7 +79,6 @@ module ProjetaPlus
           nil
         end
 
-        # CREATE AUTO VIEWS - Criar vistas automáticas
         @dialog.add_action_callback("createAutoViews") do |action_context, json_payload|
           begin
             params = JSON.parse(json_payload)
@@ -93,7 +91,6 @@ module ProjetaPlus
           nil
         end
 
-        # CREATE INDIVIDUAL SECTION - Criar corte individual
         @dialog.add_action_callback("createIndividualSection") do |action_context, json_payload|
           begin
             params = JSON.parse(json_payload)

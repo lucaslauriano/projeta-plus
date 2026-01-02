@@ -13,7 +13,7 @@ Módulo para gerenciamento de planos de seção (section planes) no SketchUp.
 
 ### Criação Automática de Seções
 
-#### 1. Cortes Padrões (A, B, C, D)
+#### 1. Seções Padrões (A, B, C, D)
 
 ```ruby
 ProjetaPlus::Modules::ProSections.create_standard_sections
@@ -28,7 +28,7 @@ Cria 4 cortes padrões baseados no centro do modelo:
 
 Cada corte é criado em sua própria layer `-CORTES-[LETRA]`.
 
-#### 2. Vistas Automáticas
+#### 2. Seções por ambiente
 
 ```ruby
 ProjetaPlus::Modules::ProSections.create_auto_views
@@ -41,7 +41,7 @@ Cria 4 vistas baseadas no objeto selecionado:
 - Nomenclatura: `{ambiente}_a`, `{ambiente}_b`, etc.
 - Todos os cortes ficam na layer `-CORTES-{AMBIENTE}`
 
-#### 3. Corte Individual
+#### 3. Seção Individual
 
 ```ruby
 ProjetaPlus::Modules::ProSections.create_individual_section({
@@ -102,7 +102,7 @@ const {
 Interface completa para gerenciamento de seções:
 
 - Botões para criar cortes padrões
-- Botão para vistas automáticas (requer seleção)
+- Botão para seções por ambiente (requer seleção)
 - Dialog para corte individual
 - Lista de seções existentes no modelo
 - Gerenciamento de dados (salvar/carregar/importar)

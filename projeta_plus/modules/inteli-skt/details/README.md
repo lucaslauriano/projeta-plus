@@ -55,7 +55,7 @@ Lista todos os estilos disponíveis no modelo atual.
 ```ruby
 {
   success: true,
-  styles: ["PRO_PLANTAS", "PRO_CORTES", "PRO_VISTAS"],
+  styles: ["PRO_PLANTAS", "PRO_Seções", "PRO_VISTAS"],
   message: "3 estilos encontrados"
 }
 ```

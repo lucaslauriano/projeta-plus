@@ -1,12 +1,11 @@
 # encoding: UTF-8
 require 'sketchup.rb'
 require 'json'
+require_relative '../../settings/pro_settings_utils.rb'
 
 module ProjetaPlus
   module Modules
     module ProLevels
-      
-      ALTURA_CORTE_PADRAO = 1.50 # metros
       
       # ========================================
       # ESTRUTURA DE DADOS
@@ -27,11 +26,13 @@ module ProjetaPlus
         end
         
         def base_cut_height
-          @height_meters + ALTURA_CORTE_PADRAO + 0.10
+          cut_height = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+          @height_meters + cut_height + 0.10
         end
         
         def ceiling_cut_height
-          @height_meters + ALTURA_CORTE_PADRAO + 0.05
+          cut_height = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+          @height_meters + cut_height + 0.05
         end
         
         def to_hash
@@ -166,16 +167,13 @@ module ProjetaPlus
         model.start_operation("Criar Cena Base", true)
         
         unless scene
-          # Calcular altura do corte
           cut_height_meters = level.base_cut_height
           cut_height = cut_height_meters.m + 0.05.m
           
-          # Criar section plane (plano horizontal voltado para baixo)
           sp = model.entities.add_section_plane([0, 0, cut_height], [0, 0, -1])
           sp.name = scene_name
           sp.activate
           
-          # Configurar vista de topo
           camera = model.active_view.camera
           camera.set([0, 0, 100.m], [0, 0, 0], [0, 1, 0])
           model.active_view.camera = camera

@@ -132,7 +132,7 @@ module ProjetaPlus
       end
 
       # ========================================
-      # MÉTODOS DE CRIAÇÃO DE CORTES (Botões Iniciais)
+      # MÉTODOS DE CRIAÇÃO da seçãoS (Botões Iniciais)
       # ========================================
 
       # Cria cortes padrões (A, B, C, D)
@@ -143,7 +143,7 @@ module ProjetaPlus
 
         sections_config = standard_sections_config(bounds, center)
 
-        model.start_operation("Criar Cortes Padrões", true)
+        model.start_operation("Criar Seções Padrões", true)
 
         # Criar layer única para todos os cortes padrões
         layer = create_or_get_layer(model, "#{LAYER_PREFIX}GERAIS")
@@ -167,7 +167,7 @@ module ProjetaPlus
 
         {
           success: true,
-          message: "Cortes padrões (#{created.join(', ')}) criados com sucesso",
+          message: "Seções padrões (#{created.join(', ')}) criados com sucesso",
           count: created.length
         }
       rescue StandardError => e
@@ -176,7 +176,6 @@ module ProjetaPlus
         { success: false, message: "Erro ao criar cortes padrões: #{e.message}" }
       end
 
-      # Cria vistas automáticas para objeto selecionado
       def self.create_auto_views(params = {})
         model = Sketchup.active_model
         sel = model.selection.first
@@ -193,7 +192,7 @@ module ProjetaPlus
 
         sections_config = standard_sections_config(bb, center)
 
-        model.start_operation("Criar Vistas Automáticas", true)
+        model.start_operation("Criar Seções por Ambiente", true)
 
         # Criar layer para o ambiente (maiúsculo)
         layer = create_or_get_layer(model, "#{LAYER_PREFIX}#{prefixo}")
@@ -218,13 +217,13 @@ module ProjetaPlus
 
         {
           success: true,
-          message: "Vistas automáticas criadas para #{ambiente}: #{created.join(', ')}",
+          message: "Seções por ambiente criadas para #{ambiente}: #{created.join(', ')}",
           count: created.length
         }
       rescue StandardError => e
         model.abort_operation if model
         log_error("create_auto_views", e)
-        { success: false, message: "Erro ao criar vistas automáticas: #{e.message}" }
+        { success: false, message: "Erro ao criar seções por ambiente: #{e.message}" }
       end
 
       # Cria corte individual
@@ -243,7 +242,7 @@ module ProjetaPlus
         config = direction_configs(bounds, center)[direction_type.downcase]
         return invalid_input("Tipo de direção inválido") unless config
 
-        model.start_operation("Criar Corte Individual", true)
+        model.start_operation("Criar Seção Individual", true)
 
         remove_section_and_page(model, name)
 
@@ -256,7 +255,7 @@ module ProjetaPlus
 
         {
           success: true,
-          message: "Corte '#{name}' criado com sucesso",
+          message: "Seção '#{name}' criado com sucesso",
           section: build_section_config(sp)
         }
       rescue StandardError => e
@@ -289,7 +288,7 @@ module ProjetaPlus
         model.pages.selected_page = page
         section_plane.activate
         
-        # Alinhar câmera ao plano de corte
+        # Alinhar câmera ao plano da seção
         align_camera_to_section(model, direction)
         
         # Aplicar configurações salvas (estilo e camadas)
@@ -322,7 +321,7 @@ module ProjetaPlus
         # Não falhar a criação da cena se houver erro ao aplicar configurações
       end
 
-      # Alinha a câmera para olhar diretamente para o plano de corte
+      # Alinha a câmera para olhar diretamente para o plano da seção
       def self.align_camera_to_section(model, direction)
         view = model.active_view
         

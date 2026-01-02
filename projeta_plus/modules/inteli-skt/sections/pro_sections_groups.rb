@@ -110,7 +110,7 @@ module ProjetaPlus
 
         new_segment = {
           'id' => params['id'] || params[:id] || Time.now.to_i.to_s,
-          'name' => params['name'] || params[:name] || 'Novo Corte',
+          'name' => params['name'] || params[:name] || 'Nova Seção',
           'code' => params['code'] || params[:code] || '',
           'style' => params['style'] || params[:style] || 'PRO_VISTAS',
           'activeLayers' => params['activeLayers'] || params[:activeLayers] || []
