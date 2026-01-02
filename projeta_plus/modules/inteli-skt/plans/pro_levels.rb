@@ -168,7 +168,7 @@ module ProjetaPlus
         unless scene
           # Calcular altura do corte
           cut_height_meters = level.base_cut_height
-          cut_height = cut_height_meters.m
+          cut_height = cut_height_meters.m + 0.05.m
           
           # Criar section plane (plano horizontal voltado para baixo)
           sp = model.entities.add_section_plane([0, 0, cut_height], [0, 0, -1])

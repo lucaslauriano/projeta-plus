@@ -8,19 +8,15 @@
           "id": "1766601229716",
           "name": "Corte técnico",
           "code": "c_tec",
-          "style": "FM_VISTAS",
-          "cameraType": [
-
-          ],
-          "activeLayers": [
-
-          ]
+          "style": "PRO_VISTAS",
+          "cameraType": [],
+          "activeLayers": []
         },
         {
           "id": "1766618366446",
           "name": "Arquitetônico",
           "code": "arq",
-          "style": "FM_PLANTAS_PB",
+          "style": "PRO_PLANTAS_PB",
           "activeLayers": [
             "-ARQUITETURA-BASE ALVENARIA",
             "-ARQUITETURA-CHURRASQUEIRA",

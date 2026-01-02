@@ -32,7 +32,7 @@ module ProjetaPlus
           else
             # Configurações padrão
             settings = {
-              'style' => 'FM_VISTAS',
+              'style' => 'PRO_VISTAS',
               'activeLayers' => []
             }
           end
@@ -47,7 +47,7 @@ module ProjetaPlus
           {
             success: false,
             message: "Erro ao carregar configurações: #{e.message}",
-            settings: { 'style' => 'FM_VISTAS', 'activeLayers' => [] }
+            settings: { 'style' => 'PRO_VISTAS', 'activeLayers' => [] }
           }
         end
       end
@@ -56,7 +56,7 @@ module ProjetaPlus
       def save_sections_settings(params)
         begin
           settings = {
-            'style' => params['style'] || params[:style] || 'FM_VISTAS',
+            'style' => params['style'] || params[:style] || 'PRO_VISTAS',
             'activeLayers' => params['activeLayers'] || params[:activeLayers] || []
           }
           

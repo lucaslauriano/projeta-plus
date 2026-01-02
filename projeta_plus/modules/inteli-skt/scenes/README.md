@@ -77,14 +77,14 @@ result = ProjetaPlus::Modules::ProScenes.get_scenes
 # Add a new scene
 result = ProjetaPlus::Modules::ProScenes.add_scene({
   name: 'My Scene',
-  style: 'FM_VISTAS',
+  style: 'PRO_VISTAS',
   cameraType: 'iso_perspectiva',
   activeLayers: ['Layer0', '-2D-AMBIENTE']
 })
 
 # Update existing scene
 result = ProjetaPlus::Modules::ProScenes.update_scene('My Scene', {
-  style: 'FM_PLANTAS',
+  style: 'PRO_PLANTAS',
   cameraType: 'topo_ortogonal'
 })
 

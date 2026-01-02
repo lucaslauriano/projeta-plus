@@ -8,7 +8,7 @@
           "id": "geral",
           "name": "Geral",
           "code": "gnrl",
-          "style": "FM_VISTAS",
+          "style": "PRO_VISTAS",
           "cameraType": "iso_perspectiva",
           "activeLayers": [
             "-2D-AMBIENTE",
@@ -154,7 +154,7 @@
           "id": "1765893956326",
           "name": "Desenhar",
           "code": "draw",
-          "style": "FM_VISTAS",
+          "style": "PRO_VISTAS",
           "cameraType": "iso_perspectiva",
           "activeLayers": [
             "Layer0",
@@ -282,7 +282,7 @@
           "id": "1765894023474",
           "name": "Planos",
           "code": "plans",
-          "style": "FM_PLANOS",
+          "style": "PRO_PLANOS",
           "cameraType": "iso_perspectiva",
           "activeLayers": [
             "-ARQUITETURA-BASE ALVENARIA",
@@ -395,7 +395,7 @@
         {
           "id": "1766592687884",
           "name": "Etiquetar",
-          "style": "FM_VISTAS",
+          "style": "PRO_VISTAS",
           "cameraType": "iso_perspectiva",
           "activeLayers": []
         }
@@ -409,7 +409,7 @@
           "id": "1766592735865",
           "name": "Sketchup",
           "code": "sketchup",
-          "style": "FM_VISTAS",
+          "style": "PRO_VISTAS",
           "cameraType": "iso_perspectiva",
           "activeLayers": []
         },
@@ -417,7 +417,7 @@
           "id": "1766592800025",
           "name": "Enscape",
           "code": "enscape",
-          "style": "FM_VISTAS",
+          "style": "PRO_VISTAS",
           "cameraType": "iso_perspectiva",
           "activeLayers": []
         }

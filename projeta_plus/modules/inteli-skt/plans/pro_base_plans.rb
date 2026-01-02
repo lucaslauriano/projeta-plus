@@ -54,7 +54,7 @@ module ProjetaPlus
                 plans_data << {
                   id: 'base',
                   name: 'Base',
-                  style: base_config[:style] || 'FM_PLANTAS',
+                  style: base_config[:style] || 'PRO_PLANTAS',
                   activeLayers: base_config[:activeLayers] || ['Layer0']
                 }
               end
@@ -63,7 +63,7 @@ module ProjetaPlus
                 plans_data << {
                   id: 'forro',
                   name: 'Forro',
-                  style: forro_config[:style] || 'FM_PLANTAS',
+                  style: forro_config[:style] || 'PRO_PLANTAS',
                   activeLayers: forro_config[:activeLayers] || ['Layer0']
                 }
               end
@@ -89,13 +89,13 @@ module ProjetaPlus
               {
                 id: 'base',
                 name: 'Base',
-                style: 'FM_PLANTAS',
+                style: 'PRO_PLANTAS',
                 activeLayers: ['Layer0']
               },
               {
                 id: 'forro',
                 name: 'Forro',
-                style: 'FM_PLANTAS',
+                style: 'PRO_PLANTAS',
                 activeLayers: ['Layer0']
               }
             ]
@@ -182,7 +182,7 @@ module ProjetaPlus
                 plan_config = {
                   id: target_id,
                   name: new_plan['name'] || new_plan[:name] || (plan_id == 'base' ? 'Base' : 'Forro'),
-                  style: new_plan['style'] || new_plan[:style] || 'FM_PLANTAS',
+                  style: new_plan['style'] || new_plan[:style] || 'PRO_PLANTAS',
                   cameraType: 'topo_ortogonal',
                   activeLayers: new_plan['activeLayers'] || new_plan[:activeLayers] || ['Layer0']
                 }

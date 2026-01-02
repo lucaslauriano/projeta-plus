@@ -8,7 +8,7 @@
           "id": "1766601229716",
           "name": "Humanizado",
           "code": "hmzd",
-          "style": "FM_VISTAS",
+          "style": "PRO_VISTAS",
           "cameraType": [],
           "activeLayers": []
         },
@@ -16,7 +16,7 @@
           "id": "1766601229716",
           "name": "Corte técnico",
           "code": "c_tec",
-          "style": "FM_VISTAS",
+          "style": "PRO_VISTAS",
           "cameraType": [],
           "activeLayers": []
         }

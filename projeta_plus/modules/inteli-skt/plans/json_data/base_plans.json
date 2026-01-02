@@ -3,7 +3,7 @@
     {
       "id": "base",
       "name": "Base",
-      "style": "FM_PLANTAS",
+      "style": "PRO_PLANTAS",
       "activeLayers": [
         "-ARQUITETURA-BASE ALVENARIA",
         "-ARQUITETURA-CHURRASQUEIRA",
@@ -42,7 +42,7 @@
     {
       "id": "forro",
       "name": "Forro",
-      "style": "FM_PLANTAS",
+      "style": "PRO_PLANTAS",
       "activeLayers": [
         "Layer0",
         "-ANOTACAO-FORRO",
