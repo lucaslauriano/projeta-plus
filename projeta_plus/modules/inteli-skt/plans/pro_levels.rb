@@ -98,7 +98,16 @@ module ProjetaPlus
       def self.add_level(height_str)
         levels = load_levels
         
-        height = height_str.to_s.tr(',', '.').to_f
+        # Convert to float, handling both string and numeric inputs
+        height = case height_str
+                 when Numeric
+                   height_str.to_f
+                 when String
+                   height_str.tr(',', '.').to_f
+                 else
+                   height_str.to_s.tr(',', '.').to_f
+                 end
+        
         number = levels.empty? ? 1 : levels.map(&:number).max + 1
         
         level = Level.new(number, height)
