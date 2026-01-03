@@ -18,13 +18,18 @@ module ProjetaPlus
           items = []
 
           model.pages.each do |page|
-            # Recuperar o código salvo como atributo
+            # Recuperar o código e display_name salvos como atributos
             code = page.get_attribute('ProjetaPlus', 'code', nil)
+            display_name = page.get_attribute('ProjetaPlus', 'display_name', nil)
+            
+            # Se não tiver display_name salvo, usar o nome da página
+            display_name = page.name if display_name.nil? || display_name.empty?
             
             item_config = {
               id: page.name,
-              name: page.name,
+              name: display_name,
               code: code,
+              pageName: page.name,
               style: page.style ? page.style.name : '',
               cameraType: detect_camera_type(page),
               activeLayers: get_page_visible_layers(page)
@@ -57,13 +62,16 @@ module ProjetaPlus
           camera_type = params['cameraType'] || params[:cameraType]
           active_layers = params['activeLayers'] || params[:activeLayers]
 
+          # Definir o nome da página: usar code se existir, senão usar name
+          page_name = (code && !code.empty?) ? code : name
+
           # Validar parâmetros
           valid, error_msg = validate_params(name, style, camera_type)
           return { success: false, message: error_msg } unless valid
 
           # Verificar se já existe
-          if model.pages.find { |p| p.name.downcase == name.downcase }
-            return { success: false, message: "#{entity_name_singular.capitalize} '#{name}' já existe" }
+          if model.pages.find { |p| p.name.downcase == page_name.downcase }
+            return { success: false, message: "#{entity_name_singular.capitalize} '#{page_name}' já existe" }
           end
 
           model.start_operation("Adicionar #{entity_name_singular.capitalize}", true)
@@ -72,10 +80,11 @@ module ProjetaPlus
           apply_style(style) if style && !style.empty?
           apply_layers_visibility(active_layers) if active_layers
 
-          # Criar a página
-          page = model.pages.add(name)
+          # Criar a página com o nome definido (code ou name)
+          page = model.pages.add(page_name)
 
-          # Salvar o código como atributo da página
+          # Salvar o name e code como atributos da página
+          page.set_attribute('ProjetaPlus', 'display_name', name) if name && !name.empty?
           if code && !code.empty?
             page.set_attribute('ProjetaPlus', 'code', code)
           end
@@ -93,11 +102,12 @@ module ProjetaPlus
 
           {
             success: true,
-            message: "#{entity_name_singular.capitalize} '#{name}' criada com sucesso",
+            message: "#{entity_name_singular.capitalize} '#{page_name}' criada com sucesso",
             entity_name_singular.to_sym => {
               id: page.name,
-              name: page.name,
+              name: name,
               code: code,
+              pageName: page.name,
               style: style,
               cameraType: camera_type,
               activeLayers: active_layers
@@ -117,6 +127,7 @@ module ProjetaPlus
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         begin
           model = Sketchup.active_model
+          new_name = params['name'] || params[:name]
           code = params['code'] || params[:code]
           style = params['style'] || params[:style]
           camera_type = params['cameraType'] || params[:cameraType]
@@ -137,7 +148,15 @@ module ProjetaPlus
               page = model.pages.add(target_name)
             end
             
-            # Salvar o código como atributo da página
+            # Atualizar o nome da página se code mudou
+            new_page_name = (code && !code.empty?) ? code : (new_name || page.name)
+            if new_page_name != page.name
+              # Renomear a página
+              page.name = new_page_name
+            end
+            
+            # Salvar o name e code como atributos da página
+            page.set_attribute('ProjetaPlus', 'display_name', new_name) if new_name && !new_name.empty?
             if code && !code.empty?
               page.set_attribute('ProjetaPlus', 'code', code)
             end
@@ -202,13 +221,16 @@ module ProjetaPlus
       end
 
       # Aplica configuração (cria se não existir) — suporta scope (current / <n> / all)
-      def apply_config(name, config)
+      def apply_config(name, code, config)
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         begin
           model = Sketchup.active_model
 
+          # Definir o nome da página: usar code se existir, senão usar name
+          page_name = (code && !code.empty?) ? code : name
+
           # Determinar nomes finais conforme o escopo em config (mesma lógica de update)
-          target_names = parse_update_scope(name, config, model)
+          target_names = parse_update_scope(page_name, config, model)
 
           model.start_operation("Aplicar Configuração de #{entity_name_singular.capitalize}", true)
 
@@ -219,6 +241,12 @@ module ProjetaPlus
               model.pages.selected_page = page
             else
               page = model.pages.add(final_name)
+            end
+
+            # Salvar o name e code como atributos da página
+            page.set_attribute('ProjetaPlus', 'display_name', name) if name && !name.empty?
+            if code && !code.empty?
+              page.set_attribute('ProjetaPlus', 'code', code)
             end
 
             # Aplicar configurações

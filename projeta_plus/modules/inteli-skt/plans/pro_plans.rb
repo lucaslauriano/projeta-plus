@@ -48,8 +48,8 @@ module ProjetaPlus
       end
 
       # Wrapper para apply_config com nome específico
-      def self.apply_plan_config(name, config)
-        apply_config(name, config)
+      def self.apply_plan_config(name, code, config)
+        apply_config(name, code, config)
       end
 
       # ========================================
