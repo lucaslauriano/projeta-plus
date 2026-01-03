@@ -18,9 +18,13 @@ module ProjetaPlus
           items = []
 
           model.pages.each do |page|
+            # Recuperar o código salvo como atributo
+            code = page.get_attribute('ProjetaPlus', 'code', nil)
+            
             item_config = {
               id: page.name,
               name: page.name,
+              code: code,
               style: page.style ? page.style.name : '',
               cameraType: detect_camera_type(page),
               activeLayers: get_page_visible_layers(page)
@@ -48,6 +52,7 @@ module ProjetaPlus
         begin
           model = Sketchup.active_model
           name = params['name'] || params[:name]
+          code = params['code'] || params[:code]
           style = params['style'] || params[:style]
           camera_type = params['cameraType'] || params[:cameraType]
           active_layers = params['activeLayers'] || params[:activeLayers]
@@ -70,6 +75,11 @@ module ProjetaPlus
           # Criar a página
           page = model.pages.add(name)
 
+          # Salvar o código como atributo da página
+          if code && !code.empty?
+            page.set_attribute('ProjetaPlus', 'code', code)
+          end
+
           # Configurar câmera
           apply_camera_config(page, camera_type) if camera_type
 
@@ -87,6 +97,7 @@ module ProjetaPlus
             entity_name_singular.to_sym => {
               id: page.name,
               name: page.name,
+              code: code,
               style: style,
               cameraType: camera_type,
               activeLayers: active_layers
@@ -106,6 +117,7 @@ module ProjetaPlus
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         begin
           model = Sketchup.active_model
+          code = params['code'] || params[:code]
           style = params['style'] || params[:style]
           camera_type = params['cameraType'] || params[:cameraType]
           active_layers = params['activeLayers'] || params[:activeLayers]
@@ -123,6 +135,11 @@ module ProjetaPlus
               model.pages.selected_page = page
             else
               page = model.pages.add(target_name)
+            end
+            
+            # Salvar o código como atributo da página
+            if code && !code.empty?
+              page.set_attribute('ProjetaPlus', 'code', code)
             end
             
             # Aplicar estilo e camadas para cada página
