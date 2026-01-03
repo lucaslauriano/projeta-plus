@@ -98,23 +98,16 @@ module ProjetaPlus
       def self.add_level(height_str)
         levels = load_levels
         
-        # Debug: log what we received
-        puts "DEBUG add_level - Received: #{height_str.inspect} (class: #{height_str.class})"
-        
         # Convert to float, handling both string and numeric inputs
         height = case height_str
                  when Numeric
                    height_str.to_f
                  when String
                    # Remove any whitespace and handle both comma and dot as decimal separator
-                   cleaned = height_str.strip.tr(',', '.')
-                   puts "DEBUG add_level - Cleaned string: #{cleaned.inspect}"
-                   cleaned.to_f
+                   height_str.strip.tr(',', '.').to_f
                  else
                    height_str.to_s.strip.tr(',', '.').to_f
                  end
-        
-        puts "DEBUG add_level - Converted height: #{height}"
         
         number = levels.empty? ? 1 : levels.map(&:number).max + 1
         
@@ -129,8 +122,6 @@ module ProjetaPlus
           level: level.to_hash
         }
       rescue => e
-        puts "DEBUG add_level - Error: #{e.message}"
-        puts "DEBUG add_level - Backtrace: #{e.backtrace.first(5).join("\n")}"
         { success: false, message: "Erro ao adicionar nível: #{e.message}" }
       end
       
