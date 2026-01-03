@@ -449,3 +449,10 @@
 [2026-01-03 13:11:34 -0300] ElectricalReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/debug_log.txt
 [2026-01-03 14:32:40 -0300] ElectricalReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/debug_log.txt
 [2026-01-03 15:33:13 -0300] ElectricalReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2026-01-03 12:39:00 -0300] ElectricalReportsHandler Initialized. Log file: C:/Users/Francieli/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2026-01-03 12:46:05 -0300] ElectricalReportsHandler Initialized. Log file: C:/Users/Francieli/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2026-01-03 13:14:08 -0300] ElectricalReportsHandler Initialized. Log file: C:/Users/Francieli/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2026-01-03 13:23:59 -0300] ElectricalReportsHandler Initialized. Log file: C:/Users/Francieli/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2026-01-03 13:27:17 -0300] ElectricalReportsHandler Initialized. Log file: C:/Users/Francieli/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2026-01-03 15:25:08 -0300] ElectricalReportsHandler Initialized. Log file: C:/Users/Francieli/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/projeta_plus/debug_log.txt
+[2026-01-03 15:48:13 -0300] ElectricalReportsHandler Initialized. Log file: C:/Users/Francieli/AppData/Roaming/SketchUp/SketchUp 2024/SketchUp/Plugins/projeta_plus/debug_log.txt
