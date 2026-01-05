@@ -12,6 +12,7 @@
 
 # User-specific runtime data files
 projeta_plus/modules/inteli-skt/scenes/json_data/user_scenes_data.json
+*user_sections_data.json
 projeta_plus/modules/inteli-skt/plans/json_data/user_plans_data.json
 projeta_plus/modules/inteli-skt/plans/json_data/user_base_plans.json
 projeta_plus/modules/inteli-skt/layers/json_data/user_tags_data.json

@@ -262,7 +262,7 @@ module ProjetaPlus
         end
         
         # Aplicar configurações se disponível (do JSON configurado)
-        apply_plan_config_if_available(scene_name, 'forro')
+        apply_plan_config_if_available(scene_name, 'base_plan', 'forro')
         
         # Garantir que o section plane está ativo e a cena está selecionada
         scene = model.pages.find { |s| s.name == scene_name }
@@ -296,7 +296,7 @@ module ProjetaPlus
         number.to_i == 1 ? type_capitalized : "#{type_capitalized}_#{number}"
       end
       
-      def self.apply_plan_config_if_available(scene_name, config_type)
+      def self.apply_plan_config_if_available(scene_name, code, config_type)
         begin
           # Carregar configurações do ProBasePlans
           require_relative 'pro_base_plans.rb'
