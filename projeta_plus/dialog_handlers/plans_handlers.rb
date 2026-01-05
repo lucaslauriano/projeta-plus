@@ -75,7 +75,7 @@ module ProjetaPlus
             name = params['name']
             code = params['code']
             config = params['config']
-            result = ProjetaPlus::Modules::ProPlans.apply_plan_config(name, config)
+            result = ProjetaPlus::Modules::ProPlans.apply_plan_config(name, code, config)
             send_json_response("handleApplyPlanConfigResult", result)
           rescue => e
             error_result = handle_error(e, "apply plan config")
