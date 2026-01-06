@@ -28,14 +28,14 @@ module ProjetaPlus
         
         def base_cut_height
           cut_height_cm = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
-          cut_height_m = cut_height_cm / 100.0  # Converte cm para metros
-          @height_meters + cut_height_m + 0.10
+          cut_height_m = cut_height_cm  
+          @height_meters + cut_height_m + 0.05
         end
         
         def ceiling_cut_height
           cut_height_cm = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
-          cut_height_m = cut_height_cm / 100.0  # Converte cm para metros
-          @height_meters + cut_height_m + 0.05
+          cut_height_m = cut_height_cm   
+          @height_meters + cut_height_m - 0.05
         end
         
         def to_hash
@@ -106,14 +106,29 @@ module ProjetaPlus
                  when Numeric
                    height_str.to_f
                  when String
-                   # Remove any whitespace and handle both comma and dot as decimal separator
                    height_str.strip.tr(',', '.').to_f
                  else
                    height_str.to_s.strip.tr(',', '.').to_f
                  end
         
-        number = levels.empty? ? 1 : levels.map(&:number).max + 1
+        # VERIFICAR SE JÁ EXISTE UM NÍVEL COM ESSA ALTURA
+        existing_level = levels.find { |l| (l.height_meters - height).abs < 0.01 }
         
+        if existing_level
+          # Atualizar o nível existente
+          existing_level.height_meters = height
+          save_levels(levels)
+          
+          return {
+            success: true,
+            message: "Nível '#{existing_level.name}' atualizado com sucesso",
+            level: existing_level.to_hash,
+            updated: true
+          }
+        end
+        
+        # Criar novo nível
+        number = levels.empty? ? 1 : levels.map(&:number).max + 1
         level = Level.new(number, height)
         levels << level
         
@@ -122,7 +137,8 @@ module ProjetaPlus
         {
           success: true,
           message: "Nível '#{level.name}' adicionado com sucesso",
-          level: level.to_hash
+          level: level.to_hash,
+          updated: false
         }
       rescue => e
         { success: false, message: "Erro ao adicionar nível: #{e.message}" }
@@ -172,64 +188,119 @@ module ProjetaPlus
         return { success: false, message: "Nível não encontrado" } unless level
         
         model = Sketchup.active_model
-        scene_name = generate_scene_name('base', number)
         
-        scene = model.pages.find { |s| s.name == scene_name }
+        # BUSCAR O CODE ANTES DE CRIAR A CENA
+        base_plans_result = ProjetaPlus::Modules::ProBasePlans.get_base_plans
+        base_config = base_plans_result[:plans]&.find { |p| p[:id] == 'base' } if base_plans_result[:success]
+        base_code = base_config&.dig(:code)
         
+        # DEFINIR O NOME FINAL DESDE O INÍCIO
+        temp_scene_name = generate_scene_name('base', number)
+        if base_code && !base_code.empty?
+          level_match = temp_scene_name.match(/_(\d+)$/)
+          level_number = level_match ? level_match[1] : nil
+          final_scene_name = level_number ? "#{base_code}_#{level_number}" : base_code
+        else
+          final_scene_name = temp_scene_name
+        end
+        
+        scene = model.pages.find { |s| s.name == final_scene_name }
         scene_existed = !scene.nil?
         
         model.start_operation("Criar Cena Base", true)
         
-        unless scene
-          cut_height_meters = level.base_cut_height  # Já está em metros
-          cut_height = cut_height_meters.m  # Converte para unidade SketchUp
-          
+        # SEMPRE CRIAR/ATUALIZAR O SECTION PLANE
+        cut_height_meters = level.base_cut_height
+        cut_height = cut_height_meters.m
+        
+        # Buscar section plane existente
+        sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == final_scene_name }
+        
+        if sp
+          # Atualizar section plane existente
+          sp.set_plane([0, 0, cut_height], [0, 0, -1])
+          puts "Section plane '#{final_scene_name}' atualizado"
+        else
+          # Criar novo section plane
           sp = model.entities.add_section_plane([0, 0, cut_height], [0, 0, -1])
-          sp.name = scene_name
-          sp.activate
-          
-          camera = model.active_view.camera
-          camera.set([0, 0, 100.m], [0, 0, 0], [0, 1, 0])
-          model.active_view.camera = camera
-          model.active_view.camera.perspective = false
-          model.active_view.zoom_extents
-          
-          # Criar cena
-          model.pages.add(scene_name)
-          scene = model.pages.find { |s| s.name == scene_name }
-          
-          level.has_base = true
-          save_levels(levels)
+          sp.name = final_scene_name
+          puts "Section plane '#{final_scene_name}' criado"
         end
         
-        # Aplicar configurações se disponível (do JSON configurado)
-        # Buscar o code da configuração base
-
-        base_plans_result = ProjetaPlus::Modules::ProBasePlans.get_base_plans
-        base_config = base_plans_result[:plans]&.find { |p| p[:id] == 'base' } if base_plans_result[:success]
-        base_code = base_config&.dig(:code) || scene_name
+        sp.activate
         
-        apply_plan_config_if_available(scene_name, base_code, 'base')
+        # SEMPRE CONFIGURAR A CÂMERA
+        camera = model.active_view.camera
+        camera.set([0, 0, 100.m], [0, 0, 0], [0, 1, 0])
+        model.active_view.camera = camera
+        model.active_view.camera.perspective = false
+        model.active_view.zoom_extents
         
-        # Garantir que o section plane está ativo e a cena está selecionada
-        scene = model.pages.find { |s| s.name == scene_name }
+        # CRIAR CENA SE NÃO EXISTIR
+        unless scene
+          model.pages.add(final_scene_name)
+          scene = model.pages.find { |s| s.name == final_scene_name }
+          puts "Cena '#{final_scene_name}' criada"
+        end
+        
+        # Salvar atributos
+        scene.set_attribute('ProjetaPlus', 'display_name', temp_scene_name)
+        scene.set_attribute('ProjetaPlus', 'code', base_code) if base_code
+        
+        level.has_base = true
+        save_levels(levels)
+        
+        # Aplicar configurações
+        apply_plan_config_simplified(final_scene_name, base_config)
+        
+        # Garantir section plane ativo e cena selecionada
+        scene = model.pages.find { |s| s.name == final_scene_name }
         model.pages.selected_page = scene if scene
         
-        sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == scene_name }
-        if sp
-          sp.activate
-          puts "Section plane '#{scene_name}' ativado"
-        end
+        sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == final_scene_name }
+        sp.activate if sp
         
         model.commit_operation
         
         {
           success: true,
-          message: scene_existed ? "Cena '#{scene_name}' atualizada!" : "Cena '#{scene_name}' criada com sucesso!"
+          message: scene_existed ? "Cena '#{final_scene_name}' atualizada!" : "Cena '#{final_scene_name}' criada com sucesso!"
         }
       rescue => e
         model.abort_operation if model
         { success: false, message: "Erro ao criar cena base: #{e.message}" }
+      end
+      
+      # Novo método simplificado que NÃO renomeia
+      def self.apply_plan_config_simplified(scene_name, config_plan)
+        return unless config_plan
+        
+        model = Sketchup.active_model
+        scene = model.pages.find { |s| s.name == scene_name }
+        return unless scene
+        
+        # Selecionar a cena
+        model.pages.selected_page = scene
+        
+        # Aplicar estilo
+        if config_plan[:style] && !config_plan[:style].empty?
+          apply_style(config_plan[:style])
+        end
+        
+        # Aplicar visibilidade das camadas
+        if config_plan[:activeLayers] && config_plan[:activeLayers].any?
+          apply_layers_visibility(config_plan[:activeLayers])
+        end
+        
+        # Zoom total
+        model.active_view.zoom_extents
+        
+        # Atualizar a cena
+        scene.update
+        
+        # Reativar section plane
+        sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == scene_name }
+        sp.activate if sp
       end
       
       def self.create_ceiling_scene(number)
@@ -239,62 +310,83 @@ module ProjetaPlus
         return { success: false, message: "Nível não encontrado" } unless level
         
         model = Sketchup.active_model
-        scene_name = generate_scene_name('forro', number)
-        scene = model.pages.find { |s| s.name == scene_name }
         
+        # BUSCAR O CODE ANTES
+        base_plans_result = ProjetaPlus::Modules::ProBasePlans.get_base_plans
+        forro_config = base_plans_result[:plans]&.find { |p| p[:id] == 'forro' } if base_plans_result[:success]
+        forro_code = forro_config&.dig(:code)
+        
+        # DEFINIR NOME FINAL
+        temp_scene_name = generate_scene_name('forro', number)
+        if forro_code && !forro_code.empty?
+          level_match = temp_scene_name.match(/_(\d+)$/)
+          level_number = level_match ? level_match[1] : nil
+          final_scene_name = level_number ? "#{forro_code}_#{level_number}" : forro_code
+        else
+          final_scene_name = temp_scene_name
+        end
+        
+        scene = model.pages.find { |s| s.name == final_scene_name }
         scene_existed = !scene.nil?
         
         model.start_operation("Criar Cena Forro", true)
         
-        unless scene
-          # Calcular altura do corte
-          cut_height_meters = level.ceiling_cut_height
-          cut_height = cut_height_meters.m
-          
-          # Criar section plane (plano horizontal voltado para cima)
+        # SEMPRE CRIAR/ATUALIZAR O SECTION PLANE
+        cut_height_meters = level.ceiling_cut_height
+        cut_height = cut_height_meters.m
+        
+        # Buscar section plane existente
+        sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == final_scene_name }
+        
+        if sp
+          # Atualizar section plane existente (plano voltado para cima)
+          sp.set_plane([0, 0, cut_height], [0, 0, 1])
+          puts "Section plane '#{final_scene_name}' atualizado"
+        else
+          # Criar novo section plane (plano voltado para cima)
           sp = model.entities.add_section_plane([0, 0, cut_height], [0, 0, 1])
-          sp.name = scene_name
-          sp.activate
-          
-          # Configurar vista de baixo para cima
-          camera = model.active_view.camera
-          camera.set([0, 0, -100.m], [0, 0, 0], [0, 1, 0])
-          model.active_view.camera = camera
-          model.active_view.camera.perspective = false
-          model.active_view.zoom_extents
-          
-          # Criar cena
-          model.pages.add(scene_name)
-          scene = model.pages.find { |s| s.name == scene_name }
-          
-          level.has_ceiling = true
-          save_levels(levels)
+          sp.name = final_scene_name
+          puts "Section plane '#{final_scene_name}' criado"
         end
         
-        # Aplicar configurações se disponível (do JSON configurado)
-        # Buscar o code da configuração forro
-
-        base_plans_result = ProjetaPlus::Modules::ProBasePlans.get_base_plans
-        forro_config = base_plans_result[:plans]&.find { |p| p[:id] == 'forro' } if base_plans_result[:success]
-        forro_code = forro_config&.dig(:code) || scene_name
+        sp.activate
         
-        apply_plan_config_if_available(scene_name, forro_code, 'forro')
+        # SEMPRE CONFIGURAR A CÂMERA (vista de baixo para cima)
+        camera = model.active_view.camera
+        camera.set([0, 0, -100.m], [0, 0, 0], [0, 1, 0])
+        model.active_view.camera = camera
+        model.active_view.camera.perspective = false
+        model.active_view.zoom_extents
         
-        # Garantir que o section plane está ativo e a cena está selecionada
-        scene = model.pages.find { |s| s.name == scene_name }
+        # CRIAR CENA SE NÃO EXISTIR
+        unless scene
+          model.pages.add(final_scene_name)
+          scene = model.pages.find { |s| s.name == final_scene_name }
+          puts "Cena '#{final_scene_name}' criada"
+        end
+        
+        # Salvar atributos
+        scene.set_attribute('ProjetaPlus', 'display_name', temp_scene_name)
+        scene.set_attribute('ProjetaPlus', 'code', forro_code) if forro_code
+        
+        level.has_ceiling = true
+        save_levels(levels)
+        
+        # Aplicar configurações
+        apply_plan_config_simplified(final_scene_name, forro_config)
+        
+        # Garantir section plane ativo e cena selecionada
+        scene = model.pages.find { |s| s.name == final_scene_name }
         model.pages.selected_page = scene if scene
         
-        sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == scene_name }
-        if sp
-          sp.activate
-          puts "Section plane '#{scene_name}' ativado"
-        end
+        sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == final_scene_name }
+        sp.activate if sp
         
         model.commit_operation
         
         {
           success: true,
-          message: scene_existed ? "Cena '#{scene_name}' atualizada!" : "Cena '#{scene_name}' criada com sucesso!"
+          message: scene_existed ? "Cena '#{final_scene_name}' atualizada!" : "Cena '#{final_scene_name}' criada com sucesso!"
         }
       rescue => e
         model.abort_operation if model
@@ -337,14 +429,22 @@ module ProjetaPlus
           
           # Renomear a página para usar o code (se fornecido e diferente do nome atual)
           if code && !code.empty? && code != scene_name
-            scene.name = code
-            puts "  Página renomeada para: #{code}"
+            # Extrair o número do nível do scene_name original
+            # scene_name pode ser "Base" (nível 1) ou "Base_2", "Base_3", etc.
+            level_match = scene_name.match(/_(\d+)$/)
+            level_number = level_match ? level_match[1] : nil
+            
+            # Adicionar o sufixo do nível ao code, se não for nível 1
+            final_code = level_number ? "#{code}_#{level_number}" : code
+            
+            scene.name = final_code
+            puts "  Página renomeada para: #{final_code}"
             
             # Também renomear o section plane associado
             sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == scene_name }
             if sp
-              sp.name = code
-              puts "  Section plane renomeado para: #{code}"
+              sp.name = final_code
+              puts "  Section plane renomeado para: #{final_code}"
             end
           end
           
@@ -373,7 +473,14 @@ module ProjetaPlus
           scene.update
           
           # Reativar section plane (usando o novo nome se foi renomeado)
-          page_name = (code && !code.empty?) ? code : scene_name
+          if code && !code.empty?
+            level_match = scene_name.match(/_(\d+)$/)
+            level_number = level_match ? level_match[1] : nil
+            page_name = level_number ? "#{code}_#{level_number}" : code
+          else
+            page_name = scene_name
+          end
+          
           sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == page_name }
           if sp
             sp.activate

@@ -692,9 +692,10 @@ module ProjetaPlus
         bounds = model.bounds
         center = bounds.center
         
-        eye = Geom::Point3d.new(center.x + 1000, center.y + 1000, center.z + 1000)
+        # Posiciona a câmera ABAIXO do modelo, olhando para cima
+        eye = Geom::Point3d.new(center.x, center.y, center.z - 1000)
         target = center
-        up = Geom::Vector3d.new(0, 0, 1)
+        up = Geom::Vector3d.new(0, 1, 0)
         
         camera.set(eye, target, up)
         model.active_view.camera = camera
@@ -734,9 +735,10 @@ module ProjetaPlus
         bounds = model.bounds
         center = bounds.center
         
-        eye = Geom::Point3d.new(center.x + 1000, center.y + 1000, center.z + 1000)
+        # Posiciona a câmera ABAIXO do modelo, olhando para cima
+        eye = Geom::Point3d.new(center.x, center.y, center.z - 1000)
         target = center
-        up = Geom::Vector3d.new(0, 0, 1)
+        up = Geom::Vector3d.new(0, 1, 0)
         
         camera.set(eye, target, up)
       end
@@ -765,11 +767,11 @@ module ProjetaPlus
         direction = camera.direction
         perspective = camera.perspective?
         
-        # Vista de topo (direção Z negativa)
+        # Vista de topo (direção Z negativa, olhando de cima para baixo)
         if direction.z < -0.9
           return perspective ? :topo_perspectiva : :topo_ortogonal
-        # Vista isométrica invertida (direção X e Y positivas)
-        elsif direction.x > 0.3 && direction.y > 0.3
+        # Vista de baixo (direção Z positiva, olhando de baixo para cima)
+        elsif direction.z > 0.9
           return perspective ? :iso_invertida_perspectiva : :iso_invertida_ortogonal
         # Vista isométrica padrão
         else
