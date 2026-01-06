@@ -2,6 +2,7 @@
 require 'sketchup.rb'
 require 'json'
 require_relative '../../settings/pro_settings_utils.rb'
+require_relative 'pro_base_plans.rb'
 
 module ProjetaPlus
   module Modules
@@ -26,13 +27,15 @@ module ProjetaPlus
         end
         
         def base_cut_height
-          cut_height = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
-          @height_meters + cut_height + 0.10
+          cut_height_cm = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+          cut_height_m = cut_height_cm / 100.0  # Converte cm para metros
+          @height_meters + cut_height_m + 0.10
         end
         
         def ceiling_cut_height
-          cut_height = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
-          @height_meters + cut_height + 0.05
+          cut_height_cm = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+          cut_height_m = cut_height_cm / 100.0  # Converte cm para metros
+          @height_meters + cut_height_m + 0.05
         end
         
         def to_hash
@@ -170,6 +173,7 @@ module ProjetaPlus
         
         model = Sketchup.active_model
         scene_name = generate_scene_name('base', number)
+        
         scene = model.pages.find { |s| s.name == scene_name }
         
         scene_existed = !scene.nil?
@@ -177,8 +181,8 @@ module ProjetaPlus
         model.start_operation("Criar Cena Base", true)
         
         unless scene
-          cut_height_meters = level.base_cut_height
-          cut_height = cut_height_meters.m + 0.05.m
+          cut_height_meters = level.base_cut_height  # Já está em metros
+          cut_height = cut_height_meters.m  # Converte para unidade SketchUp
           
           sp = model.entities.add_section_plane([0, 0, cut_height], [0, 0, -1])
           sp.name = scene_name
@@ -199,7 +203,13 @@ module ProjetaPlus
         end
         
         # Aplicar configurações se disponível (do JSON configurado)
-        apply_plan_config_if_available(scene_name, 'base')
+        # Buscar o code da configuração base
+
+        base_plans_result = ProjetaPlus::Modules::ProBasePlans.get_base_plans
+        base_config = base_plans_result[:plans]&.find { |p| p[:id] == 'base' } if base_plans_result[:success]
+        base_code = base_config&.dig(:code) || scene_name
+        
+        apply_plan_config_if_available(scene_name, base_code, 'base')
         
         # Garantir que o section plane está ativo e a cena está selecionada
         scene = model.pages.find { |s| s.name == scene_name }
@@ -262,7 +272,13 @@ module ProjetaPlus
         end
         
         # Aplicar configurações se disponível (do JSON configurado)
-        apply_plan_config_if_available(scene_name, 'base_plan', 'forro')
+        # Buscar o code da configuração forro
+
+        base_plans_result = ProjetaPlus::Modules::ProBasePlans.get_base_plans
+        forro_config = base_plans_result[:plans]&.find { |p| p[:id] == 'forro' } if base_plans_result[:success]
+        forro_code = forro_config&.dig(:code) || scene_name
+        
+        apply_plan_config_if_available(scene_name, forro_code, 'forro')
         
         # Garantir que o section plane está ativo e a cena está selecionada
         scene = model.pages.find { |s| s.name == scene_name }
@@ -299,8 +315,6 @@ module ProjetaPlus
       def self.apply_plan_config_if_available(scene_name, code, config_type)
         begin
           # Carregar configurações do ProBasePlans
-          require_relative 'pro_base_plans.rb'
-          
           base_plans_result = ProjetaPlus::Modules::ProBasePlans.get_base_plans
           return unless base_plans_result[:success] && base_plans_result[:plans]
           
@@ -313,10 +327,30 @@ module ProjetaPlus
           return unless scene
           
           puts "Aplicando configuração '#{config_type}' para cena '#{scene_name}'"
+          puts "  Code: #{code}"
           puts "  Estilo: #{config_plan[:style]}"
           puts "  Camadas: #{config_plan[:activeLayers].length} camadas"
-          
+
           model.start_operation("Aplicar Configuração", true)
+          # NÃO usar start_operation aqui pois este método é chamado
+          # de dentro de create_base_scene/create_ceiling_scene que já têm operação aberta
+          
+          # Renomear a página para usar o code (se fornecido e diferente do nome atual)
+          if code && !code.empty? && code != scene_name
+            scene.name = code
+            puts "  Página renomeada para: #{code}"
+            
+            # Também renomear o section plane associado
+            sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == scene_name }
+            if sp
+              sp.name = code
+              puts "  Section plane renomeado para: #{code}"
+            end
+          end
+          
+          # Salvar o display_name original como atributo
+          scene.set_attribute('ProjetaPlus', 'display_name', scene_name)
+          scene.set_attribute('ProjetaPlus', 'code', code) if code && !code.empty?
           
           # Selecionar a cena
           model.pages.selected_page = scene
@@ -338,15 +372,14 @@ module ProjetaPlus
           # Atualizar a cena
           scene.update
           
-          # Reativar section plane
-          sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == scene_name }
+          # Reativar section plane (usando o novo nome se foi renomeado)
+          page_name = (code && !code.empty?) ? code : scene_name
+          sp = model.entities.find { |e| e.is_a?(Sketchup::SectionPlane) && e.name == page_name }
           if sp
             sp.activate
             puts "  Section plane reativado"
           end
-          
           model.commit_operation
-          
           puts "Configuração aplicada com sucesso!"
         rescue => e
           model.abort_operation if model
