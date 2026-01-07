@@ -79,9 +79,9 @@ module ProjetaPlus
             # Abrir pasta
             if Sketchup.platform == :platform_win
               win_path = custom_path.tr('/', '\\')
-              UI.openURL("file:///#{win_path}")
+              ::UI.openURL("file:///#{win_path}")
             else
-              UI.openURL("file://#{custom_path}")
+              ::UI.openURL("file://#{custom_path}")
             end
             
             result = { success: true, message: "Pasta de componentes customizados aberta" }

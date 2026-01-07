@@ -6,10 +6,9 @@ require_relative '../../localization.rb'
 
 module ProjetaPlus
   module Modules
-    module ProViewIndication
-    CUT_LEVEL = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+    module ProViewAnnotation
     CM_TO_INCHES_CONVERSION_FACTOR = 2.54
-    BLOCK_NAME = 'proViewIndication_abcd.skp'
+    BLOCK_NAME = 'ProViewAnnotation_abcd.skp'
     
     def self.global_transformation(path, face)
       idx = path.index(face)
@@ -48,7 +47,8 @@ module ProjetaPlus
       path = candidates.find { |p| File.exist?(p) }
       return nil unless path
       
-      definitions.load(path)
+      definition = definitions.load(path, allow_newer: true)
+
     end
     
     def self.axes_from_normal(normal)
@@ -68,14 +68,18 @@ module ProjetaPlus
       [x_axis, y_axis, z_axis]
     end
 
-    class ViewIndicationTool
+    class ViewAnnotationTool
       include ProjetaPlus::Modules::ProHoverFaceUtil
+      
+      def initialize(dialog = nil)
+        @dialog = dialog
+      end
       
       def activate
         @hover_face = nil
         @path = nil
         @world_transformation = Geom::Transformation.new
-        Sketchup.set_status_text(ProjetaPlus::Localization.t("messages.view_indication_prompt"), SB_PROMPT)
+        Sketchup.set_status_text(ProjetaPlus::Localization.t("messages.view_annotation_prompt"), SB_PROMPT)
       end
       
       def onMouseMove(flags, x, y, view)
@@ -92,53 +96,45 @@ module ProjetaPlus
         
         model = Sketchup.active_model
         
-        # Use the BoundingBox that was already calculated in ProHoverFaceUtil
         bounding_box = hover_extents
         
-        # Get the exact center of the face using the BoundingBox
         center_point = Geom::Point3d.new(
           bounding_box.center.x, 
           bounding_box.center.y, 
           bounding_box.min.z
         )
-        
-        # Calculate world normal
+
         world_normal = @hover_face.normal.transform(@world_transformation).normalize
-        
-        # Get axes from normal
-        x_axis, y_axis, z_axis = ProjetaPlus::Modules::ProViewIndication.axes_from_normal(world_normal)
-        
-        # Load the block definition
-        component_definition = ProjetaPlus::Modules::ProViewIndication.load_definition
+
+        x_axis, y_axis, z_axis = ProjetaPlus::Modules::ProViewAnnotation.axes_from_normal(world_normal)
+
+        component_definition = ProjetaPlus::Modules::ProViewAnnotation.load_definition
         unless component_definition
-          ::UI.messagebox(ProjetaPlus::Localization.t("messages.view_indication_block_not_found"), 
-                         MB_OK, ProjetaPlus::Localization.t("app_message_title"))
+          if @dialog
+            @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.view_annotation_block_not_found")}', 'error');")
+          end
           return
         end
         
-        model.start_operation(ProjetaPlus::Localization.t("commands.view_indication_operation_name"), true)
-        
-        # Offset the center point by cut level
-        center_point = center_point.offset(z_axis, CUT_LEVEL.to_f / CM_TO_INCHES_CONVERSION_FACTOR)
-        
-        # Create transformation
+        model.start_operation(ProjetaPlus::Localization.t("commands.view_annotation_operation_name"), true)
+        cut_height = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
+        center_point = center_point.offset(z_axis, cut_height / CM_TO_INCHES_CONVERSION_FACTOR)
+
         transformation = Geom::Transformation.axes(center_point, x_axis, y_axis, z_axis)
-        
-        # Create instance
+
         instance = model.active_entities.add_instance(component_definition, transformation)
-        
-        # Scale the instance
+
         instance.transform!(Geom::Transformation.scaling(instance.bounds.center, ProjetaPlus::Modules::ProSettingsUtils.get_scale))
-        
-        # Select the instance
+
         model.selection.clear
         model.selection.add(instance)
         
         model.commit_operation
         view.invalidate
         
-        ::UI.messagebox(ProjetaPlus::Localization.t("messages.view_indication_success"), 
-                       MB_OK, ProjetaPlus::Localization.t("app_message_title"))
+        if @dialog
+          @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.view_annotation_success")}', 'success');")
+        end
       end
       
       def onKeyDown(key, repeat, flags, view)
@@ -147,6 +143,6 @@ module ProjetaPlus
         end
       end
     end
-    end # module ProViewIndication
+    end # module ProViewAnnotation
   end # module Modules
 end # module ProjetaPlus

@@ -7,7 +7,7 @@ require_relative '../../localization.rb'
 
 module ProjetaPlus
   module Modules
-    module ProHeightAnnotation
+    module ProEletricalAnnotation
       include ProjetaPlus::Modules::ProHoverFaceUtil
 
       AVAILABLE_FONTS = ["Century Gothic", "Arial", "Arial Narrow", "Verdana", "Times New Roman"].freeze
@@ -17,7 +17,10 @@ module ProjetaPlus
       # Keycodes
       VK_LEFT = 37; VK_UP = 38; VK_RIGHT = 39; VK_DOWN = 40
       VK_SHIFT = 16; VK_CTRL = 17; VK_ESC = 27; VK_ENTER = 13
-      VK_ADD = 107; VK_SUBTRACT = 109; VK_PLUS = 187; VK_MINUS = 189
+      VK_ADD = 107; 
+      VK_SUBTRACT = 109;
+      VK_PLUS = 187; 
+      VK_MINUS = 189
       VK_LEFT_MAC = 123; VK_UP_MAC = 126; VK_RIGHT_MAC = 124; VK_DOWN_MAC = 125
 
       class << self
@@ -38,42 +41,38 @@ module ProjetaPlus
 
         def get_defaults
           {
-            scale: Sketchup.read_default('HeightAnnotation', 'scale', ProjetaPlus::Modules::ProSettingsUtils.get_scale).to_i,
-            height_z_cm: Sketchup.read_default('HeightAnnotation', 'height_z', ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm).to_s,
-            font: Sketchup.read_default('HeightAnnotation', 'font', ProjetaPlus::Modules::ProSettingsUtils.get_font),
-            show_usage: convert_to_boolean(Sketchup.read_default('HeightAnnotation', 'show_usage', false))
+            scale: Sketchup.read_default('EletricalAnnotation', 'scale', ProjetaPlus::Modules::ProSettingsUtils.get_scale).to_i,
+            height_z_cm: Sketchup.read_default('EletricalAnnotation', 'height_z', ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm).to_s,
+            font: Sketchup.read_default('EletricalAnnotation', 'font', ProjetaPlus::Modules::ProSettingsUtils.get_font),
+            show_usage: convert_to_boolean(Sketchup.read_default('EletricalAnnotation', 'show_usage', false))
           }
         end
 
-        def start_interactive_annotation(args)
+        def start_interactive_annotation(args, dialog = nil)
           return { success: false, message: ProjetaPlus::Localization.t('messages.no_model_open') } if Sketchup.active_model.nil?
-          Sketchup.active_model.select_tool(InteractiveHeightAnnotationTool.new(args))
+          Sketchup.active_model.select_tool(InteractiveEletricalAnnotationTool.new(args, dialog))
           { success: true, message: ProjetaPlus::Localization.t('messages.height_tool_activated') }
         rescue => e
           { success: false, message: ProjetaPlus::Localization.t('messages.error_activating_tool') + ": #{e.message}" }
         end
       end
 
-      class InteractiveHeightAnnotationTool
+      class InteractiveEletricalAnnotationTool
         include ProjetaPlus::Modules::ProHoverFaceUtil
 
-        def initialize(args = {})
+        def initialize(args = {}, dialog = nil)
           @args = args || {}
+          @dialog = dialog
           @scale = (@args['scale'] || ProjetaPlus::Modules::ProSettingsUtils.get_scale).to_i
           @height_z = (@args['height_z_cm'] || ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm).to_f / CM_TO_INCHES_CONVERSION_FACTOR
           @font = (@args['font'] || ProjetaPlus::Modules::ProSettingsUtils.get_font).to_s
           @show_usage = !!(@args['show_usage'].to_s =~ /^(true|1|sim|yes|on)$/i)
-
           @text_height = 2.mm * @scale
-          
-          @line_spacing_factor = Sketchup.read_default('HeightAnnotation', 'line_spacing', 0.3).to_f
-          
+          @line_spacing_factor = Sketchup.read_default('EletricalAnnotation', 'line_spacing', 0.3).to_f
           @base_margin = (0.5 * @scale).cm / CM_TO_INCHES_CONVERSION_FACTOR
-
-          @rotation_90 = Sketchup.read_default('HeightAnnotation', 'rotation_90', 'false') == 'true'
-          @relative_position = Sketchup.read_default('HeightAnnotation', 'relative_position', 0).to_i
-          @offset_multiplier = Sketchup.read_default('HeightAnnotation', 'offset_multiplier', 1.0).to_f
-
+          @rotation_90 = Sketchup.read_default('EletricalAnnotation', 'rotation_90', 'false') == 'true'
+          @relative_position = Sketchup.read_default('EletricalAnnotation', 'relative_position', 0).to_i
+          @offset_multiplier = Sketchup.read_default('EletricalAnnotation', 'offset_multiplier', 1.0).to_f
           @phase = :waiting_for_face
           @hover_face = nil
           @path = nil
@@ -82,7 +81,6 @@ module ProjetaPlus
           @confirmed_position = nil
           @last_esc_at = Time.at(0)
           @layout_mode = :vertical
-
           @__text_cache = {}
         end
 
@@ -349,7 +347,10 @@ module ProjetaPlus
             colorize_safe(g)
 
           rescue => e
-            UI.messagebox("Erro ao criar anotação: #{e.class} - #{e.message}")
+            if @dialog
+              error_msg = "Erro ao criar anotação: #{e.class} - #{e.message}".gsub("'", "\\\\'")
+              @dialog.execute_script("showMessage('#{error_msg}', 'error');")
+            end
           ensure
             model.commit_operation
           end
@@ -391,7 +392,7 @@ module ProjetaPlus
             return
           when VK_CTRL
             @rotation_90 = !@rotation_90
-            Sketchup.write_default('HeightAnnotation', 'rotation_90', @rotation_90.to_s)
+            Sketchup.write_default('EletricalAnnotation', 'rotation_90', @rotation_90.to_s)
           when VK_SHIFT
             @layout_mode = (@layout_mode == :vertical) ? :horizontal : :vertical
           when VK_ENTER
@@ -401,31 +402,31 @@ module ProjetaPlus
           when VK_ADD, VK_PLUS
             if flags & COPY_MODIFIER_MASK != 0
               @line_spacing_factor = [@line_spacing_factor + 0.1, 2.0].min
-              Sketchup.write_default('HeightAnnotation', 'line_spacing', @line_spacing_factor)
+              Sketchup.write_default('EletricalAnnotation', 'line_spacing', @line_spacing_factor)
             else
               @offset_multiplier = [@offset_multiplier + 0.5, 5.0].min
-              Sketchup.write_default('HeightAnnotation', 'offset_multiplier', @offset_multiplier)
+              Sketchup.write_default('EletricalAnnotation', 'offset_multiplier', @offset_multiplier)
             end
           when VK_SUBTRACT, VK_MINUS
             if flags & COPY_MODIFIER_MASK != 0
               @line_spacing_factor = [@line_spacing_factor - 0.1, 0.0].max
-              Sketchup.write_default('HeightAnnotation', 'line_spacing', @line_spacing_factor)
+              Sketchup.write_default('EletricalAnnotation', 'line_spacing', @line_spacing_factor)
             else
               @offset_multiplier = [@offset_multiplier - 0.5, 0.5].max
-              Sketchup.write_default('HeightAnnotation', 'offset_multiplier', @offset_multiplier)
+              Sketchup.write_default('EletricalAnnotation', 'offset_multiplier', @offset_multiplier)
             end
           when VK_UP, VK_UP_MAC
             @relative_position = 0
-            Sketchup.write_default('HeightAnnotation', 'relative_position', @relative_position)
+            Sketchup.write_default('EletricalAnnotation', 'relative_position', @relative_position)
           when VK_RIGHT, VK_RIGHT_MAC
             @relative_position = 1
-            Sketchup.write_default('HeightAnnotation', 'relative_position', @relative_position)
+            Sketchup.write_default('EletricalAnnotation', 'relative_position', @relative_position)
           when VK_DOWN, VK_DOWN_MAC
             @relative_position = 2
-            Sketchup.write_default('HeightAnnotation', 'relative_position', @relative_position)
+            Sketchup.write_default('EletricalAnnotation', 'relative_position', @relative_position)
           when VK_LEFT, VK_LEFT_MAC
             @relative_position = 3
-            Sketchup.write_default('HeightAnnotation', 'relative_position', @relative_position)
+            Sketchup.write_default('EletricalAnnotation', 'relative_position', @relative_position)
           else
             return
           end

@@ -1,17 +1,18 @@
 # encoding: UTF-8
-require "sketchup.rb"
 require 'json'
+require "sketchup.rb"
+require_relative 'localization.rb'
 
 module ProjetaPlus
   module Commands
     @@main_dashboard_dialog = nil
     
     def self.open_main_dashboard_command
-      cmd = ::UI::Command.new(ProjetaPlus::Localization.t("toolbar.main_dashboard")) do
+      cmd = ::UI::Command.new(ProjetaPlus::Localization.t("plugin_name")) do
         open_main_dashboard
       end
-      cmd.tooltip = ProjetaPlus::Localization.t("toolbar.main_dashboard_tooltip")
-      cmd.status_bar_text = ProjetaPlus::Localization.t("toolbar.main_dashboard_status")
+      cmd.tooltip = ProjetaPlus::Localization.t("plugin_name")
+      #cmd.status_bar_text = ProjetaPlus::Localization.t("plugin_name")
       cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'logo.png')
       cmd
     end
@@ -27,8 +28,10 @@ module ProjetaPlus
         preferences_key: "projeta_plus_main_dialog",
         scrollable: true,
         resizable: true,
-        width: 380,
-        height: 800,
+        width: 356,
+        min_width: 356,
+        height: 700,
+        min_height: 700,
         left: 200,
         top: 200
       )
@@ -42,7 +45,6 @@ module ProjetaPlus
       @@main_dashboard_dialog.set_on_closed do
         furniture_handler&.detach_selection_observer
         @@main_dashboard_dialog = nil
-        puts "[ProjetaPlus Dialog] Main dialog closed."
       end
       @@main_dashboard_dialog.show
     end
@@ -60,7 +62,6 @@ module ProjetaPlus
     private
     
     def self.register_dialog_handlers
-      puts "[ProjetaPlus Commands] Registering dialog handlers..."
       
       # Initialize all handlers
       settings_handler = ProjetaPlus::DialogHandlers::SettingsHandler.new(@@main_dashboard_dialog)
@@ -77,6 +78,7 @@ module ProjetaPlus
       plans_handler = ProjetaPlus::DialogHandlers::PlansHandler.new(@@main_dashboard_dialog)
       sections_handler = ProjetaPlus::DialogHandlers::SectionsHandler.new(@@main_dashboard_dialog)
       details_handler = ProjetaPlus::DialogHandlers::DetailsHandler.new(@@main_dashboard_dialog)
+      electrical_reports_handler = ProjetaPlus::DialogHandlers::ElectricalReportsHandler.new(@@main_dashboard_dialog)
       
       # Register all callbacks
       settings_handler.register_callbacks
@@ -93,9 +95,8 @@ module ProjetaPlus
       plans_handler.register_callbacks
       sections_handler.register_callbacks
       details_handler.register_callbacks
+      electrical_reports_handler.register_callbacks
       
-      puts "[ProjetaPlus Commands] All dialog handlers registered successfully."
-
       furniture_handler
     end
 

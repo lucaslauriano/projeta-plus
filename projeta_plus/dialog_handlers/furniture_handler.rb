@@ -188,6 +188,167 @@ module ProjetaPlus
           nil
         end
 
+        # ========================================
+        # NEW FURNITURE REPORTS CALLBACKS
+        # ========================================
+
+        @dialog.add_action_callback('getFurnitureTypes') do |_context|
+          begin
+            puts "[FurnitureHandler] getFurnitureTypes called"
+            result = ProjetaPlus::Modules::ProFurnitureReports.get_furniture_types
+            puts "[FurnitureHandler] getFurnitureTypes result: #{result.inspect}"
+            @dialog.execute_script("window.handleGetFurnitureTypesResult(#{result.to_json})")
+          rescue => e
+            puts "[FurnitureHandler] ERROR in getFurnitureTypes: #{e.message}"
+            puts e.backtrace if e.backtrace
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleGetFurnitureTypesResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('getCategoryData') do |_context, payload|
+          begin
+            puts "[FurnitureHandler] getCategoryData called with payload: #{payload.inspect}"
+            params = JSON.parse(payload)
+            puts "[FurnitureHandler] Parsed params: #{params.inspect}"
+            result = ProjetaPlus::Modules::ProFurnitureReports.get_category_data(params['category'])
+            puts "[FurnitureHandler] getCategoryData result: #{result.keys.inspect}"
+            @dialog.execute_script("window.handleGetCategoryDataResult(#{result.to_json})")
+          rescue => e
+            puts "[FurnitureHandler] ERROR in getCategoryData: #{e.message}"
+            puts e.backtrace if e.backtrace
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleGetCategoryDataResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('getCategoryPreferences') do |_context|
+          begin
+            result = ProjetaPlus::Modules::ProFurnitureReports.get_category_preferences
+            @dialog.execute_script("window.handleGetCategoryPreferencesResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleGetCategoryPreferencesResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('saveCategoryPreferences') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            result = ProjetaPlus::Modules::ProFurnitureReports.save_category_preferences(params['preferences'])
+            @dialog.execute_script("window.handleSaveCategoryPreferencesResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleSaveCategoryPreferencesResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('getColumnPreferences') do |_context|
+          begin
+            result = ProjetaPlus::Modules::ProFurnitureReports.get_column_preferences
+            @dialog.execute_script("window.handleGetColumnPreferencesResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleGetColumnPreferencesResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('saveColumnPreferences') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            result = ProjetaPlus::Modules::ProFurnitureReports.save_column_preferences(params['preferences'])
+            @dialog.execute_script("window.handleSaveColumnPreferencesResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleSaveColumnPreferencesResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('pickSaveFilePathFurniture') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            default_name = params['defaultName'] || 'export'
+            file_type = params['fileType'] || 'csv'
+            
+            extension = file_type == 'xlsx' ? '.xlsx' : '.csv'
+            filter = file_type == 'xlsx' ? 'Excel Files|*.xlsx||' : 'CSV Files|*.csv||'
+            
+            path = ::UI.savepanel("Salvar arquivo #{file_type.upcase}", nil, "#{default_name}#{extension}", filter)
+            
+            if path
+              result = { success: true, path: path }
+            else
+              result = { success: false, message: 'Salvar cancelado pelo usuário' }
+            end
+            
+            @dialog.execute_script("window.handlePickSaveFilePathFurnitureResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handlePickSaveFilePathFurnitureResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('exportCategoryCSV') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            unless params['path']
+              error_result = { success: false, message: 'Caminho do arquivo não fornecido' }
+              @dialog.execute_script("window.handleExportCategoryCSVResult(#{error_result.to_json})")
+              return nil
+            end
+            
+            result = ProjetaPlus::Modules::ProFurnitureReports.export_category_csv(params['category'], params['path'])
+            @dialog.execute_script("window.handleExportCategoryCSVResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleExportCategoryCSVResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('exportXLSX') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            result = ProjetaPlus::Modules::ProFurnitureReports.export_xlsx(params['categories'], params['path'])
+            @dialog.execute_script("window.handleExportXLSXResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleExportXLSXResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('isolateFurnitureItem') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            result = ProjetaPlus::Modules::ProFurnitureReports.isolate_furniture_item(params['entityId'])
+            @dialog.execute_script("window.handleIsolateFurnitureItemResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleIsolateFurnitureItemResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
+        @dialog.add_action_callback('deleteFurnitureItem') do |_context, payload|
+          begin
+            params = JSON.parse(payload)
+            result = ProjetaPlus::Modules::ProFurnitureReports.delete_furniture_item(params['entityId'])
+            @dialog.execute_script("window.handleDeleteFurnitureItemResult(#{result.to_json})")
+          rescue => e
+            error_result = { success: false, message: e.message }
+            @dialog.execute_script("window.handleDeleteFurnitureItemResult(#{error_result.to_json})")
+          end
+          nil
+        end
+
         # Anexa o observer automaticamente para sincronizar a seleção
         # Observer ativo apenas para detectar quando a seleção é limpa
         attach_selection_observer

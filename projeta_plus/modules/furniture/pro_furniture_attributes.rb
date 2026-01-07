@@ -16,11 +16,20 @@ module ProjetaPlus
       MIN_DIMENSION_CM = 1.0
 
       TYPE_COLORS = {
+        # Inglês
         "Furniture" => Sketchup::Color.new(139, 69, 19),      
         "Appliances" => Sketchup::Color.new(70, 130, 180),    
-        "Fixtures" => Sketchup::Color.new(60, 179, 113),     
+        "Fixtures" => Sketchup::Color.new(60, 179, 113),
+        "Fixtures & Fittings" => Sketchup::Color.new(60, 179, 113),     
         "Accessories" => Sketchup::Color.new(255, 140, 0),    
-        "Decoration" => Sketchup::Color.new(186, 85, 211),    
+        "Decoration" => Sketchup::Color.new(186, 85, 211),
+        # Português
+        "Mobiliário" => Sketchup::Color.new(139, 69, 19),
+        "Eletrodomésticos" => Sketchup::Color.new(70, 130, 180),
+        "Louças e Metais" => Sketchup::Color.new(60, 179, 113),
+        "Acessórios" => Sketchup::Color.new(255, 140, 0),
+        "Decoração" => Sketchup::Color.new(186, 85, 211),
+        # Fallback
         "Other" => Sketchup::Color.new(128, 128, 128)         
       }.freeze
 
@@ -60,13 +69,16 @@ module ProjetaPlus
       end
 
       def self.set_attribute_safe(component, key, value)
+        # Salvar tanto na instância quanto na definição para garantir consistência
+        component.set_attribute(DICTIONARY_NAME, key, value)
         component.definition.set_attribute(DICTIONARY_NAME, key, value)
       end
 
       def self.get_attribute_safe(component, key, default = "")
-        value = component.definition.get_attribute(DICTIONARY_NAME, key, nil)
-        value = component.get_attribute(DICTIONARY_NAME, key, default) if value.nil?
-        value || default
+        # Priorizar leitura da instância primeiro (valores específicos), depois da definição (valores padrão)
+        value = component.get_attribute(DICTIONARY_NAME, key, nil)
+        value = component.definition.get_attribute(DICTIONARY_NAME, key, nil) if value.nil?
+        value.nil? || (value.is_a?(String) && value.empty?) ? default : value
       end
 
       def self.sync_attributes_to_definition(component)

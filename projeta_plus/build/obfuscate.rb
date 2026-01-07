@@ -17,20 +17,20 @@ PRESERVE_NAMES = Set.new([
   
   # Classes de anotação
   'ProSettings', 'ProRoomAnnotation', 'ProSectionAnnotation', 'ProCeilingAnnotation',
-  'ProLightingAnnotation', 'ProCircuitConnection', 'ProViewIndication', 'ProComponentUpdater',
+  'ProLightingAnnotation', 'ProCircuitConnection', 'ProViewAnnotation', 'ProComponentUpdater',
   'ProHoverFaceUtil',
   
   # Métodos públicos usados no frontend (callbacks registrados)
   'requestAllSettings', 'loadGlobalSettings', 'changeLanguage', 'updateSetting',
   'selectFolderPath', 'loadRoomAnnotationDefaults', 'startRoomAnnotation',
   'startSectionAnnotation', 'loadCeilingAnnotationDefaults', 'startCeilingAnnotation',
-  'activate_view_indication_tool', 'get_view_indication_settings', 'update_view_indication_settings',
+  'activate_view_tool', 'get_view_settings', 'update_view_settings',
   'loadLightingAnnotationDefaults', 'startLightingAnnotation', 'startCircuitConnection',
-  'loadHeightAnnotationDefaults', 'startHeightAnnotation', 'loadComponentUpdaterDefaults',
+  'loadEletricalAnnotationDefaults', 'startEletricalAnnotation', 'loadComponentUpdaterDefaults',
   'updateComponentAttributes', 'executeExtensionFunction', 'showMessageBox', 'requestModelName',
   
   # Callbacks JS chamados do Ruby
-  'languageChanged', 'receiveModelNameFromRuby', 'showMessage', 'updateViewIndicationSettings',
+  'languageChanged', 'receiveModelNameFromRuby', 'showMessage', 'updateViewAnnotationSettings',
   
   # Métodos importantes do BaseHandler
   'execute_script', 'send_json_response', 'handle_error', 'log',

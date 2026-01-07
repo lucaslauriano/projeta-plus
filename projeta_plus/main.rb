@@ -45,6 +45,7 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'scenes_
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'plans_handlers.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'sections_handlers.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'details_handler.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'dialog_handlers', 'electrical_reports_handler.rb')
 
 # Commands (now uses the handlers)
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'commands.rb')
@@ -56,8 +57,8 @@ require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'p
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_ceiling_annotation.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_lighting_annotation.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_circuit_connection.rb')
-require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_height_annotation.rb')
-require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_view_indication.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_eletrical_annotation.rb')
+require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_view_annotation.rb')
 require File.join(ProjetaPlus::PATH, 'projeta_plus', 'modules', 'annotation', 'pro_component_updater.rb')
 
 

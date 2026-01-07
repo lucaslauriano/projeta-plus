@@ -1,32 +1,26 @@
 {
-  "sections": [
+  "groups": [
     {
-      "id": "A",
-      "name": "A",
-      "position": [0, 40, 0],
-      "direction": [0, 1, 0],
-      "active": false
-    },
-    {
-      "id": "B",
-      "name": "B",
-      "position": [40, 0, 0],
-      "direction": [1, 0, 0],
-      "active": false
-    },
-    {
-      "id": "C",
-      "name": "C",
-      "position": [0, 80, 0],
-      "direction": [0, -1, 0],
-      "active": false
-    },
-    {
-      "id": "D",
-      "name": "D",
-      "position": [80, 0, 0],
-      "direction": [-1, 0, 0],
-      "active": false
+      "id": "1766601212132",
+      "name": "Geral",
+      "segments": [
+        {
+          "id": "1766601229716",
+          "name": "Humanizado",
+          "code": "hmzd",
+          "style": "PRO_VISTAS",
+          "cameraType": [],
+          "activeLayers": []
+        },
+        {
+          "id": "1766601229716",
+          "name": "Corte técnico",
+          "code": "c_tec",
+          "style": "PRO_VISTAS",
+          "cameraType": [],
+          "activeLayers": []
+        }
+      ]
     }
   ]
 }

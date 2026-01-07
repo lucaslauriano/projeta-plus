@@ -128,7 +128,8 @@ module ProjetaPlus
       class InteractiveSectionAnnotationTool
         include ProjetaPlus::Modules::ProHoverFaceUtil
         
-        def initialize
+        def initialize(dialog = nil)
+          @dialog = dialog
           @valid_pick = false
           @target_entity = nil
         end
@@ -155,7 +156,10 @@ module ProjetaPlus
         
         def onLButtonDown(flags, x, y, view)
           unless @valid_pick
-            ::UI.messagebox(ProjetaPlus::Localization.t("messages.click_on_group_component_for_section"), MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            error_result = { success: false, message: ProjetaPlus::Localization.t("messages.click_on_group_component_for_section") }
+            if @dialog
+              @dialog.execute_script("window.handleSectionAnnotationResult && window.handleSectionAnnotationResult(#{error_result.to_json})")
+            end
             return
           end
           
@@ -166,16 +170,23 @@ module ProjetaPlus
           
           if result[:success]
             model.commit_operation
-            ::UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            if @dialog
+              @dialog.execute_script("window.handleSectionAnnotationResult && window.handleSectionAnnotationResult(#{result.to_json})")
+            end
           else
             model.abort_operation
-            ::UI.messagebox(result[:message], MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+            if @dialog
+              @dialog.execute_script("window.handleSectionAnnotationResult && window.handleSectionAnnotationResult(#{result.to_json})")
+            end
           end
           
           Sketchup.active_model.select_tool(nil)
         rescue StandardError => e
           model.abort_operation if model
-          ::UI.messagebox("#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}", MB_OK, ProjetaPlus::Localization.t("plugin_name"))
+          error_result = { success: false, message: "#{ProjetaPlus::Localization.t("messages.unexpected_error")}: #{e.message}" }
+          if @dialog
+            @dialog.execute_script("window.handleSectionAnnotationResult && window.handleSectionAnnotationResult(#{error_result.to_json})")
+          end
           Sketchup.active_model.select_tool(nil)
         end
         
@@ -206,12 +217,12 @@ module ProjetaPlus
         end
       end
       
-      def self.start_interactive_annotation(args = nil)
+      def self.start_interactive_annotation(args = nil, dialog = nil)
         if Sketchup.active_model.nil?
           return { success: false, message: ProjetaPlus::Localization.t("messages.no_model_open") }
         end
         
-        Sketchup.active_model.select_tool(InteractiveSectionAnnotationTool.new)
+        Sketchup.active_model.select_tool(InteractiveSectionAnnotationTool.new(dialog))
         { success: true, message: ProjetaPlus::Localization.t("messages.section_tool_activated") }
       rescue StandardError => e
         { success: false, message: ProjetaPlus::Localization.t("messages.error_activating_tool") + ": #{e.message}" }
@@ -222,12 +233,24 @@ module ProjetaPlus
         entities = model.entities
         
         no_planes_msg = ProjetaPlus::Localization.t("messages.section_annotation_error_no_plane")
+        no_vertical_planes_msg = ProjetaPlus::Localization.t("messages.section_annotation_error_no_vertical_plane")
         invalid_values_msg = ProjetaPlus::Localization.t("messages.invalid_section_annotation_values")
         section_success_msg = ProjetaPlus::Localization.t("messages.section_annotation_success")
         
         section_planes = entities.grep(Sketchup::SectionPlane)
         if section_planes.empty?
           return { success: false, message: no_planes_msg }
+        end
+        
+        # Verificar se existe pelo menos um corte vertical
+        has_vertical_plane = section_planes.any? do |plane|
+          plane_data = plane.get_plane
+          orientation = Geom::Vector3d.new(plane_data[0], plane_data[1], plane_data[2])
+          orientation.z.abs <= 0.9
+        end
+        
+        unless has_vertical_plane
+          return { success: false, message: no_vertical_planes_msg }
         end
         
         line_height_cm = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm.to_f
@@ -244,7 +267,7 @@ module ProjetaPlus
         bb.add([entity_bounds.min.x - extend_distance, entity_bounds.min.y - extend_distance, entity_bounds.min.z])
         bb.add([entity_bounds.max.x + extend_distance, entity_bounds.max.y + extend_distance, entity_bounds.max.z])
         
-        layer_name = '-ANOTAÇÃO-SECAO'
+        layer_name = '-ANOTACAO-SECAO'
         layer = model.layers.add(layer_name)
         
         all_lines_group = entities.add_group

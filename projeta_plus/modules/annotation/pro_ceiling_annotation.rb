@@ -15,12 +15,6 @@ module ProjetaPlus
       TEXT_OFFSET_FROM_CEILING = -5.0.cm
       PREFERENCE_KEY = "AnotacaoForro"
 
-      def self.get_defaults
-        {
-          floor_level: Sketchup.read_default(PREFERENCE_KEY, "floor_level", ProjetaPlus::Modules::ProSettingsUtils.get_floor_level)
-        }
-      end
-
       # Cria texto 3D invertido no eixo Z para ser legível de baixo para cima
       def self.create_inverted_text(text, position, scale, font, alignment = TextAlignCenter)
         model = Sketchup.active_model
@@ -68,7 +62,7 @@ module ProjetaPlus
         
         scale = ProjetaPlus::Modules::ProSettingsUtils.get_scale
         font = ProjetaPlus::Modules::ProSettingsUtils.get_font
-        floor_level = parse_and_save_floor_level(args['floor_level'])
+        floor_level = parse_floor_level(args['floor_level'])
         
         transformation = calculate_accumulated_transformation(path, face)
         area_text = calculate_area_text(face)
@@ -95,10 +89,9 @@ module ProjetaPlus
         layer
       end
 
-      # Converte string de nível do piso para float e salva nas preferências
-      def self.parse_and_save_floor_level(floor_level_str)
+      # Converte string de nível do piso para float
+      def self.parse_floor_level(floor_level_str)
         normalized_str = floor_level_str.to_s.tr(',', '.')
-        Sketchup.write_default(PREFERENCE_KEY, "floor_level", normalized_str)
         normalized_str.to_f
       end
 
@@ -142,8 +135,9 @@ module ProjetaPlus
       class InteractiveCeilingAnnotationTool
         include ProjetaPlus::Modules::ProHoverFaceUtil
         
-        def initialize(args)
+        def initialize(args, dialog = nil)
           @args = args
+          @dialog = dialog
           @valid_pick = false
         end
         
@@ -218,19 +212,16 @@ module ProjetaPlus
         end
 
         def show_success_message
-          ::UI.messagebox(
-            ProjetaPlus::Localization.t("messages.ceiling_annotation_success"),
-            MB_OK,
-            ProjetaPlus::Localization.t("plugin_name")
-          )
+          if @dialog
+            @dialog.execute_script("showMessage('#{ProjetaPlus::Localization.t("messages.ceiling_annotation_success")}', 'success');")
+          end
         end
 
         def show_error_message(message)
-          ::UI.messagebox(
-            message,
-            MB_OK,
-            ProjetaPlus::Localization.t("plugin_name")
-          )
+          if @dialog
+            escaped_message = message.gsub("'", "\\\\'")
+            @dialog.execute_script("showMessage('#{escaped_message}', 'error');")
+          end
         end
 
         def deactivate_tool
@@ -239,10 +230,10 @@ module ProjetaPlus
       end
 
       # Inicia a ferramenta interativa de anotação
-      def self.start_interactive_annotation(args)
+      def self.start_interactive_annotation(args, dialog = nil)
         return { success: false, message: ProjetaPlus::Localization.t("messages.no_model_open") } if Sketchup.active_model.nil?
         
-        Sketchup.active_model.select_tool(InteractiveCeilingAnnotationTool.new(args))
+        Sketchup.active_model.select_tool(InteractiveCeilingAnnotationTool.new(args, dialog))
         { success: true, message: ProjetaPlus::Localization.t("messages.ceiling_tool_activated") }
       rescue StandardError => e
         { success: false, message: ProjetaPlus::Localization.t("messages.error_activating_tool") + ": #{e.message}" }

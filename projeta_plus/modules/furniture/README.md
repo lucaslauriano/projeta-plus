@@ -224,7 +224,7 @@ The module implements a 2-second cache for performance:
 | Old                                   | New                                                | Reason                       |
 | ------------------------------------- | -------------------------------------------------- | ---------------------------- |
 | `pro_mob_*` (in `dynamic_attributes`) | Simple keys in `projeta_plus_furniture` dictionary | English naming + namespacing |
-| `FM_Extensions::Exportar`             | `ProjetaPlus::Modules::ProFurnitureAttributes`     | Consistent namespace         |
+| `PRO_Extensions::Exportar`            | `ProjetaPlus::Modules::ProFurnitureAttributes`     | Consistent namespace         |
 | Hardcoded strings                     | `ProjetaPlus::Localization.t()`                    | Internationalization         |
 | Mixed concerns                        | Separated modules                                  | Better organization          |
 | Portuguese variables                  | English variables                                  | Code standardization         |

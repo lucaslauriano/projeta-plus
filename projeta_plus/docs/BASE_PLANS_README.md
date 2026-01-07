@@ -9,12 +9,14 @@ Sistema completo para gerenciar configurações de estilos e camadas para planta
 ### Backend (Ruby)
 
 1. **`pro_base_plans.rb`** - Módulo Ruby principal
+
    - `get_base_plans` - Carrega configurações do JSON
    - `save_base_plans` - Salva configurações no JSON
    - `get_available_styles_for_base_plans` - Lista estilos da pasta styles/
    - `get_available_layers_for_base_plans` - Lista camadas do modelo
 
 2. **`scenes_handlers.rb`** - Handler de callbacks
+
    - Registra os 4 métodos acima como callbacks do dialog
 
 3. **Arquivos JSON**
@@ -24,22 +26,26 @@ Sistema completo para gerenciar configurações de estilos e camadas para planta
 ### Frontend (TypeScript/React)
 
 1. **`hooks/useBasePlans.ts`** - Hook React customizado
+
    - Gerencia estado e comunicação com backend
    - Carrega dados automaticamente ao inicializar
    - Handlers para respostas do Ruby
 
 2. **`components/base-plans-config-dialog.tsx`** - Componente de diálogo
+
    - Abas separadas para Base e Forro
    - Seleção de estilo
    - Gerenciamento de camadas com busca
    - Botões: Todos, Nenhum, Estado Atual
 
 3. **`components/levels-manager-dialog.tsx`** - Integração
+
    - Botão "Configurar Plantas" no header
    - Integra o novo diálogo
    - Carrega e salva configurações
 
 4. **`components/ui/tabs.tsx`** - Componente de abas
+
    - Novo componente criado para suportar as abas
 
 5. **`types/global.d.ts`** - Tipos TypeScript
@@ -53,15 +59,18 @@ Sistema completo para gerenciar configurações de estilos e camadas para planta
 O sistema carrega as configurações na seguinte ordem:
 
 1. **`plans/json_data/user_base_plans.json`** (Prioridade 1 - Arquivo Dedicado)
+
    - Arquivo específico para configurações de Base e Forro
    - Formato simplificado com apenas estas duas plantas
 
 2. **`plans/json_data/user_plans_data.json`** (Prioridade 2 - Fallback)
+
    - Busca por `planta_baixa` → mapeia para "Base"
    - Busca por `planta_cobertura` → mapeia para "Forro"
    - Usado se user_base_plans.json não existir
 
 3. **`plans/json_data/base_plans.json`** (Prioridade 3 - Padrão)
+
    - Configurações padrão do sistema
    - Usado se nenhum dos anteriores existir
 
@@ -77,13 +86,13 @@ O sistema carrega as configurações na seguinte ordem:
     {
       "id": "base",
       "name": "Base",
-      "style": "FM_PLANTAS",
+      "style": "PRO_PLANTAS",
       "activeLayers": ["Layer0", "Walls", "Floor", ...]
     },
     {
       "id": "ceiling",
       "name": "Forro",
-      "style": "FM_PLANTAS",
+      "style": "PRO_PLANTAS",
       "activeLayers": ["Layer0", "Ceiling", ...]
     }
   ]
@@ -99,14 +108,14 @@ O sistema carrega as configurações na seguinte ordem:
     {
       "id": "planta_baixa",
       "name": "Base",
-      "style": "FM_PLANTAS",
+      "style": "PRO_PLANTAS",
       "cameraType": "topo_ortogonal",
       "activeLayers": ["Layer0", "Walls", "Floor", ...]
     },
     {
       "id": "planta_cobertura",
       "name": "Forro",
-      "style": "FM_PLANTAS",
+      "style": "PRO_PLANTAS",
       "cameraType": "topo_ortogonal",
       "activeLayers": ["Layer0", "Ceiling", ...]
     }
@@ -122,13 +131,13 @@ O sistema carrega as configurações na seguinte ordem:
     {
       "id": "base",
       "name": "Base",
-      "style": "FM_VISTAS",
+      "style": "PRO_VISTAS",
       "activeLayers": ["Layer0"]
     },
     {
       "id": "ceiling",
       "name": "Forro",
-      "style": "FM_VISTAS",
+      "style": "PRO_VISTAS",
       "activeLayers": ["Layer0"]
     }
   ]
@@ -138,6 +147,7 @@ O sistema carrega as configurações na seguinte ordem:
 ## Fluxo de Funcionamento
 
 1. **Ao abrir o Gerenciador de Níveis:**
+
    - Hook `useBasePlans` é inicializado
    - Chama automaticamente:
      - `getBasePlans` → carrega configurações
@@ -145,6 +155,7 @@ O sistema carrega as configurações na seguinte ordem:
      - `getAvailableLayersForBasePlans` → lista camadas do modelo
 
 2. **Ao clicar em "Configurar Plantas":**
+
    - Abre dialog com abas Base e Forro
    - Mostra estilos disponíveis da pasta `styles/`
    - Mostra camadas existentes no modelo
@@ -179,8 +190,9 @@ Para verificar o funcionamento, abra o Console do Navegador (F12):
 ```
 
 No Ruby Console do SketchUp:
+
 ```
-Estilos encontrados: FM_VISTAS, FM_PLANTAS, ...
+Estilos encontrados: PRO_VISTAS, PRO_PLANTAS, ...
 Camadas encontradas: Layer0, Walls, Floor, ...
 Base plans salvas com sucesso em: ...
 ```
@@ -197,10 +209,12 @@ As configurações de Base Plans são usadas ao criar plantas base e forro atrav
 ## Manutenção
 
 ### Adicionar novo estilo
+
 1. Adicionar arquivo `.style` na pasta `modules/inteli-skt/styles/`
 2. O estilo aparecerá automaticamente na lista
 
 ### Resetar para padrão
+
 1. No `user_plans_data.json`, remover ou editar as entradas:
    - `planta_baixa`
    - `planta_cobertura`
@@ -215,4 +229,3 @@ As configurações de Base Plans são usadas ao criar plantas base e forro atrav
 - Hook: `frontend/projeta-plus-html/hooks/useBasePlans.ts`
 - Dialog: `frontend/projeta-plus-html/app/dashboard/inteli-sket/components/base-plans-config-dialog.tsx`
 - Integração: `frontend/projeta-plus-html/app/dashboard/inteli-sket/components/levels-manager-dialog.tsx`
-

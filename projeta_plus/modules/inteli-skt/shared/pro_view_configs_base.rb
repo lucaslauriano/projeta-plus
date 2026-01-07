@@ -18,9 +18,18 @@ module ProjetaPlus
           items = []
 
           model.pages.each do |page|
+            # Recuperar o código e display_name salvos como atributos
+            code = page.get_attribute('ProjetaPlus', 'code', nil)
+            display_name = page.get_attribute('ProjetaPlus', 'display_name', nil)
+            
+            # Se não tiver display_name salvo, usar o nome da página
+            display_name = page.name if display_name.nil? || display_name.empty?
+            
             item_config = {
               id: page.name,
-              name: page.name,
+              name: display_name,
+              code: code,
+              pageName: page.name,
               style: page.style ? page.style.name : '',
               cameraType: detect_camera_type(page),
               activeLayers: get_page_visible_layers(page)
@@ -48,30 +57,42 @@ module ProjetaPlus
         begin
           model = Sketchup.active_model
           name = params['name'] || params[:name]
+          code = params['code'] || params[:code]
           style = params['style'] || params[:style]
           camera_type = params['cameraType'] || params[:cameraType]
           active_layers = params['activeLayers'] || params[:activeLayers]
 
-        # Validar parâmetros
-        valid, error_msg = validate_params(name, style, camera_type)
-        return { success: false, message: error_msg } unless valid
+          # Definir o nome da página: usar code se existir, senão usar name
+          page_name = (code && !code.empty?) ? code : name
 
-        # Verificar se já existe
-        if model.pages.find { |p| p.name.downcase == name.downcase }
-          return { success: false, message: "#{entity_name_singular.capitalize} '#{name}' já existe" }
-        end
+          # Validar parâmetros
+          valid, error_msg = validate_params(name, style, camera_type)
+          return { success: false, message: error_msg } unless valid
 
-        model.start_operation("Adicionar #{entity_name_singular.capitalize}", true)
+          # Verificar se já existe
+          if model.pages.find { |p| p.name.downcase == page_name.downcase }
+            return { success: false, message: "#{entity_name_singular.capitalize} '#{page_name}' já existe" }
+          end
 
-        # Aplicar configurações antes de criar
-        apply_style(style) if style && !style.empty?
-        apply_layers_visibility(active_layers) if active_layers
+          model.start_operation("Adicionar #{entity_name_singular.capitalize}", true)
 
-          # Criar a página
-          page = model.pages.add(name)
+          # Aplicar configurações antes de criar
+          apply_style(style) if style && !style.empty?
+          apply_layers_visibility(active_layers) if active_layers
+
+          # Criar a página com o nome definido (code ou name)
+          page = model.pages.add(page_name)
+
+          # Salvar o name e code como atributos da página
+          page.set_attribute('ProjetaPlus', 'display_name', name) if name && !name.empty?
+          if code && !code.empty?
+            page.set_attribute('ProjetaPlus', 'code', code)
+          end
 
           # Configurar câmera
           apply_camera_config(page, camera_type) if camera_type
+
+          unhide_all_elements
 
           # Zoom extents e atualizar
           model.active_view.zoom_extents
@@ -81,10 +102,12 @@ module ProjetaPlus
 
           {
             success: true,
-            message: "#{entity_name_singular.capitalize} '#{name}' criada com sucesso",
+            message: "#{entity_name_singular.capitalize} '#{page_name}' criada com sucesso",
             entity_name_singular.to_sym => {
               id: page.name,
-              name: page.name,
+              name: name,
+              code: code,
+              pageName: page.name,
               style: style,
               cameraType: camera_type,
               activeLayers: active_layers
@@ -99,44 +122,66 @@ module ProjetaPlus
         end
       end
 
-      # Atualiza configuração existente
+      # Atualiza configuração existente (suporta scope: current / <n> / all)
       def update_item(name, params)
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         begin
           model = Sketchup.active_model
-          page = model.pages.find { |p| p.name.downcase == name.downcase }
-
-          unless page
-            return { success: false, message: "#{entity_name_singular.capitalize} '#{name}' não encontrada" }
-          end
-
+          new_name = params['name'] || params[:name]
+          code = params['code'] || params[:code]
           style = params['style'] || params[:style]
           camera_type = params['cameraType'] || params[:cameraType]
           active_layers = params['activeLayers'] || params[:activeLayers]
-
+      
+          # Determinar páginas alvo conforme o escopo passado (current / número / all)
+          target_names = parse_update_scope(name, params, model)
+      
           model.start_operation("Atualizar #{entity_name_singular.capitalize}", true)
+      
+          updated = []
+      
+          target_names.each do |target_name|
+            page = model.pages.find { |p| p.name.downcase == target_name.downcase }
+            if page
+              model.pages.selected_page = page
+            else
+              page = model.pages.add(target_name)
+            end
+            
+            # Atualizar o nome da página se code mudou
+            new_page_name = (code && !code.empty?) ? code : (new_name || page.name)
+            if new_page_name != page.name
+              # Renomear a página
+              page.name = new_page_name
+            end
+            
+            # Salvar o name e code como atributos da página
+            page.set_attribute('ProjetaPlus', 'display_name', new_name) if new_name && !new_name.empty?
+            if code && !code.empty?
+              page.set_attribute('ProjetaPlus', 'code', code)
+            end
+            
+            # Aplicar estilo e camadas para cada página
+            apply_style(style) if style && !style.empty?
+            apply_layers_visibility(active_layers) if active_layers
+      
+            # Aplicar configuração de câmera (usa a página)
+            apply_camera_config(page, camera_type) if camera_type
 
-          # Selecionar a página
-          model.pages.selected_page = page
-
-          # Aplicar estilo
-          apply_style(style) if style && !style.empty?
-
-          # Aplicar visibilidade de camadas
-          apply_layers_visibility(active_layers) if active_layers
-
-          # Aplicar configuração de câmera
-          apply_camera_config(page, camera_type) if camera_type
-
-          # Atualizar a página (sem renomear - usuário cria nova cena se quiser nome diferente)
-          model.active_view.zoom_extents
-          page.update
-
+            unhide_all_elements
+      
+            # Atualizar a página
+            model.active_view.zoom_extents
+            page.update
+      
+            updated << target_name
+          end
+      
           model.commit_operation
-
+      
           {
             success: true,
-            message: "#{entity_name_singular.capitalize} '#{name}' atualizada com sucesso"
+            message: "#{entity_name_singular.capitalize} '#{name}' atualizada(s): #{updated.join(', ')}"
           }
         rescue => e
           model.abort_operation if model
@@ -175,77 +220,56 @@ module ProjetaPlus
         end
       end
 
-      # Aplica configuração (cria se não existir)
-      def apply_config(name, config)
+      # Aplica configuração (cria se não existir) — suporta scope (current / <n> / all)
+      def apply_config(name, code, config)
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         begin
           model = Sketchup.active_model
-          
-          # Detectar número do nível da cena atual
-          level_number = detect_level_number_from_current_scene(model)
-          
-          # Adicionar número ao nome se estiver em uma cena de nível específico
-          final_name = level_number > 1 ? "#{name}#{level_number}" : name
-          
-          page = model.pages.find { |p| p.name.downcase == final_name.downcase }
-          
+
+          # Definir o nome da página: usar code se existir, senão usar name
+          page_name = (code && !code.empty?) ? code : name
+
+          # Determinar nomes finais conforme o escopo em config (mesma lógica de update)
+          target_names = parse_update_scope(page_name, config, model)
+
           model.start_operation("Aplicar Configuração de #{entity_name_singular.capitalize}", true)
-          
-          # Reexibir todos os elementos ocultos
-          unhide_all_elements
-          
-          # Criar página se não existir ou selecionar se já existe
-          if page
-            model.pages.selected_page = page
-            message = "#{entity_name_singular.capitalize} '#{final_name}' atualizada com sucesso"
-          else
-            page = model.pages.add(final_name)
-            message = "#{entity_name_singular.capitalize} '#{final_name}' criada com sucesso"
-          end
-          
-          # Aplicar configurações
-          style = config['style'] || config[:style]
-          apply_style(style) if style && !style.empty?
-          
-          active_layers = config['activeLayers'] || config[:activeLayers]
-          apply_layers_visibility(active_layers) if active_layers
-          
-          camera_type = config['cameraType'] || config[:cameraType]
-          if camera_type
-            camera = model.active_view.camera
-            camera_type_sym = camera_type.is_a?(String) ? camera_type.to_sym : camera_type
-            
-            case camera_type_sym
-            when :iso_perspectiva, :iso
-              configure_iso_camera_direct
-              camera.perspective = true
-            when :iso_ortogonal
-              configure_iso_camera_direct
-              camera.perspective = false
-            when :iso_invertida_perspectiva
-              configure_inverted_camera_direct
-              camera.perspective = true
-            when :iso_invertida_ortogonal
-              configure_inverted_camera_direct
-              camera.perspective = false
-            when :topo_perspectiva, :topo
-              configure_top_camera_direct
-              camera.perspective = true
-            when :topo_ortogonal
-              configure_top_camera_direct
-              camera.perspective = false
+
+          target_names.each do |final_name|
+            page = model.pages.find { |p| p.name.downcase == final_name.downcase }
+
+            if page
+              model.pages.selected_page = page
+            else
+              page = model.pages.add(final_name)
             end
-            
-            model.active_view.camera = camera
+
+            # Salvar o name e code como atributos da página
+            page.set_attribute('ProjetaPlus', 'display_name', name) if name && !name.empty?
+            if code && !code.empty?
+              page.set_attribute('ProjetaPlus', 'code', code)
+            end
+
+            # Aplicar configurações
+            style = config['style'] || config[:style]
+            apply_style(style) if style && !style.empty?
+
+            active_layers = config['activeLayers'] || config[:activeLayers]
+            apply_layers_visibility(active_layers) if active_layers
+
+            camera_type = config['cameraType'] || config[:cameraType]
+            apply_camera_config(page, camera_type) if camera_type
+
+            unhide_all_elements
+
+            model.active_view.zoom_extents
+            page.update
           end
-          
-          model.active_view.zoom_extents
-          page.update
+
           model.commit_operation
-          
+
           {
             success: true,
-            message: message
+            message: "Configuração aplicada para: #{target_names.join(', ')}"
           }
         rescue => e
           model.abort_operation if model
@@ -332,6 +356,33 @@ module ProjetaPlus
         end
       end
 
+      # Retorna camadas visíveis que existem na lista disponível
+      def get_visible_layers_filtered(available_layers)
+        begin
+          model = Sketchup.active_model
+          visible_layers = []
+          
+          model.layers.each do |layer|
+            # Incluir apenas se estiver visível E estiver na lista de camadas disponíveis
+            if layer.visible? && available_layers.include?(layer.name)
+              visible_layers << layer.name
+            end
+          end
+          
+          {
+            success: true,
+            layers: visible_layers.sort,
+            message: "Camadas visíveis capturadas e filtradas"
+          }
+        rescue => e
+          {
+            success: false,
+            message: "Erro ao carregar camadas visíveis: #{e.message}",
+            layers: []
+          }
+        end
+      end
+
       # Retorna estado atual do modelo
       def get_current_state
         begin
@@ -400,6 +451,17 @@ module ProjetaPlus
           content = remove_bom(content)
           data = JSON.parse(content)
           
+          # Convert old format to new format (backward compatibility)
+          if data[self::ENTITY_NAME] && !data['groups']
+            data = {
+              'groups' => [{
+                'id' => Time.now.to_i.to_s,
+                'name' => 'Default',
+                'segments' => data[self::ENTITY_NAME]
+              }]
+            }
+          end
+          
           {
             success: true,
             data: data,
@@ -429,6 +491,17 @@ module ProjetaPlus
           content = remove_bom(content)
           data = JSON.parse(content)
           
+          # Convert old format to new format (backward compatibility)
+          if data[self::ENTITY_NAME] && !data['groups']
+            data = {
+              'groups' => [{
+                'id' => Time.now.to_i.to_s,
+                'name' => 'Default',
+                'segments' => data[self::ENTITY_NAME]
+              }]
+            }
+          end
+          
           # Salvar como arquivo do usuário
           ensure_json_directory
           File.write(self::USER_DATA_FILE, JSON.pretty_generate(data))
@@ -457,6 +530,17 @@ module ProjetaPlus
           content = File.read(file_path)
           content = remove_bom(content)
           data = JSON.parse(content)
+          
+          # Convert old format to new format (backward compatibility)
+          if data[self::ENTITY_NAME] && !data['groups']
+            data = {
+              'groups' => [{
+                'id' => Time.now.to_i.to_s,
+                'name' => 'Default',
+                'segments' => data[self::ENTITY_NAME]
+              }]
+            }
+          end
           
           {
             success: true,
@@ -491,6 +575,36 @@ module ProjetaPlus
         entity_name_singular = self::ENTITY_NAME.chomp('s')
         return [false, "Nome da #{entity_name_singular} é obrigatório"] if name.nil? || name.strip.empty?
         [true, nil]
+      end
+
+      # Resolve lista de nomes de cenas alvo com base no escopo passado em params[:scope]
+      # scope pode ser: 'current'|'atual' (padrão), 'all'|'todos', um número '2' ou 'nivel_2'
+      def parse_update_scope(base_name, params, model)
+        scope = params && (params['scope'] || params[:scope]) || 'current'
+        scope_str = scope.to_s.downcase
+
+        case scope_str
+        when 'current', 'atual', 'apenas_atual', 'apenas atual'
+          level_number = detect_level_number_from_current_scene(model)
+          final_name = level_number > 1 ? "#{base_name}_#{level_number}" : base_name
+          [final_name]
+        when 'all', 'todos', 'todas', 'todos_niveis', 'todos níveis'
+          pattern = /^#{Regexp.escape(base_name)}(?:_(\d+))?$/i
+          matches = model.pages.map(&:name).select { |n| n =~ pattern }
+          matches.empty? ? [base_name] : matches
+        else
+          if scope_str =~ /^\d+$/
+            level = scope_str.to_i
+            final_name = level > 1 ? "#{base_name}_#{level}" : base_name
+            [final_name]
+          elsif scope_str =~ /^nivel[_-]?(\d+)$/i
+            level = $1.to_i
+            final_name = level > 1 ? "#{base_name}_#{level}" : base_name
+            [final_name]
+          else
+            [base_name]
+          end
+        end
       end
 
       def apply_style(style_name)
@@ -578,9 +692,10 @@ module ProjetaPlus
         bounds = model.bounds
         center = bounds.center
         
-        eye = Geom::Point3d.new(center.x + 1000, center.y + 1000, center.z + 1000)
+        # Posiciona a câmera ABAIXO do modelo, olhando para cima
+        eye = Geom::Point3d.new(center.x, center.y, center.z - 1000)
         target = center
-        up = Geom::Vector3d.new(0, 0, 1)
+        up = Geom::Vector3d.new(0, 1, 0)
         
         camera.set(eye, target, up)
         model.active_view.camera = camera
@@ -620,9 +735,10 @@ module ProjetaPlus
         bounds = model.bounds
         center = bounds.center
         
-        eye = Geom::Point3d.new(center.x + 1000, center.y + 1000, center.z + 1000)
+        # Posiciona a câmera ABAIXO do modelo, olhando para cima
+        eye = Geom::Point3d.new(center.x, center.y, center.z - 1000)
         target = center
-        up = Geom::Vector3d.new(0, 0, 1)
+        up = Geom::Vector3d.new(0, 1, 0)
         
         camera.set(eye, target, up)
       end
@@ -651,11 +767,11 @@ module ProjetaPlus
         direction = camera.direction
         perspective = camera.perspective?
         
-        # Vista de topo (direção Z negativa)
+        # Vista de topo (direção Z negativa, olhando de cima para baixo)
         if direction.z < -0.9
           return perspective ? :topo_perspectiva : :topo_ortogonal
-        # Vista isométrica invertida (direção X e Y positivas)
-        elsif direction.x > 0.3 && direction.y > 0.3
+        # Vista de baixo (direção Z positiva, olhando de baixo para cima)
+        elsif direction.z > 0.9
           return perspective ? :iso_invertida_perspectiva : :iso_invertida_ortogonal
         # Vista isométrica padrão
         else

@@ -55,7 +55,7 @@ Lista todos os estilos disponíveis no modelo atual.
 ```ruby
 {
   success: true,
-  styles: ["FM_PLANTAS", "FM_CORTES", "FM_VISTAS"],
+  styles: ["PRO_PLANTAS", "PRO_Seções", "PRO_VISTAS"],
   message: "3 estilos encontrados"
 }
 ```
@@ -74,7 +74,7 @@ Duplica a cena atual aplicando um novo estilo e sufixo.
 
 ```json
 {
-  "estilo": "FM_PLANTAS",
+  "estilo": "PRO_PLANTAS",
   "sufixo": "planta"
 }
 ```
@@ -257,7 +257,7 @@ await getStyles();
 // → Popula array 'styles'
 
 // 4. Duplicar cena com novo estilo
-await duplicateScene('FM_PLANTAS', 'planta');
+await duplicateScene('PRO_PLANTAS', 'planta');
 // → Cria cena det-1-planta
 
 // 5. Alternar vista
