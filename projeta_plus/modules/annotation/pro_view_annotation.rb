@@ -118,7 +118,7 @@ module ProjetaPlus
         
         model.start_operation(ProjetaPlus::Localization.t("commands.view_annotation_operation_name"), true)
         cut_height = ProjetaPlus::Modules::ProSettingsUtils.get_cut_height_cm
-        center_point = center_point.offset(z_axis, cut_height / CM_TO_INCHES_CONVERSION_FACTOR)
+        center_point = center_point.offset(z_axis, cut_height / CM_TO_INCHES_CONVERSION_FACTOR * 100)
 
         transformation = Geom::Transformation.axes(center_point, x_axis, y_axis, z_axis)
 

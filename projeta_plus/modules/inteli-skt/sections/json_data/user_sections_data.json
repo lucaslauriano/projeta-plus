@@ -8,7 +8,7 @@
           "id": "1767655400975",
           "name": "Pontos Técnicos",
           "code": "tec",
-          "style": "PRO_PLANTAS",
+          "style": "PRO_MOBILIARIO_LINHAS",
           "activeLayers": [
             "-ARQUITETURA-BASE ALVENARIA",
             "-ARQUITETURA-CHURRASQUEIRA",
