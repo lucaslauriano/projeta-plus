@@ -79,6 +79,9 @@ module ProjetaPlus
       sections_handler = ProjetaPlus::DialogHandlers::SectionsHandler.new(@@main_dashboard_dialog)
       details_handler = ProjetaPlus::DialogHandlers::DetailsHandler.new(@@main_dashboard_dialog)
       electrical_reports_handler = ProjetaPlus::DialogHandlers::ElectricalReportsHandler.new(@@main_dashboard_dialog)
+      lightning_reports_handler = ProjetaPlus::DialogHandlers::LightningReportsHandler.new(@@main_dashboard_dialog)
+      baseboard_reports_handler = ProjetaPlus::DialogHandlers::BaseboardReportsHandler.new(@@main_dashboard_dialog)
+      coatings_reports_handler = ProjetaPlus::DialogHandlers::CoatingsReportsHandler.new(@@main_dashboard_dialog)
       
       # Register all callbacks
       settings_handler.register_callbacks
@@ -96,6 +99,9 @@ module ProjetaPlus
       sections_handler.register_callbacks
       details_handler.register_callbacks
       electrical_reports_handler.register_callbacks
+      lightning_reports_handler.register_callbacks
+      baseboard_reports_handler.register_callbacks
+      coatings_reports_handler.register_callbacks
       
       furniture_handler
     end

@@ -1,0 +1,426 @@
+[2026-01-08 16:56:48 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-08 16:56:55 -0300] getLightningTypes called
+[2026-01-08 16:56:55 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:56:55 -0300] getLightningColumnPreferences called
+[2026-01-08 16:56:55 -0300] Preferences loaded: true
+[2026-01-08 16:56:55 -0300] getLightningTypes called
+[2026-01-08 16:56:55 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:56:55 -0300] getLightningColumnPreferences called
+[2026-01-08 16:56:55 -0300] Preferences loaded: true
+[2026-01-08 16:57:05 -0300] saveLightningColumnPreferences called
+[2026-01-08 16:57:05 -0300] Preferences to save: ["luminaria", "marca_luminaria", "lampada", "marca_lampada", "temperatura", "irc", "lumens", "dimer", "ambiente", "quantidade"]
+[2026-01-08 16:57:05 -0300] Save result: true
+[2026-01-08 16:57:06 -0300] saveLightningColumnPreferences called
+[2026-01-08 16:57:06 -0300] Preferences to save: ["luminaria", "marca_luminaria", "lampada", "marca_lampada", "temperatura", "irc", "lumens", "dimer", "ambiente", "quantidade", "legenda"]
+[2026-01-08 16:57:06 -0300] Save result: true
+[2026-01-08 16:57:07 -0300] saveLightningColumnPreferences called
+[2026-01-08 16:57:07 -0300] Preferences to save: []
+[2026-01-08 16:57:07 -0300] Save result: true
+[2026-01-08 16:57:07 -0300] saveLightningColumnPreferences called
+[2026-01-08 16:57:07 -0300] Preferences to save: ["legenda", "luminaria", "marca_luminaria", "lampada", "marca_lampada", "temperatura", "irc", "lumens", "dimer", "ambiente", "quantidade"]
+[2026-01-08 16:57:07 -0300] Save result: true
+[2026-01-08 16:57:10 -0300] getLightningData called with payload: "{\"type\":\"furniture\"}"
+[2026-01-08 16:57:10 -0300] Type: furniture
+[2026-01-08 16:57:10 -0300] Module returned. Success: true
+[2026-01-08 16:57:10 -0300] Items count: 0
+[2026-01-08 16:57:13 -0300] getLightningData called with payload: "{\"type\":\"standard\"}"
+[2026-01-08 16:57:13 -0300] Type: standard
+[2026-01-08 16:57:14 -0300] Module returned. Success: true
+[2026-01-08 16:57:14 -0300] Items count: 2
+[2026-01-08 16:57:52 -0300] getLightningTypes called
+[2026-01-08 16:57:52 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:57:52 -0300] getLightningColumnPreferences called
+[2026-01-08 16:57:52 -0300] Preferences loaded: true
+[2026-01-08 16:57:54 -0300] getLightningTypes called
+[2026-01-08 16:57:54 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:57:54 -0300] getLightningColumnPreferences called
+[2026-01-08 16:57:54 -0300] Preferences loaded: true
+[2026-01-08 16:58:03 -0300] getLightningTypes called
+[2026-01-08 16:58:03 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:58:03 -0300] getLightningColumnPreferences called
+[2026-01-08 16:58:03 -0300] Preferences loaded: true
+[2026-01-08 16:58:14 -0300] getLightningTypes called
+[2026-01-08 16:58:14 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:58:14 -0300] getLightningColumnPreferences called
+[2026-01-08 16:58:14 -0300] Preferences loaded: true
+[2026-01-08 16:58:33 -0300] getLightningTypes called
+[2026-01-08 16:58:33 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:58:33 -0300] getLightningColumnPreferences called
+[2026-01-08 16:58:33 -0300] Preferences loaded: true
+[2026-01-08 16:58:39 -0300] getLightningTypes called
+[2026-01-08 16:58:39 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:58:39 -0300] getLightningColumnPreferences called
+[2026-01-08 16:58:39 -0300] Preferences loaded: true
+[2026-01-08 16:58:49 -0300] getLightningTypes called
+[2026-01-08 16:58:49 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:58:49 -0300] getLightningColumnPreferences called
+[2026-01-08 16:58:49 -0300] Preferences loaded: true
+[2026-01-08 16:59:22 -0300] getLightningTypes called
+[2026-01-08 16:59:22 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 16:59:22 -0300] getLightningColumnPreferences called
+[2026-01-08 16:59:22 -0300] Preferences loaded: true
+[2026-01-08 17:00:25 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-08 17:00:35 -0300] getLightningTypes called
+[2026-01-08 17:00:35 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:00:35 -0300] getLightningColumnPreferences called
+[2026-01-08 17:00:35 -0300] Preferences loaded: true
+[2026-01-08 17:00:35 -0300] getLightningTypes called
+[2026-01-08 17:00:35 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:00:35 -0300] getLightningColumnPreferences called
+[2026-01-08 17:00:35 -0300] Preferences loaded: true
+[2026-01-08 17:00:39 -0300] getLightningTypes called
+[2026-01-08 17:00:39 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:00:39 -0300] getLightningColumnPreferences called
+[2026-01-08 17:00:39 -0300] Preferences loaded: true
+[2026-01-08 17:00:39 -0300] getLightningTypes called
+[2026-01-08 17:00:39 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:00:39 -0300] getLightningColumnPreferences called
+[2026-01-08 17:00:39 -0300] Preferences loaded: true
+[2026-01-08 17:01:03 -0300] getLightningTypes called
+[2026-01-08 17:01:03 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Iluminação Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Iluminação Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:01:03 -0300] getLightningColumnPreferences called
+[2026-01-08 17:01:03 -0300] Preferences loaded: true
+[2026-01-08 17:01:30 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-08 17:01:35 -0300] getLightningTypes called
+[2026-01-08 17:01:35 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:01:35 -0300] getLightningColumnPreferences called
+[2026-01-08 17:01:35 -0300] Preferences loaded: true
+[2026-01-08 17:01:35 -0300] getLightningTypes called
+[2026-01-08 17:01:35 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:01:35 -0300] getLightningColumnPreferences called
+[2026-01-08 17:01:35 -0300] Preferences loaded: true
+[2026-01-08 17:01:37 -0300] getLightningData called with payload: "{\"type\":\"furniture\"}"
+[2026-01-08 17:01:37 -0300] Type: furniture
+[2026-01-08 17:01:37 -0300] Module returned. Success: true
+[2026-01-08 17:01:37 -0300] Items count: 0
+[2026-01-08 17:01:38 -0300] getLightningData called with payload: "{\"type\":\"standard\"}"
+[2026-01-08 17:01:38 -0300] Type: standard
+[2026-01-08 17:01:38 -0300] Module returned. Success: true
+[2026-01-08 17:01:38 -0300] Items count: 2
+[2026-01-08 17:01:50 -0300] getLightningTypes called
+[2026-01-08 17:01:50 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:01:50 -0300] getLightningColumnPreferences called
+[2026-01-08 17:01:50 -0300] Preferences loaded: true
+[2026-01-08 17:01:50 -0300] getLightningTypes called
+[2026-01-08 17:01:50 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:01:50 -0300] getLightningColumnPreferences called
+[2026-01-08 17:01:50 -0300] Preferences loaded: true
+[2026-01-08 17:01:52 -0300] getLightningData called with payload: "{\"type\":\"furniture\"}"
+[2026-01-08 17:01:52 -0300] Type: furniture
+[2026-01-08 17:01:52 -0300] Module returned. Success: true
+[2026-01-08 17:01:52 -0300] Items count: 0
+[2026-01-08 17:01:53 -0300] getLightningData called with payload: "{\"type\":\"standard\"}"
+[2026-01-08 17:01:53 -0300] Type: standard
+[2026-01-08 17:01:53 -0300] Module returned. Success: true
+[2026-01-08 17:01:53 -0300] Items count: 2
+[2026-01-08 17:01:58 -0300] getLightningTypes called
+[2026-01-08 17:01:58 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:01:58 -0300] getLightningColumnPreferences called
+[2026-01-08 17:01:58 -0300] Preferences loaded: true
+[2026-01-08 17:02:14 -0300] getLightningTypes called
+[2026-01-08 17:02:14 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:14 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:14 -0300] Preferences loaded: true
+[2026-01-08 17:02:19 -0300] getLightningTypes called
+[2026-01-08 17:02:19 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:19 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:19 -0300] Preferences loaded: true
+[2026-01-08 17:02:19 -0300] getLightningTypes called
+[2026-01-08 17:02:19 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:19 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:19 -0300] Preferences loaded: true
+[2026-01-08 17:02:20 -0300] getLightningTypes called
+[2026-01-08 17:02:20 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:20 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:20 -0300] Preferences loaded: true
+[2026-01-08 17:02:20 -0300] getLightningTypes called
+[2026-01-08 17:02:20 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:20 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:20 -0300] Preferences loaded: true
+[2026-01-08 17:02:22 -0300] getLightningTypes called
+[2026-01-08 17:02:22 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:22 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:22 -0300] Preferences loaded: true
+[2026-01-08 17:02:22 -0300] getLightningTypes called
+[2026-01-08 17:02:22 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:22 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:22 -0300] Preferences loaded: true
+[2026-01-08 17:02:26 -0300] getLightningTypes called
+[2026-01-08 17:02:26 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:26 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:26 -0300] Preferences loaded: true
+[2026-01-08 17:02:26 -0300] getLightningTypes called
+[2026-01-08 17:02:26 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:26 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:26 -0300] Preferences loaded: true
+[2026-01-08 17:02:28 -0300] getLightningData called with payload: "{\"type\":\"furniture\"}"
+[2026-01-08 17:02:28 -0300] Type: furniture
+[2026-01-08 17:02:28 -0300] Module returned. Success: true
+[2026-01-08 17:02:28 -0300] Items count: 0
+[2026-01-08 17:02:29 -0300] getLightningData called with payload: "{\"type\":\"standard\"}"
+[2026-01-08 17:02:29 -0300] Type: standard
+[2026-01-08 17:02:29 -0300] Module returned. Success: true
+[2026-01-08 17:02:29 -0300] Items count: 2
+[2026-01-08 17:02:55 -0300] getLightningTypes called
+[2026-01-08 17:02:55 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:02:55 -0300] getLightningColumnPreferences called
+[2026-01-08 17:02:55 -0300] Preferences loaded: true
+[2026-01-08 17:04:29 -0300] getLightningTypes called
+[2026-01-08 17:04:29 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:04:29 -0300] getLightningColumnPreferences called
+[2026-01-08 17:04:29 -0300] Preferences loaded: true
+[2026-01-08 17:04:29 -0300] getLightningTypes called
+[2026-01-08 17:04:29 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:04:29 -0300] getLightningColumnPreferences called
+[2026-01-08 17:04:29 -0300] Preferences loaded: true
+[2026-01-08 17:04:38 -0300] getLightningTypes called
+[2026-01-08 17:04:38 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:04:38 -0300] getLightningColumnPreferences called
+[2026-01-08 17:04:38 -0300] Preferences loaded: true
+[2026-01-08 17:04:46 -0300] getLightningTypes called
+[2026-01-08 17:04:46 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:04:46 -0300] getLightningColumnPreferences called
+[2026-01-08 17:04:46 -0300] Preferences loaded: true
+[2026-01-08 17:07:24 -0300] getLightningTypes called
+[2026-01-08 17:07:24 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:07:24 -0300] getLightningColumnPreferences called
+[2026-01-08 17:07:24 -0300] Preferences loaded: true
+[2026-01-08 17:07:24 -0300] getLightningTypes called
+[2026-01-08 17:07:24 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:07:24 -0300] getLightningColumnPreferences called
+[2026-01-08 17:07:24 -0300] Preferences loaded: true
+[2026-01-08 17:07:30 -0300] getLightningData called with payload: "{\"type\":\"furniture\"}"
+[2026-01-08 17:07:30 -0300] Type: furniture
+[2026-01-08 17:07:30 -0300] Module returned. Success: true
+[2026-01-08 17:07:30 -0300] Items count: 0
+[2026-01-08 17:07:31 -0300] getLightningData called with payload: "{\"type\":\"standard\"}"
+[2026-01-08 17:07:31 -0300] Type: standard
+[2026-01-08 17:07:31 -0300] Module returned. Success: true
+[2026-01-08 17:07:31 -0300] Items count: 2
+[2026-01-08 17:07:52 -0300] getLightningTypes called
+[2026-01-08 17:07:52 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:07:52 -0300] getLightningColumnPreferences called
+[2026-01-08 17:07:52 -0300] Preferences loaded: true
+[2026-01-08 17:07:52 -0300] getLightningTypes called
+[2026-01-08 17:07:52 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:07:52 -0300] getLightningColumnPreferences called
+[2026-01-08 17:07:52 -0300] Preferences loaded: true
+[2026-01-08 17:07:54 -0300] getLightningTypes called
+[2026-01-08 17:07:54 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:07:54 -0300] getLightningColumnPreferences called
+[2026-01-08 17:07:54 -0300] Preferences loaded: true
+[2026-01-08 17:07:54 -0300] getLightningTypes called
+[2026-01-08 17:07:54 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:07:54 -0300] getLightningColumnPreferences called
+[2026-01-08 17:07:54 -0300] Preferences loaded: true
+[2026-01-08 17:08:02 -0300] getLightningTypes called
+[2026-01-08 17:08:02 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:08:02 -0300] getLightningColumnPreferences called
+[2026-01-08 17:08:02 -0300] Preferences loaded: true
+[2026-01-08 17:08:02 -0300] getLightningTypes called
+[2026-01-08 17:08:02 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:08:02 -0300] getLightningColumnPreferences called
+[2026-01-08 17:08:02 -0300] Preferences loaded: true
+[2026-01-08 17:08:06 -0300] getLightningTypes called
+[2026-01-08 17:08:06 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:08:06 -0300] getLightningColumnPreferences called
+[2026-01-08 17:08:06 -0300] Preferences loaded: true
+[2026-01-08 17:08:06 -0300] getLightningTypes called
+[2026-01-08 17:08:06 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:08:06 -0300] getLightningColumnPreferences called
+[2026-01-08 17:08:06 -0300] Preferences loaded: true
+[2026-01-08 17:09:02 -0300] getLightningTypes called
+[2026-01-08 17:09:02 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:09:02 -0300] getLightningColumnPreferences called
+[2026-01-08 17:09:02 -0300] Preferences loaded: true
+[2026-01-08 17:09:02 -0300] getLightningTypes called
+[2026-01-08 17:09:02 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 17:09:02 -0300] getLightningColumnPreferences called
+[2026-01-08 17:09:02 -0300] Preferences loaded: true
+[2026-01-08 17:09:06 -0300] getLightningData called with payload: "{\"type\":\"furniture\"}"
+[2026-01-08 17:09:06 -0300] Type: furniture
+[2026-01-08 17:09:06 -0300] Module returned. Success: true
+[2026-01-08 17:09:06 -0300] Items count: 0
+[2026-01-08 17:09:08 -0300] getLightningData called with payload: "{\"type\":\"standard\"}"
+[2026-01-08 17:09:08 -0300] Type: standard
+[2026-01-08 17:09:08 -0300] Module returned. Success: true
+[2026-01-08 17:09:08 -0300] Items count: 2
+[2026-01-08 19:10:21 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-08 19:11:40 -0300] getLightningTypes called
+[2026-01-08 19:11:40 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:11:40 -0300] getLightningColumnPreferences called
+[2026-01-08 19:11:40 -0300] Preferences loaded: true
+[2026-01-08 19:11:40 -0300] getLightningTypes called
+[2026-01-08 19:11:40 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:11:40 -0300] getLightningColumnPreferences called
+[2026-01-08 19:11:40 -0300] Preferences loaded: true
+[2026-01-08 19:11:58 -0300] getLightningTypes called
+[2026-01-08 19:11:58 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:11:58 -0300] getLightningColumnPreferences called
+[2026-01-08 19:11:58 -0300] Preferences loaded: true
+[2026-01-08 19:11:58 -0300] getLightningTypes called
+[2026-01-08 19:11:58 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:11:58 -0300] getLightningColumnPreferences called
+[2026-01-08 19:11:58 -0300] Preferences loaded: true
+[2026-01-08 19:11:59 -0300] getLightningTypes called
+[2026-01-08 19:11:59 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:11:59 -0300] getLightningColumnPreferences called
+[2026-01-08 19:11:59 -0300] Preferences loaded: true
+[2026-01-08 19:11:59 -0300] getLightningTypes called
+[2026-01-08 19:11:59 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:11:59 -0300] getLightningColumnPreferences called
+[2026-01-08 19:11:59 -0300] Preferences loaded: true
+[2026-01-08 19:12:02 -0300] getLightningTypes called
+[2026-01-08 19:12:02 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:02 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:02 -0300] Preferences loaded: true
+[2026-01-08 19:12:02 -0300] getLightningTypes called
+[2026-01-08 19:12:02 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:02 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:02 -0300] Preferences loaded: true
+[2026-01-08 19:12:05 -0300] getLightningTypes called
+[2026-01-08 19:12:05 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:05 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:05 -0300] Preferences loaded: true
+[2026-01-08 19:12:05 -0300] getLightningTypes called
+[2026-01-08 19:12:05 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:05 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:05 -0300] Preferences loaded: true
+[2026-01-08 19:12:10 -0300] getLightningTypes called
+[2026-01-08 19:12:10 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:10 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:10 -0300] Preferences loaded: true
+[2026-01-08 19:12:10 -0300] getLightningTypes called
+[2026-01-08 19:12:10 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:10 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:10 -0300] Preferences loaded: true
+[2026-01-08 19:12:27 -0300] getLightningTypes called
+[2026-01-08 19:12:27 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:27 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:27 -0300] Preferences loaded: true
+[2026-01-08 19:12:27 -0300] getLightningTypes called
+[2026-01-08 19:12:27 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:27 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:27 -0300] Preferences loaded: true
+[2026-01-08 19:12:29 -0300] getLightningTypes called
+[2026-01-08 19:12:29 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:29 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:29 -0300] Preferences loaded: true
+[2026-01-08 19:12:29 -0300] getLightningTypes called
+[2026-01-08 19:12:29 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:29 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:29 -0300] Preferences loaded: true
+[2026-01-08 19:12:31 -0300] getLightningTypes called
+[2026-01-08 19:12:31 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:31 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:31 -0300] Preferences loaded: true
+[2026-01-08 19:12:31 -0300] getLightningTypes called
+[2026-01-08 19:12:31 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:31 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:31 -0300] Preferences loaded: true
+[2026-01-08 19:12:32 -0300] getLightningTypes called
+[2026-01-08 19:12:32 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:32 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:32 -0300] Preferences loaded: true
+[2026-01-08 19:12:32 -0300] getLightningTypes called
+[2026-01-08 19:12:32 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:12:32 -0300] getLightningColumnPreferences called
+[2026-01-08 19:12:32 -0300] Preferences loaded: true
+[2026-01-08 19:15:05 -0300] getLightningTypes called
+[2026-01-08 19:15:05 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:15:05 -0300] getLightningColumnPreferences called
+[2026-01-08 19:15:05 -0300] Preferences loaded: true
+[2026-01-08 19:15:05 -0300] getLightningTypes called
+[2026-01-08 19:15:05 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:15:05 -0300] getLightningColumnPreferences called
+[2026-01-08 19:15:05 -0300] Preferences loaded: true
+[2026-01-08 19:15:18 -0300] getLightningTypes called
+[2026-01-08 19:15:18 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:15:18 -0300] getLightningColumnPreferences called
+[2026-01-08 19:15:18 -0300] Preferences loaded: true
+[2026-01-08 19:15:18 -0300] getLightningTypes called
+[2026-01-08 19:15:18 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:15:18 -0300] getLightningColumnPreferences called
+[2026-01-08 19:15:18 -0300] Preferences loaded: true
+[2026-01-08 19:16:15 -0300] getLightningTypes called
+[2026-01-08 19:16:15 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:16:15 -0300] getLightningColumnPreferences called
+[2026-01-08 19:16:15 -0300] Preferences loaded: true
+[2026-01-08 19:16:15 -0300] getLightningTypes called
+[2026-01-08 19:16:15 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:16:15 -0300] getLightningColumnPreferences called
+[2026-01-08 19:16:15 -0300] Preferences loaded: true
+[2026-01-08 19:16:16 -0300] getLightningTypes called
+[2026-01-08 19:16:16 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:16:16 -0300] getLightningColumnPreferences called
+[2026-01-08 19:16:16 -0300] Preferences loaded: true
+[2026-01-08 19:16:16 -0300] getLightningTypes called
+[2026-01-08 19:16:16 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:16:16 -0300] getLightningColumnPreferences called
+[2026-01-08 19:16:16 -0300] Preferences loaded: true
+[2026-01-08 19:17:13 -0300] getLightningTypes called
+[2026-01-08 19:17:13 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:17:13 -0300] getLightningColumnPreferences called
+[2026-01-08 19:17:13 -0300] Preferences loaded: true
+[2026-01-08 19:17:13 -0300] getLightningTypes called
+[2026-01-08 19:17:13 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:17:13 -0300] getLightningColumnPreferences called
+[2026-01-08 19:17:13 -0300] Preferences loaded: true
+[2026-01-08 19:24:56 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-08 19:27:30 -0300] getLightningTypes called
+[2026-01-08 19:27:30 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:27:30 -0300] getLightningColumnPreferences called
+[2026-01-08 19:27:30 -0300] Preferences loaded: true
+[2026-01-08 19:27:30 -0300] getLightningTypes called
+[2026-01-08 19:27:30 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:27:30 -0300] getLightningColumnPreferences called
+[2026-01-08 19:27:30 -0300] Preferences loaded: true
+[2026-01-08 19:27:41 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-08 19:33:14 -0300] getLightningTypes called
+[2026-01-08 19:33:14 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:33:14 -0300] getLightningColumnPreferences called
+[2026-01-08 19:33:14 -0300] Preferences loaded: true
+[2026-01-08 19:33:14 -0300] getLightningTypes called
+[2026-01-08 19:33:14 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:33:14 -0300] getLightningColumnPreferences called
+[2026-01-08 19:33:14 -0300] Preferences loaded: true
+[2026-01-08 19:34:55 -0300] getLightningTypes called
+[2026-01-08 19:34:55 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:34:55 -0300] getLightningColumnPreferences called
+[2026-01-08 19:34:55 -0300] Preferences loaded: true
+[2026-01-08 19:34:55 -0300] getLightningTypes called
+[2026-01-08 19:34:55 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:34:55 -0300] getLightningColumnPreferences called
+[2026-01-08 19:34:55 -0300] Preferences loaded: true
+[2026-01-08 19:35:18 -0300] getLightningTypes called
+[2026-01-08 19:35:18 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:35:18 -0300] getLightningColumnPreferences called
+[2026-01-08 19:35:18 -0300] Preferences loaded: true
+[2026-01-08 19:35:18 -0300] getLightningTypes called
+[2026-01-08 19:35:18 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:35:18 -0300] getLightningColumnPreferences called
+[2026-01-08 19:35:18 -0300] Preferences loaded: true
+[2026-01-08 19:37:48 -0300] getLightningTypes called
+[2026-01-08 19:37:48 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:37:48 -0300] getLightningColumnPreferences called
+[2026-01-08 19:37:48 -0300] Preferences loaded: true
+[2026-01-08 19:37:48 -0300] getLightningTypes called
+[2026-01-08 19:37:48 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:37:48 -0300] getLightningColumnPreferences called
+[2026-01-08 19:37:48 -0300] Preferences loaded: true
+[2026-01-08 19:38:21 -0300] getLightningTypes called
+[2026-01-08 19:38:21 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:38:21 -0300] getLightningColumnPreferences called
+[2026-01-08 19:38:21 -0300] Preferences loaded: true
+[2026-01-08 19:38:21 -0300] getLightningTypes called
+[2026-01-08 19:38:21 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:38:21 -0300] getLightningColumnPreferences called
+[2026-01-08 19:38:21 -0300] Preferences loaded: true
+[2026-01-08 19:38:35 -0300] getLightningTypes called
+[2026-01-08 19:38:35 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:38:35 -0300] getLightningColumnPreferences called
+[2026-01-08 19:38:35 -0300] Preferences loaded: true
+[2026-01-08 19:38:35 -0300] getLightningTypes called
+[2026-01-08 19:38:35 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
+[2026-01-08 19:38:35 -0300] getLightningColumnPreferences called
+[2026-01-08 19:38:35 -0300] Preferences loaded: true

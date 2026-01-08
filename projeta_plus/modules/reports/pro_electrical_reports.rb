@@ -20,7 +20,7 @@ module ProjetaPlus
         modules: {
           id: 'eletrica_modulos',
           filter: 'ELÉTRICA MODULOS',
-          title: 'Montagem de Suportes + Módulos'
+          title: 'Suportes + Módulos'
         },
         points: {
           id: 'eletrica',
