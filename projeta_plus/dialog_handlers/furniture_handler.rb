@@ -420,9 +420,30 @@ module ProjetaPlus
           return
         end
 
-        # Se NÃO for force (manual), ignora seleção automática
+        # Se NÃO for force (manual), apenas notifica que há algo selecionado (sem carregar dados)
         unless force
-          puts "[ProjetaPlus Furniture] Seleção automática ignorada (use o botão 'Selecionar Componente')"
+          puts "[ProjetaPlus Furniture] Seleção detectada - notificando frontend (sem carregar dados)"
+          ::UI.start_timer(0, false) do
+            # Verifica se é um componente válido
+            model = Sketchup.active_model
+            entity = model.selection.detect { |e| e.is_a?(Sketchup::ComponentInstance) || e.is_a?(Sketchup::Group) }
+            
+            if entity
+              # Notifica que há algo selecionado (para habilitar o botão)
+              send_json_response(
+                'handleFurnitureAttributes',
+                { success: false, selected: true, message: "Componente selecionado - clique em 'Selecionar Componente' para carregar" }
+              )
+              puts "[ProjetaPlus Furniture] Componente válido detectado - botão habilitado"
+            else
+              # Não é um componente válido
+              send_json_response(
+                'handleFurnitureAttributes',
+                { success: false, selected: false, message: "Seleção não é um componente válido" }
+              )
+              puts "[ProjetaPlus Furniture] Seleção não é um componente válido"
+            end
+          end
           puts "[ProjetaPlus Furniture] ═══════════════════════════════════════\n"
           @processing_selection = false
           return
