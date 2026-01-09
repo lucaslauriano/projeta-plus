@@ -8,21 +8,14 @@ module ProjetaPlus
   module Modules
     module ProLightningReports
 
-      # ========================================
-      # CONFIGURAÇÕES E CONSTANTES
-      # ========================================
-
       SETTINGS_KEY = "lightning_reports_settings"
       COLUMN_PREFS_KEY = 'lightning_column_prefs'
       
-      # Prefixos de atributos dinâmicos
-      PREFIX_STANDARD = "fm_ilu"
-      PREFIX_FURNITURE = "fm_ilu_mar"
+      PREFIX_STANDARD = "pro_ilu"
+      PREFIX_FURNITURE = "pro_ilu_furn"
       
-      # Máximo nível de recursão para busca de componentes
       MAX_RECURSION_LEVEL = 5
 
-      # Mapeamento de colunas
       COLUMN_MAPPING = {
         'legenda' => 'LEGENDA',
         'luminaria' => 'LUMINÁRIA',
@@ -42,9 +35,6 @@ module ProjetaPlus
         temperatura irc lumens dimer ambiente quantidade
       ]
 
-      # ========================================
-      # MÉTODOS PÚBLICOS - Get Data
-      # ========================================
 
       # Retorna tipos de iluminação disponíveis
       def self.get_lightning_types
@@ -60,7 +50,6 @@ module ProjetaPlus
         end
       end
 
-      # Coleta dados de iluminação para um tipo específico
       def self.get_lightning_data(type = 'standard')
         begin
           puts "[ProLightningReports] Getting data for type: #{type}"
@@ -106,7 +95,6 @@ module ProjetaPlus
         end
       end
 
-      # Retorna preferências de colunas salvas
       def self.get_column_preferences
         begin
           prefs = load_column_preferences
@@ -116,10 +104,6 @@ module ProjetaPlus
         end
       end
 
-      # ========================================
-      # MÉTODOS PÚBLICOS - Save Data
-      # ========================================
-
       def self.save_column_preferences(preferences)
         begin
           Sketchup.write_default('projeta_plus_lightning', COLUMN_PREFS_KEY, JSON.generate(preferences))
@@ -128,10 +112,6 @@ module ProjetaPlus
           { success: false, message: "Erro ao salvar preferências: #{e.message}" }
         end
       end
-
-      # ========================================
-      # MÉTODOS PÚBLICOS - Export
-      # ========================================
 
       def self.export_to_csv(params)
         begin
@@ -190,13 +170,8 @@ module ProjetaPlus
         end
       end
 
-      # ========================================
-      # MÉTODOS PRIVADOS - Coleta de Dados
-      # ========================================
-
       private
 
-      # Busca componentes de iluminação recursivamente
       def self.search_components_recursive(entities, prefix, level)
         components = []
         return components if level >= MAX_RECURSION_LEVEL
@@ -205,21 +180,17 @@ module ProjetaPlus
           if entity.is_a?(Sketchup::ComponentInstance)
             definition = entity.definition
 
-            # Extrair atributos dinâmicos
             attrs = extract_lightning_attributes(definition, prefix)
 
-            # Se encontrou algum atributo válido, adicionar
             if attrs.values.any? { |v| !v.nil? && v.to_s.strip != '' }
               components << attrs
             end
 
-            # Buscar recursivamente dentro do componente
             components.concat(
               search_components_recursive(definition.entities, prefix, level + 1)
             )
 
           elsif entity.is_a?(Sketchup::Group)
-            # Buscar recursivamente dentro do grupo
             components.concat(
               search_components_recursive(entity.entities, prefix, level + 1)
             )
@@ -229,44 +200,40 @@ module ProjetaPlus
         components
       end
 
-      # Extrai atributos de iluminação de uma definição
       def self.extract_lightning_attributes(definition, prefix)
         {
-          fm_ilu: definition.get_attribute("dynamic_attributes", prefix),
-          fm_ilu_t1: definition.get_attribute("dynamic_attributes", "#{prefix}_t1"),
-          fm_ilu_t2: definition.get_attribute("dynamic_attributes", "#{prefix}_t2"),
-          fm_ilu_t3: definition.get_attribute("dynamic_attributes", "#{prefix}_t3"),
-          fm_ilu_t4: definition.get_attribute("dynamic_attributes", "#{prefix}_t4"),
-          fm_ilu_t5: definition.get_attribute("dynamic_attributes", "#{prefix}_t5"),
-          fm_ilu_t6: definition.get_attribute("dynamic_attributes", "#{prefix}_t6"),
-          fm_ilu_t7: definition.get_attribute("dynamic_attributes", "#{prefix}_t7"),
-          fm_ilu_t8: definition.get_attribute("dynamic_attributes", "#{prefix}_t8"),
-          fm_ilu_t9: definition.get_attribute("dynamic_attributes", "#{prefix}_t9")
+          pro_ilu: definition.get_attribute("dynamic_attributes", prefix),
+          pro_ilu_t1: definition.get_attribute("dynamic_attributes", "#{prefix}_t1"),
+          pro_ilu_t2: definition.get_attribute("dynamic_attributes", "#{prefix}_t2"),
+          pro_ilu_t3: definition.get_attribute("dynamic_attributes", "#{prefix}_t3"),
+          pro_ilu_t4: definition.get_attribute("dynamic_attributes", "#{prefix}_t4"),
+          pro_ilu_t5: definition.get_attribute("dynamic_attributes", "#{prefix}_t5"),
+          pro_ilu_t6: definition.get_attribute("dynamic_attributes", "#{prefix}_t6"),
+          pro_ilu_t7: definition.get_attribute("dynamic_attributes", "#{prefix}_t7"),
+          pro_ilu_t8: definition.get_attribute("dynamic_attributes", "#{prefix}_t8"),
+          pro_ilu_t9: definition.get_attribute("dynamic_attributes", "#{prefix}_t9")
         }
       end
 
-      # Agrupa componentes idênticos e conta quantidades
       def self.group_and_count_components(components)
         grouped = Hash.new(0)
         
         components.each do |comp|
-          # Criar chave única baseada em todos os atributos
           key = [
-            comp[:fm_ilu],
-            comp[:fm_ilu_t1],
-            comp[:fm_ilu_t2],
-            comp[:fm_ilu_t3],
-            comp[:fm_ilu_t4],
-            comp[:fm_ilu_t5],
-            comp[:fm_ilu_t6],
-            comp[:fm_ilu_t7],
-            comp[:fm_ilu_t8],
-            comp[:fm_ilu_t9]
+            comp[:pro_ilu],
+            comp[:pro_ilu_t1],
+            comp[:pro_ilu_t2],
+            comp[:pro_ilu_t3],
+            comp[:pro_ilu_t4],
+            comp[:pro_ilu_t5],
+            comp[:pro_ilu_t6],
+            comp[:pro_ilu_t7],
+            comp[:pro_ilu_t8],
+            comp[:pro_ilu_t9]
           ]
           grouped[key] += 1
         end
 
-        # Converter para array de hashes com nomes amigáveis
         grouped.map do |key, count|
           {
             legenda: key[0]&.to_s || '',
@@ -284,10 +251,6 @@ module ProjetaPlus
         end
       end
 
-      # ========================================
-      # MÉTODOS PRIVADOS - Persistência
-      # ========================================
-
       def self.load_column_preferences
         begin
           json_str = Sketchup.read_default('projeta_plus_lightning', COLUMN_PREFS_KEY)
@@ -301,17 +264,11 @@ module ProjetaPlus
         end
       end
 
-      # ========================================
-      # MÉTODOS PRIVADOS - Export
-      # ========================================
-
       def self.write_csv_file(file_path, columns, data)
         CSV.open(file_path, 'w:UTF-8') do |csv|
-          # Cabeçalho
           headers = columns.map { |col| COLUMN_MAPPING[col] || col.upcase }
           csv << headers
 
-          # Dados
           data.each do |item|
             row = columns.map do |col|
               value = item[col] || item[col.to_sym] || ''
@@ -320,7 +277,6 @@ module ProjetaPlus
             csv << row
           end
 
-          # Linha de total (se tiver coluna quantidade)
           if columns.include?('quantidade')
             total_row = columns.map do |col|
               if col == 'quantidade'

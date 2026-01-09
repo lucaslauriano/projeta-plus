@@ -366,7 +366,7 @@ module ProjetaPlus
         detach_selection_observer
 
         @selection_observer = SelectionObserver.new(self)
-        #selection.add_observer(@selection_observer)
+        selection.add_observer(@selection_observer)
         log('Furniture selection observer attached.')
       rescue => e
         handle_error(e, 'attach_selection_observer')

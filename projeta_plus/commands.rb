@@ -6,6 +6,7 @@ require_relative 'localization.rb'
 module ProjetaPlus
   module Commands
     @@main_dashboard_dialog = nil
+    @@lib_scripts_dialog = nil
     
     def self.open_main_dashboard_command
       cmd = ::UI::Command.new(ProjetaPlus::Localization.t("plugin_name")) do
@@ -13,6 +14,15 @@ module ProjetaPlus
       end
       cmd.tooltip = ProjetaPlus::Localization.t("plugin_name")
       #cmd.status_bar_text = ProjetaPlus::Localization.t("plugin_name")
+      cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'logo.png')
+      cmd
+    end
+
+    def self.open_lib_scripts_command
+      cmd = ::UI::Command.new("Biblioteca de Scripts") do
+        open_lib_scripts_dialog
+      end
+      cmd.tooltip = "Biblioteca de Scripts e Ferramentas"
       cmd.large_icon = cmd.small_icon = File.join(ProjetaPlus::PATH, 'projeta_plus', 'icons', 'logo.png')
       cmd
     end
@@ -47,6 +57,35 @@ module ProjetaPlus
         @@main_dashboard_dialog = nil
       end
       @@main_dashboard_dialog.show
+    end
+
+    def self.open_lib_scripts_dialog
+      if @@lib_scripts_dialog
+        @@lib_scripts_dialog.bring_to_front
+        return
+      end
+
+      @@lib_scripts_dialog = ::UI::HtmlDialog.new(
+        dialog_title: "Biblioteca de Scripts",
+        preferences_key: "projeta_plus_lib_scripts_dialog",
+        scrollable: true,
+        resizable: true,
+        width: 120,
+        min_width: 120,
+        max_width: 120,
+        height: 800,
+        min_height: 600,
+        left: 100,
+        top: 100
+      )
+
+      # DEV_MODE: This URL will be automatically replaced during build
+      @@lib_scripts_dialog.set_url("http://localhost:3000/dashboard/lib-scripts")
+
+      @@lib_scripts_dialog.set_on_closed do
+        @@lib_scripts_dialog = nil
+      end
+      @@lib_scripts_dialog.show
     end
 
     def self.recreate_toolbar

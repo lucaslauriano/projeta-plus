@@ -424,3 +424,10 @@
 [2026-01-08 19:38:35 -0300] Result: {:success=>true, :types=>[{:id=>"standard", :name=>"Padrão", :prefix=>"fm_ilu"}, {:id=>"furniture", :name=>"Marcenaria", :prefix=>"fm_ilu_mar"}]}
 [2026-01-08 19:38:35 -0300] getLightningColumnPreferences called
 [2026-01-08 19:38:35 -0300] Preferences loaded: true
+[2026-01-09 09:31:48 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-09 09:57:07 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-09 10:00:13 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-09 10:01:30 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-09 10:02:46 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-09 10:16:27 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt
+[2026-01-09 10:18:27 -0300] LightningReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/lightning_reports_log.txt

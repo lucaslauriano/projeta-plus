@@ -166,3 +166,10 @@
 [2026-01-08 19:38:28 -0300] getBaseboardData called
 [2026-01-08 19:38:28 -0300] Module returned. Success: true
 [2026-01-08 19:38:28 -0300] Items count: 0
+[2026-01-09 09:31:48 -0300] BaseboardReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/baseboard_reports_log.txt
+[2026-01-09 09:57:07 -0300] BaseboardReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/baseboard_reports_log.txt
+[2026-01-09 10:00:13 -0300] BaseboardReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/baseboard_reports_log.txt
+[2026-01-09 10:01:30 -0300] BaseboardReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/baseboard_reports_log.txt
+[2026-01-09 10:02:46 -0300] BaseboardReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/baseboard_reports_log.txt
+[2026-01-09 10:16:27 -0300] BaseboardReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/baseboard_reports_log.txt
+[2026-01-09 10:18:27 -0300] BaseboardReportsHandler Initialized. Log file: /Users/lucaslauriano/Library/Application Support/SketchUp 2025/SketchUp/Plugins/projeta_plus/baseboard_reports_log.txt

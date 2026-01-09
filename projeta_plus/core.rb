@@ -9,10 +9,13 @@ module ProjetaPlus
       toolbar = ::UI::Toolbar.new(TOOLBAR_NAME)
       menu    = ::UI.menu("Plugins")
 
-      command = ProjetaPlus::Commands.open_main_dashboard_command
+      dashboard_command = ProjetaPlus::Commands.open_main_dashboard_command
+      toolbar.add_item(dashboard_command)
+      menu.add_item(dashboard_command)
 
-      toolbar.add_item(command)
-      menu.add_item(command)
+      lib_scripts_command = ProjetaPlus::Commands.open_lib_scripts_command
+      toolbar.add_item(lib_scripts_command)
+      menu.add_item(lib_scripts_command)
 
       toolbar.show
     end
